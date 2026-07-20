@@ -133,7 +133,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         if (existing == null) {
             throw new BusinessException("项目不存在");
         }
-        this.removeById(id);
+        baseMapper.deleteById(id);
         return Result.ok();
     }
 

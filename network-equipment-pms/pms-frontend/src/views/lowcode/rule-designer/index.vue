@@ -281,7 +281,7 @@ onMounted(load)
                 :model-value="current.type"
                 :disabled="isEdit"
                 placeholder="选择类型"
-                @update:model-value="(v) => onTypeChange(v as LowCodeRule['type'])"
+                @update:model-value="(v: string) => onTypeChange(v as LowCodeRule['type'])"
               >
                 <el-option v-for="o in typeOptions" :key="o.value" :label="o.label" :value="o.value" />
               </el-select>
@@ -331,6 +331,7 @@ onMounted(load)
 
         <!-- 底部：测试面板（可折叠） -->
         <RuleTestPanel
+          :key="current.id ?? current.code ?? 'new-rule'"
           :rule-code="current.code"
           :rule-type="current.type"
           :inputs-schema="testInputsSchema"

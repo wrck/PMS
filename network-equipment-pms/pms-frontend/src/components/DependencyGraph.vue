@@ -52,7 +52,7 @@ onMounted(() => {
       type: 'quadratic',
       style: {
         labelText: (d: EdgeData) => {
-          const data = d.data as TaskDependency
+          const data = d.data as unknown as TaskDependency
           return `${data.dependencyType ?? 'FS'}${data.lagDays ? '+' + data.lagDays : ''}`
         },
         endArrow: true
@@ -86,7 +86,7 @@ async function refresh() {
     id: `${d.predecessorTaskId}-${d.successorTaskId}`,
     source: String(d.predecessorTaskId),
     target: String(d.successorTaskId),
-    data: d
+    data: { ...d }
   }))
   graph.setData({ nodes, edges })
   graph.render()
@@ -101,12 +101,16 @@ function applyCycleHighlight(cycleIds?: number[]) {
   if (!graph) return
   // 先清除上一次高亮
   if (prevHighlightIds.length) {
-    graph.setElementState(prevHighlightIds, 'cycle', false)
+    for (const id of prevHighlightIds) {
+      graph.setElementState(id, [])
+    }
     prevHighlightIds = []
   }
   if (!cycleIds?.length) return
   const idStrs = cycleIds.map(String)
-  graph.setElementState(idStrs, 'cycle')
+  for (const id of idStrs) {
+    graph.setElementState(id, 'cycle')
+  }
   prevHighlightIds.push(...idStrs)
   for (let i = 0; i < cycleIds.length - 1; i++) {
     const edgeId = `${cycleIds[i]}-${cycleIds[i + 1]}`

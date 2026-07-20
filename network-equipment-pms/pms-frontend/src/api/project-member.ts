@@ -1,4 +1,4 @@
-import request from '@/utils/request'
+import { del, get, post, put } from '@/utils/request'
 
 export interface ProjectMember {
   id?: number
@@ -11,17 +11,17 @@ export interface ProjectMember {
 }
 
 export function listMembersByProjectId(projectId: number) {
-  return request.get<ProjectMember[]>(`/api/project/member/project/${projectId}`)
+  return get<ProjectMember[]>(`/api/project/member/project/${projectId}`)
 }
 
 export function createMember(data: ProjectMember) {
-  return request.post<ProjectMember>('/api/project/member', data)
+  return post<ProjectMember>('/api/project/member', data)
 }
 
 export function updateMember(data: ProjectMember) {
-  return request.put<ProjectMember>('/api/project/member', data)
+  return put<ProjectMember>('/api/project/member', data)
 }
 
 export function deleteMember(id: number) {
-  return request.del<void>(`/api/project/member/${id}`)
+  return del<void>(`/api/project/member/${id}`)
 }

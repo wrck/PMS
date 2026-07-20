@@ -28,8 +28,15 @@ import {
   getFormByCode,
   getListByCode,
   getTabByCode,
+  listForms,
+  listLists,
+  listTabs,
+  normalizeRelatedPageConfig,
   type FormConfig,
   type ListConfig,
+  type LowCodeFormConfig,
+  type LowCodeListConfig,
+  type LowCodeTabConfig,
   type TabConfig,
   type RelatedPageConfig,
   type RelatedPageSectionConfig,
@@ -49,9 +56,15 @@ const props = withDefaults(
     config: RelatedPageConfig
     /** 上下文数据（用于 props 解析与 visible 表达式求值） */
     contextData?: Record<string, unknown>
+    /** 设计器预览使用的子页面配置（pageCode → config） */
+    previewConfigs?: Record<string, unknown>
+    /** 设计器预览时允许引用尚未发布的草稿配置 */
+    allowDraft?: boolean
   }>(),
   {
-    contextData: () => ({})
+    contextData: () => ({}),
+    previewConfigs: () => ({}),
+    allowDraft: false
   }
 )
 
@@ -70,7 +83,7 @@ const userStore = useUserStore()
  * 排序+过滤后的区块列表：按 order 升序，相同 order 按数组顺序；过滤 visible=false 的区块。
  */
 const visibleSections = computed<RelatedPageSectionConfig[]>(() => {
-  const list = (props.config.sections || [])
+  const list = normalizeRelatedPageConfig(props.config).sections
     .filter((s) => evalVisible(s))
     .slice()
   list.sort((a, b) => {
@@ -82,10 +95,10 @@ const visibleSections = computed<RelatedPageSectionConfig[]>(() => {
 })
 
 /** 布局类型（默认 grid） */
-const layout = computed(() => props.config.layout || RelatedPageLayout.GRID)
+const layout = computed(() => normalizeRelatedPageConfig(props.config).layout || RelatedPageLayout.GRID)
 
 /** 栅格间距（默认 16） */
-const gutter = computed(() => props.config.gutter ?? 16)
+const gutter = computed(() => normalizeRelatedPageConfig(props.config).gutter ?? 16)
 
 /**
  * 解析 section.span 为 el-col 绑定属性。
@@ -198,7 +211,12 @@ async function loadPageConfig(section: RelatedPageSectionConfig): Promise<void> 
   if (!section.pageCode) {
     return
   }
-  if (pageConfigCache.value[section.id]) {
+  if (pageConfigCache.value[section.pageCode]) {
+    return
+  }
+  if (props.previewConfigs[section.pageCode]) {
+    pageConfigCache.value = { ...pageConfigCache.value, [section.pageCode]: props.previewConfigs[section.pageCode] }
+    emit('page-loaded', section, props.previewConfigs[section.pageCode])
     return
   }
   loadingMap.value[section.id] = true
@@ -206,18 +224,35 @@ async function loadPageConfig(section: RelatedPageSectionConfig): Promise<void> 
   try {
     let cfg: unknown = null
     if (section.type === SectionType.FORM) {
-      const res = await getFormByCode(section.pageCode)
-      cfg = JSON.parse(res.formConfig) as FormConfig
+      let res: LowCodeFormConfig | null = await getFormByCode(section.pageCode)
+      if (!res && props.allowDraft) {
+        const page = await listForms({ page: 1, size: 1, code: section.pageCode })
+        res = page.records.find((item) => item.code === section.pageCode) ?? null
+      }
+      const raw = res?.formConfig
+      if (raw && typeof raw === 'string' && raw.trim()) cfg = JSON.parse(raw) as FormConfig
     } else if (section.type === SectionType.LIST) {
-      const res = await getListByCode(section.pageCode)
-      cfg = JSON.parse(res.listConfig) as ListConfig
+      let res: LowCodeListConfig | null = await getListByCode(section.pageCode)
+      if (!res && props.allowDraft) {
+        const page = await listLists({ page: 1, size: 1, code: section.pageCode })
+        res = page.records.find((item) => item.code === section.pageCode) ?? null
+      }
+      const raw = res?.listConfig
+      if (raw && typeof raw === 'string' && raw.trim()) cfg = JSON.parse(raw) as ListConfig
     } else if (section.type === SectionType.TAB) {
-      const res = await getTabByCode(section.pageCode)
-      cfg = JSON.parse(res.tabConfig) as TabConfig
+      let res: LowCodeTabConfig | null = await getTabByCode(section.pageCode)
+      if (!res && props.allowDraft) {
+        const page = await listTabs({ page: 1, size: 1, code: section.pageCode })
+        res = page.records.find((item) => item.code === section.pageCode) ?? null
+      }
+      const raw = res?.tabConfig
+      if (raw && typeof raw === 'string' && raw.trim()) cfg = JSON.parse(raw) as TabConfig
     }
     if (cfg) {
-      pageConfigCache.value[section.id] = cfg
+      pageConfigCache.value = { ...pageConfigCache.value, [section.pageCode]: cfg }
       emit('page-loaded', section, cfg)
+    } else {
+      errorMap.value[section.id] = '引用的页面配置为空或不存在'
     }
   } catch (e) {
     errorMap.value[section.id] = (e as Error).message || '加载失败'
@@ -300,22 +335,23 @@ function handleCustomNavigate(section: RelatedPageSectionConfig) {
 
             <!-- 表单 -->
             <LowCodeFormRenderer
-              v-else-if="section.type === 'form' && pageConfigCache[section.id]"
-              :config="pageConfigCache[section.id] as FormConfig"
+              v-else-if="section.type === 'form' && pageConfigCache[section.pageCode ?? '']"
+              :config="pageConfigCache[section.pageCode ?? ''] as FormConfig"
               :model-value="resolveProps(section)"
             />
 
             <!-- 列表 -->
             <LowCodeListRenderer
-              v-else-if="section.type === 'list' && pageConfigCache[section.id]"
-              :config="pageConfigCache[section.id] as ListConfig"
+              v-else-if="section.type === 'list' && pageConfigCache[section.pageCode ?? '']"
+              :config="pageConfigCache[section.pageCode ?? ''] as ListConfig"
               :auto-fetch="true"
             />
 
             <!-- 标签页 -->
             <LowCodeTabRenderer
-              v-else-if="section.type === 'tab' && pageConfigCache[section.id]"
-              :config="pageConfigCache[section.id] as TabConfig"
+              v-else-if="section.type === 'tab' && pageConfigCache[section.pageCode ?? '']"
+              :config="pageConfigCache[section.pageCode ?? ''] as TabConfig"
+              :allow-draft="allowDraft"
               :context-data="resolveProps(section)"
             />
 
@@ -362,18 +398,19 @@ function handleCustomNavigate(section: RelatedPageSectionConfig) {
             <el-alert :title="`加载失败：${errorMap[section.id]}`" type="error" :closable="false" />
           </div>
           <LowCodeFormRenderer
-            v-else-if="section.type === 'form' && pageConfigCache[section.id]"
-            :config="pageConfigCache[section.id] as FormConfig"
+            v-else-if="section.type === 'form' && pageConfigCache[section.pageCode ?? '']"
+            :config="pageConfigCache[section.pageCode ?? ''] as FormConfig"
             :model-value="resolveProps(section)"
           />
           <LowCodeListRenderer
-            v-else-if="section.type === 'list' && pageConfigCache[section.id]"
-            :config="pageConfigCache[section.id] as ListConfig"
+            v-else-if="section.type === 'list' && pageConfigCache[section.pageCode ?? '']"
+            :config="pageConfigCache[section.pageCode ?? ''] as ListConfig"
             :auto-fetch="true"
           />
           <LowCodeTabRenderer
-            v-else-if="section.type === 'tab' && pageConfigCache[section.id]"
-            :config="pageConfigCache[section.id] as TabConfig"
+            v-else-if="section.type === 'tab' && pageConfigCache[section.pageCode ?? '']"
+            :config="pageConfigCache[section.pageCode ?? ''] as TabConfig"
+            :allow-draft="allowDraft"
             :context-data="resolveProps(section)"
           />
           <div v-else-if="section.type === 'custom'" class="custom-section">
@@ -412,18 +449,19 @@ function handleCustomNavigate(section: RelatedPageSectionConfig) {
             <el-alert :title="`加载失败：${errorMap[section.id]}`" type="error" :closable="false" />
           </div>
           <LowCodeFormRenderer
-            v-else-if="section.type === 'form' && pageConfigCache[section.id]"
-            :config="pageConfigCache[section.id] as FormConfig"
+            v-else-if="section.type === 'form' && pageConfigCache[section.pageCode ?? '']"
+            :config="pageConfigCache[section.pageCode ?? ''] as FormConfig"
             :model-value="resolveProps(section)"
           />
           <LowCodeListRenderer
-            v-else-if="section.type === 'list' && pageConfigCache[section.id]"
-            :config="pageConfigCache[section.id] as ListConfig"
+            v-else-if="section.type === 'list' && pageConfigCache[section.pageCode ?? '']"
+            :config="pageConfigCache[section.pageCode ?? ''] as ListConfig"
             :auto-fetch="true"
           />
           <LowCodeTabRenderer
-            v-else-if="section.type === 'tab' && pageConfigCache[section.id]"
-            :config="pageConfigCache[section.id] as TabConfig"
+            v-else-if="section.type === 'tab' && pageConfigCache[section.pageCode ?? '']"
+            :config="pageConfigCache[section.pageCode ?? ''] as TabConfig"
+            :allow-draft="allowDraft"
             :context-data="resolveProps(section)"
           />
           <div v-else-if="section.type === 'custom'" class="custom-section">

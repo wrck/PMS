@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Aviator 沙箱执行器（借鉴 {@code GroovySandboxExecutor} 白名单思路）。
@@ -37,6 +38,16 @@ import java.util.Map;
 @Slf4j
 @Component
 public class AviatorSandboxExecutor {
+
+    /**
+     * Aviator 把未绑定的类名当作普通变量处理，单纯禁用 NewInstance 时
+     * {@code Runtime.getRuntime()} 可能只返回 null 而非拒绝执行，因此在编译前
+     * 显式阻断 Java 类型、反射和类加载入口。
+     */
+    private static final Pattern FORBIDDEN_REFERENCE = Pattern.compile(
+            "(?i)(^|[^a-z0-9_])(?:java|javax|jdk|sun|runtime|system|class|classloader|"
+                    + "processbuilder|thread|reflect|forname|getclass|getclassloader|loadclass)"
+                    + "(?=$|[^a-z0-9_])");
 
     /** 独立的 Aviator 求值器实例（非全局单例） */
     private final AviatorEvaluatorInstance instance;
@@ -82,6 +93,12 @@ public class AviatorSandboxExecutor {
      *         调用了被移除的系统函数（如 {@code sysdate()}）
      */
     public Object execute(String expression, Map<String, Object> env) {
+        if (expression == null || expression.isBlank()) {
+            throw new IllegalArgumentException("规则表达式不能为空");
+        }
+        if (FORBIDDEN_REFERENCE.matcher(expression).find()) {
+            throw new SecurityException("规则表达式包含禁止访问的 Java/反射能力");
+        }
         return this.instance.execute(expression, env);
     }
 }

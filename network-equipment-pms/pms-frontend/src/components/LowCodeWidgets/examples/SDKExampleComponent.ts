@@ -17,7 +17,7 @@
  */
 import { defineComponent, h, type PropType } from 'vue'
 import { defineLowCodeComponent } from '@/sdk'
-import type { LowCodeProps, LowCodeEvent } from '@/sdk'
+import type { LowCodeEvent } from '@/sdk'
 
 /**
  * 组件 props 类型定义（强类型，编译期检查）。
@@ -68,7 +68,7 @@ const ProgressIndicator = defineComponent({
     },
     showLabel: { type: Boolean, default: true },
     height: { type: Number, default: 12 }
-  } as unknown as LowCodeProps,
+  },
   emits: ['update:modelValue', 'change'] as Array<ProgressIndicatorEmits>,
   setup(props) {
     const clamp = (v: number) => Math.max(0, Math.min(100, v))

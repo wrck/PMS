@@ -25,6 +25,7 @@ import {
   saveConnector,
   type ConnectorConfig,
   type ConnectorType,
+  type AuthType,
   type LowCodeConnector,
   type PaginationConfig,
   type ResponseMapping,
@@ -276,8 +277,8 @@ function handleBasicTypeChange(val: ConnectorType) {
 // 计算属性代理（用于 v-model:sync 到子组件的 update 事件）
 const configProxy = {
   // Step 2 (Auth/DataSource)
-  authType: computed<ConnectorConfig['authType']>({
-    get: () => config.authType,
+  authType: computed<AuthType>({
+    get: () => config.authType ?? 'NONE',
     set: (v) => (config.authType = v)
   }),
   username: computed<string>({
@@ -403,7 +404,7 @@ import { onMounted } from 'vue'
           :key="s.title"
           :title="s.title"
           :description="s.description"
-          @click.native="goToStep(idx)"
+          @click="goToStep(idx)"
         />
       </el-steps>
 

@@ -127,7 +127,7 @@ const registryComponents = ref<ComponentMeta[]>([])
  * <p>基础 5 组保留不动；registry 组件按 category 分组，在基础组之后追加。
  * registry 组件统一标记 isRegistry=true、type='custom'，拖入画布时写入 componentName。</p>
  */
-const componentGroups = computed<Array<{ title: string; items: ComponentDef[] }>(() => {
+const componentGroups = computed((): Array<{ title: string; items: ComponentDef[] }> => {
   const groups = baseComponentGroups.map((g) => ({ ...g, items: [...g.items] }))
   if (registryComponents.value.length === 0) return groups
   // 按 category 分组
@@ -548,10 +548,17 @@ function parseFormConfigFromStr() {
     const parsed = JSON.parse(metaForm.formConfig) as FormConfig
     formConfig.title = parsed.title ?? ''
     formConfig.description = parsed.description ?? ''
-    formConfig.labelWidth = parsed.labelWidth ?? 100
+    const parsedLabelWidth =
+      typeof parsed.labelWidth === 'string' ? Number.parseInt(parsed.labelWidth, 10) : parsed.labelWidth
+    formConfig.labelWidth =
+      typeof parsedLabelWidth === 'number' && Number.isFinite(parsedLabelWidth) ? parsedLabelWidth : 100
     formConfig.labelPosition = parsed.labelPosition ?? 'right'
     formConfig.size = parsed.size ?? 'default'
-    formConfig.fields = parsed.fields || []
+    formConfig.fields = (parsed.fields || []).map((field) => ({
+      ...field,
+      props: field.props || {},
+      events: field.events || {}
+    }))
     formConfig.layout = parsed.layout || { type: LayoutType.GRID, gutter: 16 }
     // 重置字段计数器
     fieldSeq = 0

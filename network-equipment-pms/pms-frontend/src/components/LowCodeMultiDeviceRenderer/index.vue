@@ -105,7 +105,7 @@
  * /&gt;
  * </pre>
  */
-import { ref, computed, onMounted, onBeforeUnmount, watch, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, defineAsyncComponent, type Component } from 'vue'
 import LowCodeFormRenderer from '@/components/LowCodeFormRenderer/index.vue'
 import {
   getDeviceByWidth,
@@ -131,7 +131,7 @@ interface Props {
   /** 是否禁用 */
   disabled?: boolean
   /** 自定义组件注册表 */
-  componentRegistry?: Record<string, unknown>
+  componentRegistry?: Record<string, Component>
   /** 是否显示设备切换器（调试/预览用） */
   showDeviceSwitcher?: boolean
   /** 强制设备类型（不传则自动识别） */

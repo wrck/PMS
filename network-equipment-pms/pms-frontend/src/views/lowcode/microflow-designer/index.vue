@@ -16,7 +16,7 @@
  * 执行结果不含 executionId，故执行后通过 getRecentExecutionLogs 取最新轨迹。</p>
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
-import { Graph } from '@antv/x6'
+import { Graph, type NodeMetadata } from '@antv/x6'
 import { register } from '@antv/x6-vue-shape'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -170,22 +170,25 @@ function buildOutPortGroup() {
  * 带文字标签的输出端口组（CONDITION 真/假、LOOP 循环/退出）。
  * 通过 markup 同时渲染圆点与文字，使分支语义在画布上可视化。
  */
-function buildLabeledOutPortGroup(label: string, color: string) {
+function buildLabeledOutPortGroup(label: string, color: string, dy: number = 0) {
   return {
-    position: 'right' as const,
+    position: {
+      name: 'right' as const,
+      args: { dy }
+    },
     markup: [
-      { tagName: 'circle', selector: 'circle' },
-      { tagName: 'text', selector: 'text' }
+      { tagName: 'circle', selector: 'portBody' },
+      { tagName: 'text', selector: 'portLabel' }
     ],
     attrs: {
-      circle: { r: 5, magnet: true, stroke: color, fill: color, strokeWidth: 1 },
-      text: {
+      portBody: { r: 6, magnet: true, stroke: color, fill: '#fff', strokeWidth: 2 },
+      portLabel: {
         text: label,
         fill: color,
         fontSize: 11,
-        refX: 8,
-        textAnchor: 'start',
-        textVerticalAnchor: 'middle'
+        ref: 'portBody',
+        refX: -8,
+        textAnchor: 'end'
       }
     }
   }
@@ -203,7 +206,7 @@ function buildLabeledOutPortGroup(label: string, color: string) {
  * <p>端口 ID 规范：`${nodeId}-in` / `-true` / `-false` / `-body` / `-exit` / `-out`，
  * 便于 renderGraph 按 sourcePort 推断连线语义。CONDITION/LOOP 的 config 跳转字段仍保留（后端用）。</p>
  */
-function nodeAddConfig(node: MicroflowNode) {
+function nodeAddConfig(node: MicroflowNode): NodeMetadata {
   const base = {
     shape: MICROFLOW_NODE_SHAPE,
     id: node.id,
@@ -223,8 +226,8 @@ function nodeAddConfig(node: MicroflowNode) {
       ports: {
         groups: {
           in: buildInPortGroup(),
-          outTrue: buildLabeledOutPortGroup('真', '#67c23a'),
-          outFalse: buildLabeledOutPortGroup('假', '#f56c6c')
+          outTrue: buildLabeledOutPortGroup('真', '#67c23a', -15),
+          outFalse: buildLabeledOutPortGroup('假', '#f56c6c', 15)
         },
         items: [
           { id: `${node.id}-in`, group: 'in' },
@@ -240,8 +243,8 @@ function nodeAddConfig(node: MicroflowNode) {
       ports: {
         groups: {
           in: buildInPortGroup(),
-          outBody: buildLabeledOutPortGroup('循环', '#409eff'),
-          outExit: buildLabeledOutPortGroup('退出', '#909399')
+          outBody: buildLabeledOutPortGroup('循环体', '#67c23a', -15),
+          outExit: buildLabeledOutPortGroup('退出', '#f56c6c', 15)
         },
         items: [
           { id: `${node.id}-in`, group: 'in' },

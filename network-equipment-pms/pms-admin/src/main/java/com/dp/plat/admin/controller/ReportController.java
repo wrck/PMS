@@ -202,7 +202,7 @@ public class ReportController {
                 .collect(Collectors.toMap(AssetModel::getId, AssetModel::getStandardPrice, (a, b) -> a));
         BigDecimal totalValue = assets.stream()
                 .filter(a -> a.getModelId() != null && priceByModelId.containsKey(a.getModelId()))
-                .map(priceByModelId::get)
+                .map(a -> priceByModelId.get(a.getModelId()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         long total = assets.size();

@@ -1,7 +1,7 @@
 package com.dp.plat.project.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.dp.plat.project.dao.ProjectMemberMapper;
+import com.dp.plat.project.mapper.ProjectMemberMapper;
 import com.dp.plat.project.entity.ProjectMember;
 import com.dp.plat.project.service.IProjectMemberService;
 import lombok.RequiredArgsConstructor;

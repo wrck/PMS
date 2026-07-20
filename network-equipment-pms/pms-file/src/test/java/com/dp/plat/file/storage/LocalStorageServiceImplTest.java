@@ -96,10 +96,10 @@ class LocalStorageServiceImplTest {
         String storagePath = storageService.upload(
                 new ByteArrayInputStream(content), "file.bin", content.length, "application/octet-stream");
 
-        InputStream result = storageService.download(storagePath);
-
-        assertNotNull(result);
-        assertArrayEquals(content, result.readAllBytes());
+        try (InputStream result = storageService.download(storagePath)) {
+            assertNotNull(result);
+            assertArrayEquals(content, result.readAllBytes());
+        }
     }
 
     @Test

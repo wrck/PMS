@@ -37,6 +37,10 @@ const loading = ref(false)
 const tableData = ref<Project[]>([])
 const total = ref(0)
 
+function progressStatus(progress: number | string | undefined): '' | 'success' {
+  return Number(progress ?? 0) >= 100 ? 'success' : ''
+}
+
 const query = reactive<{ page: number; size: number; projectName?: string; status?: string }>({
   page: 1,
   size: 10,
@@ -363,7 +367,7 @@ onMounted(loadData)
               <el-progress
                 :percentage="Number(row.progress ?? 0)"
                 :stroke-width="10"
-                :status="(Number(row.progress ?? 0) >= 100 ? 'success' : '') as '' | 'success'"
+                :status="progressStatus(row.progress)"
               />
             </template>
           </el-table-column>

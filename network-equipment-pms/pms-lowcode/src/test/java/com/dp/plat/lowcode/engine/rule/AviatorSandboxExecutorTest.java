@@ -40,7 +40,7 @@ class AviatorSandboxExecutorTest {
         env.put("a", 10);
         env.put("b", 20);
         Object result = sandbox.execute("a + b", env);
-        assertThat(result).isEqualTo(30);
+        assertThat(result).isEqualTo(30L);
     }
 
     @Test

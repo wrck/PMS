@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -106,7 +106,7 @@ public class ProjectController {
 
     @Operation(summary = "创建子项目")
     @PostMapping("/{id}/subproject")
-    @RequiresPermissions("project:subproject:manage")
+    @PreAuthorize("hasAuthority('project:subproject:manage')")
     @OperLog(title = "项目管理-创建子项目", businessType = 1)
     @RateLimit(key = "#userId", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     @Idempotent
@@ -117,7 +117,7 @@ public class ProjectController {
 
     @Operation(summary = "关闭主项目（含子项目校验）")
     @PostMapping("/{id}/close")
-    @RequiresPermissions("project:close")
+    @PreAuthorize("hasAuthority('project:close')")
     @OperLog(title = "项目管理-关闭项目", businessType = 2)
     @RateLimit(key = "#userId", capacity = 5, refillTokens = 5, refillPeriodSeconds = 60)
     public Result<Project> close(@PathVariable Long id) {
@@ -126,7 +126,7 @@ public class ProjectController {
 
     @Operation(summary = "取消项目")
     @PostMapping("/{id}/cancel")
-    @RequiresPermissions("project:close")
+    @PreAuthorize("hasAuthority('project:close')")
     @OperLog(title = "项目管理-取消项目", businessType = 2)
     @RateLimit(key = "#userId", capacity = 5, refillTokens = 5, refillPeriodSeconds = 60)
     public Result<Project> cancel(@PathVariable Long id) {

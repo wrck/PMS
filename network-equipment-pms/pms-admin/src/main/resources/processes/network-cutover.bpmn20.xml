@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             targetNamespace="http://dp.plat/pms/lowcode">
+  <process id="demo_network_cutover" name="网络割接流程" isExecutable="true">
+    <startEvent id="cutover_apply" name="提交割接申请"/>
+    <sequenceFlow id="flow_apply_risk" sourceRef="cutover_apply" targetRef="risk_review"/>
+    <userTask id="risk_review" name="风险与方案审核" flowable:candidateGroups="network_manager"/>
+    <sequenceFlow id="flow_risk_gateway" sourceRef="risk_review" targetRef="risk_gateway"/>
+    <exclusiveGateway id="risk_gateway" name="审核结果"/>
+    <sequenceFlow id="flow_reject" sourceRef="risk_gateway" targetRef="rejected_end">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == false}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow_approve" sourceRef="risk_gateway" targetRef="command_confirm">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == true}]]></conditionExpression>
+    </sequenceFlow>
+    <userTask id="command_confirm" name="割接窗口与指挥确认" flowable:candidateGroups="change_manager"/>
+    <sequenceFlow id="flow_command_execute" sourceRef="command_confirm" targetRef="cutover_execute"/>
+    <userTask id="cutover_execute" name="实施割接" flowable:candidateGroups="network_engineer"/>
+    <sequenceFlow id="flow_execute_verify" sourceRef="cutover_execute" targetRef="business_verify"/>
+    <userTask id="business_verify" name="业务验证" flowable:candidateGroups="business_owner"/>
+    <sequenceFlow id="flow_verify_gateway" sourceRef="business_verify" targetRef="verify_gateway"/>
+    <exclusiveGateway id="verify_gateway" name="验证结果"/>
+    <sequenceFlow id="flow_verify_success" sourceRef="verify_gateway" targetRef="archive_task">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${verificationPassed == true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow_verify_rollback" sourceRef="verify_gateway" targetRef="rollback_task">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${verificationPassed == false}]]></conditionExpression>
+    </sequenceFlow>
+    <userTask id="rollback_task" name="执行回退" flowable:candidateGroups="network_engineer"/>
+    <sequenceFlow id="flow_rollback_archive" sourceRef="rollback_task" targetRef="archive_task"/>
+    <userTask id="archive_task" name="复盘与归档" flowable:candidateGroups="change_manager"/>
+    <sequenceFlow id="flow_archive_end" sourceRef="archive_task" targetRef="completed_end"/>
+    <endEvent id="completed_end" name="割接完成"/>
+    <endEvent id="rejected_end" name="申请驳回"/>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_demo_network_cutover">
+    <bpmndi:BPMNPlane id="BPMNPlane_demo_network_cutover" bpmnElement="demo_network_cutover">
+      <bpmndi:BPMNShape id="cutover_apply_di" bpmnElement="cutover_apply"><dc:Bounds x="80" y="170" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="risk_review_di" bpmnElement="risk_review"><dc:Bounds x="160" y="148" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="risk_gateway_di" bpmnElement="risk_gateway" isMarkerVisible="true"><dc:Bounds x="330" y="163" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="rejected_end_di" bpmnElement="rejected_end"><dc:Bounds x="337" y="300" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="command_confirm_di" bpmnElement="command_confirm"><dc:Bounds x="430" y="148" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="cutover_execute_di" bpmnElement="cutover_execute"><dc:Bounds x="600" y="148" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="business_verify_di" bpmnElement="business_verify"><dc:Bounds x="770" y="148" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="verify_gateway_di" bpmnElement="verify_gateway" isMarkerVisible="true"><dc:Bounds x="940" y="163" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="rollback_task_di" bpmnElement="rollback_task"><dc:Bounds x="915" y="300" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="archive_task_di" bpmnElement="archive_task"><dc:Bounds x="1060" y="148" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="completed_end_di" bpmnElement="completed_end"><dc:Bounds x="1230" y="170" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_apply_risk_di" bpmnElement="flow_apply_risk"><di:waypoint x="116" y="188"/><di:waypoint x="160" y="188"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_risk_gateway_di" bpmnElement="flow_risk_gateway"><di:waypoint x="280" y="188"/><di:waypoint x="330" y="188"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_approve_di" bpmnElement="flow_approve"><di:waypoint x="380" y="188"/><di:waypoint x="430" y="188"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_reject_di" bpmnElement="flow_reject"><di:waypoint x="355" y="213"/><di:waypoint x="355" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_command_execute_di" bpmnElement="flow_command_execute"><di:waypoint x="550" y="188"/><di:waypoint x="600" y="188"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_execute_verify_di" bpmnElement="flow_execute_verify"><di:waypoint x="720" y="188"/><di:waypoint x="770" y="188"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_verify_gateway_di" bpmnElement="flow_verify_gateway"><di:waypoint x="890" y="188"/><di:waypoint x="940" y="188"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_verify_success_di" bpmnElement="flow_verify_success"><di:waypoint x="990" y="188"/><di:waypoint x="1060" y="188"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_verify_rollback_di" bpmnElement="flow_verify_rollback"><di:waypoint x="965" y="213"/><di:waypoint x="975" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_rollback_archive_di" bpmnElement="flow_rollback_archive"><di:waypoint x="1035" y="340"/><di:waypoint x="1120" y="340"/><di:waypoint x="1120" y="228"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_archive_end_di" bpmnElement="flow_archive_end"><di:waypoint x="1180" y="188"/><di:waypoint x="1230" y="188"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

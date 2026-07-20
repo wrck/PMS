@@ -1,0 +1,33 @@
+{
+  "name": "PMS 低代码平台",
+  "short_name": "PMS",
+  "description": "网络设备运维管理系统 — 低代码应用开发平台",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#409eff",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "低代码设计器",
+      "short_name": "设计器",
+      "url": "/lowcode/form-designer"
+    },
+    {
+      "name": "动态数据",
+      "short_name": "数据",
+      "url": "/lowcode/data"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"]
+}

@@ -276,7 +276,7 @@ onMounted(() => {
             <div class="actions">
               <el-button size="small" @click="openDetail(t)">详情</el-button>
               <el-button size="small" type="primary" plain @click="quickDownload(t)">下载</el-button>
-              <el-dropdown trigger="click" @command="(cmd) => handleManageCommand(cmd, t)">
+              <el-dropdown trigger="click" @command="(cmd: string) => handleManageCommand(cmd, t)">
                 <el-button size="small">管理<el-icon class="el-icon--right"><ArrowDown /></el-icon></el-button>
                 <template #dropdown>
                   <el-dropdown-menu>

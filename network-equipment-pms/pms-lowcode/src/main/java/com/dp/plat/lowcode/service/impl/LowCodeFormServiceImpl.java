@@ -45,7 +45,7 @@ public class LowCodeFormServiceImpl
         if (!StringUtils.hasText(code)) {
             return null;
         }
-        return this.getOne(new LambdaQueryWrapper<LowCodeForm>()
+        return baseMapper.selectOne(new LambdaQueryWrapper<LowCodeForm>()
                 .eq(LowCodeForm::getCode, code)
                 .eq(LowCodeForm::getStatus, STATUS_PUBLISHED)
                 .last("LIMIT 1"));
@@ -125,7 +125,7 @@ public class LowCodeFormServiceImpl
         if (existing == null) {
             throw new BusinessException("表单配置不存在");
         }
-        this.removeById(id);
+        baseMapper.deleteById(id);
     }
 
     @Override
@@ -164,7 +164,7 @@ public class LowCodeFormServiceImpl
         if (!StringUtils.hasText(code)) {
             throw new BusinessException("表单编码不能为空");
         }
-        LowCodeForm form = this.getOne(new LambdaQueryWrapper<LowCodeForm>()
+        LowCodeForm form = baseMapper.selectOne(new LambdaQueryWrapper<LowCodeForm>()
                 .eq(LowCodeForm::getCode, code)
                 .last("LIMIT 1"));
         if (form == null) {

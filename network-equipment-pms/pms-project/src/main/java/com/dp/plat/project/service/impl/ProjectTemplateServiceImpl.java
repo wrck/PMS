@@ -45,7 +45,7 @@ public class ProjectTemplateServiceImpl implements IProjectTemplateService {
     private final ProjectTemplateVersionMapper versionMapper;
     private final com.dp.plat.project.mapper.ProjectMapper projectMapper;
     private final com.dp.plat.project.dao.ProjectPhaseMapper phaseMapper;
-    private final com.dp.plat.project.dao.ProjectMemberMapper memberMapper;
+    private final com.dp.plat.project.mapper.ProjectMemberMapper memberMapper;
     private final com.dp.plat.project.dao.ProjectConfigMapper configMapper;
     private final MilestoneMapper milestoneMapper;
 

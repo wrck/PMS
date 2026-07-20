@@ -72,8 +72,13 @@ public class TokenRefreshLock {
         UNLOCK_SCRIPT.setResultType(Long.class);
     }
 
-    /** ThreadLocal 保存当前线程持有的锁 UUID，用于解锁时比对。 */
-    private static final ThreadLocal<String> LOCK_HOLDER = new ThreadLocal<>();
+    /**
+     * 保存当前锁实例在本线程持有的锁信息。
+     *
+     * <p>不能声明为 {@code static}：多个 {@link TokenRefreshLock} 实例（尤其是测试上下文
+     * 重建时）共享同一个 ThreadLocal 会把上一实例的持锁状态泄漏到下一实例。</p>
+     */
+    private final ThreadLocal<LockOwnership> lockHolder = new ThreadLocal<>();
 
     private final StringRedisTemplate redisTemplate;
 
@@ -100,11 +105,15 @@ public class TokenRefreshLock {
      */
     public boolean tryLock(String systemName) {
         String lockKey = LOCK_KEY_PREFIX + systemName;
+        if (lockHolder.get() != null) {
+            // 非可重入锁：同一实例、同一线程已持有任意系统的刷新锁时直接失败。
+            return false;
+        }
         String lockValue = UUID.randomUUID().toString();
         Boolean acquired = redisTemplate.opsForValue()
                 .setIfAbsent(lockKey, lockValue, Duration.ofSeconds(LOCK_TTL_SECONDS));
         if (Boolean.TRUE.equals(acquired)) {
-            LOCK_HOLDER.set(lockValue);
+            lockHolder.set(new LockOwnership(lockKey, lockValue));
             return true;
         }
         return false;
@@ -123,13 +132,20 @@ public class TokenRefreshLock {
      */
     public void unlock(String systemName) {
         String lockKey = LOCK_KEY_PREFIX + systemName;
-        String lockValue = LOCK_HOLDER.get();
-        if (lockValue == null) {
+        LockOwnership ownership = lockHolder.get();
+        if (ownership == null) {
             // 当前线程未持有锁（tryLock 返回 false 或已解锁），直接返回
             return;
         }
+        if (!ownership.lockKey().equals(lockKey)) {
+            // 调用方传入了其他系统名，不释放也不清理真正持有的锁。
+            log.warn("忽略不匹配的 OAuth token 刷新锁释放请求: requested={}, held={}",
+                    lockKey, ownership.lockKey());
+            return;
+        }
         try {
-            Long result = redisTemplate.execute(UNLOCK_SCRIPT, List.of(lockKey), lockValue);
+            Long result = redisTemplate.execute(
+                    UNLOCK_SCRIPT, List.of(lockKey), ownership.lockValue());
             if (result != null && result == 0) {
                 // 锁已过期被其他线程获取，或已被自动释放，无需处理
                 log.debug("OAuth 刷新锁已非本线程持有，跳过删除: system={}", systemName);
@@ -139,7 +155,11 @@ public class TokenRefreshLock {
             log.warn("释放 OAuth token 刷新锁失败（锁将自动过期）: system={}, err={}",
                     systemName, e.getMessage());
         } finally {
-            LOCK_HOLDER.remove();
+            lockHolder.remove();
         }
+    }
+
+    /** 当前线程持有的 Redis 锁键及其唯一持有者值。 */
+    private record LockOwnership(String lockKey, String lockValue) {
     }
 }

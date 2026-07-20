@@ -67,7 +67,7 @@ function nodeSymbol(idx: number): string {
       <div
         v-if="idx < DELIVERABLE_STATUS_ORDER.length - 1"
         class="node-arrow"
-        :class="idx < currentIndex.value ? 'is-passed' : ''"
+        :class="idx < currentIndex ? 'is-passed' : ''"
       >→</div>
     </div>
   </div>

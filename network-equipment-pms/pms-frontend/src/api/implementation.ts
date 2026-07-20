@@ -12,6 +12,8 @@ export type TaskStatus =
   | 'PENDING'
   | 'ACCEPTED'
   | 'IN_PROGRESS'
+  | 'REVIEW'
+  | 'BLOCKED'
   | 'COMPLETED'
   | 'CONFIRMED'
   | 'REJECTED'
@@ -36,6 +38,15 @@ export interface ImplTask {
   description?: string
   remark?: string
   createTime?: string
+  parentTaskId?: number | null
+  taskPath?: string
+  depth?: number
+  priority?: TaskPriority
+  actualHours?: number
+  remainingHours?: number
+  phaseId?: number | null
+  taskWeight?: number
+  version?: number
 }
 
 export interface TaskPageQuery extends PageQuery {
@@ -53,6 +64,7 @@ export interface OemAssignPayload {
   engineerName?: string
   planStartDate?: string
   planEndDate?: string
+  parentTaskId?: number
 }
 
 /** Agent task assignment payload */
@@ -65,11 +77,11 @@ export interface AgentAssignPayload {
   planEndDate?: string
 }
 
-export function assignOemTask(data: OemAssignPayload): Promise<ImplTask> {
+export function assignOemTask(data: OemAssignPayload | ImplTask): Promise<ImplTask> {
   return post<ImplTask>('/api/implementation/task/oem/assign', data)
 }
 
-export function assignAgentTask(data: AgentAssignPayload): Promise<ImplTask> {
+export function assignAgentTask(data: AgentAssignPayload | ImplTask): Promise<ImplTask> {
   return post<ImplTask>('/api/implementation/task/agent/assign', data)
 }
 
@@ -342,4 +354,3 @@ export function listTasks(params: TaskPageQuery): Promise<PageResult<ImplTaskNod
 // 任务评论 API：见 ./task-comment.ts
 // 任务活动记录 API：见 ./task-activity.ts
 // 任务检查项 API：见 ./task-checklist.ts
-

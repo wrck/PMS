@@ -37,9 +37,9 @@ class BusinessMetricsTest {
         businessMetrics.recordProjectCreated("SECURITY");
 
         Counter networkCounter = registry.find("pms_project_created_total")
-                .tag("type", "NETWORK_DEVICE").counter().orElse(null);
+                .tag("type", "NETWORK_DEVICE").counter();
         Counter securityCounter = registry.find("pms_project_created_total")
-                .tag("type", "SECURITY").counter().orElse(null);
+                .tag("type", "SECURITY").counter();
 
         assertNotNull(networkCounter, "NETWORK_DEVICE 计数器应已注册");
         assertNotNull(securityCounter, "SECURITY 计数器应已注册");
@@ -53,7 +53,7 @@ class BusinessMetricsTest {
         businessMetrics.recordProjectCreated(null);
 
         Counter counter = registry.find("pms_project_created_total")
-                .tag("type", "UNKNOWN").counter().orElse(null);
+                .tag("type", "UNKNOWN").counter();
         assertNotNull(counter, "UNKNOWN 计数器应已注册");
         assertEquals(1.0, counter.count(), 0.001);
     }
@@ -67,9 +67,9 @@ class BusinessMetricsTest {
         businessMetrics.registerAssetStatusGauge("INSTALLED", 3);
 
         Gauge receivedGauge = registry.find("pms_asset_status")
-                .tag("status", "RECEIVED").gauge().orElse(null);
+                .tag("status", "RECEIVED").gauge();
         Gauge installedGauge = registry.find("pms_asset_status")
-                .tag("status", "INSTALLED").gauge().orElse(null);
+                .tag("status", "INSTALLED").gauge();
 
         assertNotNull(receivedGauge, "RECEIVED gauge 应已注册");
         assertNotNull(installedGauge, "INSTALLED gauge 应已注册");
@@ -85,9 +85,9 @@ class BusinessMetricsTest {
         businessMetrics.recordSettlementAmount(500.00, "USD");
 
         DistributionSummary cnySummary = registry.find("pms_settlement_amount")
-                .tag("currency", "CNY").summary().orElse(null);
+                .tag("currency", "CNY").summary();
         DistributionSummary usdSummary = registry.find("pms_settlement_amount")
-                .tag("currency", "USD").summary().orElse(null);
+                .tag("currency", "USD").summary();
 
         assertNotNull(cnySummary, "CNY summary 应已注册");
         assertNotNull(usdSummary, "USD summary 应已注册");
@@ -103,7 +103,7 @@ class BusinessMetricsTest {
         businessMetrics.recordSettlementAmount(100.00, null);
 
         DistributionSummary summary = registry.find("pms_settlement_amount")
-                .tag("currency", "CNY").summary().orElse(null);
+                .tag("currency", "CNY").summary();
         assertNotNull(summary, "CNY summary 应已注册");
         assertEquals(1L, summary.count());
         assertEquals(100.00, summary.totalAmount(), 0.001);

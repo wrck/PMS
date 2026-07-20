@@ -3,7 +3,9 @@ package com.dp.plat.lowcode.engine;
 import com.dp.plat.lowcode.dto.EntityDesignDTO;
 import com.dp.plat.lowcode.entity.LowCodeEntity;
 import com.dp.plat.lowcode.entity.LowCodeField;
+import com.dp.plat.lowcode.engine.trigger.CrudTriggerExecutor;
 import com.dp.plat.lowcode.service.LowCodeEntityService;
+import com.dp.plat.lowcode.service.LowCodeTriggerService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +32,10 @@ class DynamicEntityDataServiceTest {
     private LowCodeEntityService entityService;
     @Mock
     private JdbcTemplate jdbcTemplate;
+    @Mock
+    private LowCodeTriggerService triggerService;
+    @Mock
+    private CrudTriggerExecutor crudTriggerExecutor;
     @InjectMocks
     private DynamicEntityDataService dataService;
 

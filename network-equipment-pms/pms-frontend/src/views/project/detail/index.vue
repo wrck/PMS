@@ -32,6 +32,10 @@ const loading = ref(false)
 const project = ref<Project | null>(null)
 const activeTab = ref('basic')
 
+function progressStatus(progress: number | string | undefined): '' | 'success' {
+  return Number(progress ?? 0) >= 100 ? 'success' : ''
+}
+
 // ===== 状态映射 =====
 const statusOptions: { value: ProjectStatus; label: string; tagType: EpTagType }[] = [
   { value: 'PENDING', label: '待审批', tagType: 'info' },
@@ -482,7 +486,7 @@ onMounted(async () => {
         <el-progress
           :percentage="Number(project?.progress ?? 0)"
           :stroke-width="14"
-          :status="(Number(project?.progress ?? 0) >= 100 ? 'success' : '') as '' | 'success'"
+          :status="progressStatus(project?.progress)"
           style="flex: 1"
         />
       </div>

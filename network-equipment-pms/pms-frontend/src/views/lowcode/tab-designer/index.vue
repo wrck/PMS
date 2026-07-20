@@ -29,6 +29,7 @@ import {
   exportTab,
   getTab,
   importTab,
+  normalizeTabConfig,
   publishTab,
   updateTab,
   type LowCodeTabConfig,
@@ -285,7 +286,7 @@ function parseTabConfigFromStr() {
       tabConfig.tabs = []
       return
     }
-    const parsed = JSON.parse(metaForm.tabConfig) as TabConfig
+    const parsed = normalizeTabConfig(JSON.parse(metaForm.tabConfig) as TabConfig)
     tabConfig.title = parsed.title ?? ''
     tabConfig.description = parsed.description ?? ''
     tabConfig.type = parsed.type ?? TabsType.BORDER_CARD
@@ -842,6 +843,7 @@ onBeforeUnmount(() => {
     >
       <LowCodeTabRenderer
         :config="tabConfig"
+        :allow-draft="true"
         :context-data="{
           row: { id: 1, status: 'IN_PROGRESS', projectId: 'P2025001', warrantyStatus: 'ACTIVE' },
           context: {}

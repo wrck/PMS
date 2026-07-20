@@ -5,7 +5,7 @@ import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.service.IProjectTemplateService;
 import com.dp.plat.project.service.ProjectConfigService;
 import lombok.RequiredArgsConstructor;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -27,7 +27,7 @@ public class ProjectConfigController {
     }
 
     @PutMapping("/{projectId}")
-    @RequiresPermissions("workflow:approval:config")
+    @PreAuthorize("hasAuthority('workflow:approval:config')")
     public Result<Void> update(@PathVariable Long projectId, @RequestBody Map<String, String> configs) {
         // 批量更新项目级配置
         // 实现略：删除旧项目级配置 + 插入新配置

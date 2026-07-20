@@ -19,7 +19,8 @@
           <label>{{ f.label }}</label>
           <component
             :is="getFilterComponent(f)"
-            v-model="filterValues[f.prop]"
+            :model-value="normalizeOptionValue(filterValues[f.prop])"
+            @update:model-value="(value: unknown) => (filterValues[f.prop] = value)"
             :placeholder="f.placeholder || `选择${f.label}`"
             size="large"
             clearable
@@ -29,7 +30,7 @@
                 v-for="opt in f.options"
                 :key="opt.value"
                 :label="opt.label"
-                :value="opt.value"
+                :value="normalizeOptionValue(opt.value)"
               />
             </template>
           </component>
@@ -255,6 +256,18 @@ function getFilterComponent(_filter: ListFilterConfig) {
   // 简化：所有筛选用 select（如有 options）或 input
   if (_filter.options) return ElSelect
   return ElInput
+}
+
+function normalizeOptionValue(
+  value: unknown
+): string | number | boolean | Record<string, unknown> {
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value
+  }
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>
+  }
+  return String(value ?? '')
 }
 
 /** 应用筛选 */

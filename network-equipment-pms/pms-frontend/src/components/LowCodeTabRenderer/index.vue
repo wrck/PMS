@@ -25,11 +25,18 @@ import { ElMessage, type TabsPaneContext } from 'element-plus'
 import {
   TabPageType,
   TabsType,
+  normalizeTabConfig,
   getFormByCode,
   getListByCode,
   getRelatedPageByCode,
+  listForms,
+  listLists,
+  listRelatedPages,
   type FormConfig,
   type ListConfig,
+  type LowCodeFormConfig,
+  type LowCodeListConfig,
+  type LowCodeRelatedPageConfig,
   type RelatedPageConfig,
   type TabConfig,
   type TabItemConfig
@@ -50,10 +57,16 @@ const props = withDefaults(
     modelValue?: string
     /** 上下文数据（用于 props 解析与 visible 表达式求值） */
     contextData?: Record<string, unknown>
+    /** 设计器预览使用的子页面配置（pageCode → config） */
+    previewConfigs?: Record<string, unknown>
+    /** 设计器预览时允许引用尚未发布的草稿配置 */
+    allowDraft?: boolean
   }>(),
   {
     modelValue: '',
-    contextData: () => ({})
+    contextData: () => ({}),
+    previewConfigs: () => ({}),
+    allowDraft: false
   }
 )
 
@@ -92,7 +105,7 @@ const tabsType = computed(() => {
  * 可见标签列表：根据 visible 表达式过滤。
  */
 const visibleTabs = computed<TabItemConfig[]>(() => {
-  return (props.config.tabs || []).filter((tab) => evalVisible(tab))
+  return normalizeTabConfig(props.config).tabs.filter((tab) => evalVisible(tab))
 })
 
 // 监听可见标签变化，确保 activeName 始终有效
@@ -198,7 +211,12 @@ async function loadPageConfig(tab: TabItemConfig): Promise<void> {
   if (!tab.pageCode) {
     return
   }
-  if (pageConfigCache.value[tab.id]) {
+  if (pageConfigCache.value[tab.pageCode]) {
+    return
+  }
+  if (props.previewConfigs[tab.pageCode]) {
+    pageConfigCache.value = { ...pageConfigCache.value, [tab.pageCode]: props.previewConfigs[tab.pageCode] }
+    emit('page-loaded', tab, props.previewConfigs[tab.pageCode])
     return
   }
   loadingMap.value[tab.id] = true
@@ -206,18 +224,35 @@ async function loadPageConfig(tab: TabItemConfig): Promise<void> {
   try {
     let cfg: unknown = null
     if (tab.pageType === TabPageType.FORM) {
-      const res = await getFormByCode(tab.pageCode)
-      cfg = JSON.parse(res.formConfig) as FormConfig
+      let res: LowCodeFormConfig | null = await getFormByCode(tab.pageCode)
+      if (!res && props.allowDraft) {
+        const page = await listForms({ page: 1, size: 1, code: tab.pageCode })
+        res = page.records.find((item) => item.code === tab.pageCode) ?? null
+      }
+      const raw = res?.formConfig
+      if (raw && typeof raw === 'string' && raw.trim()) cfg = JSON.parse(raw) as FormConfig
     } else if (tab.pageType === TabPageType.LIST) {
-      const res = await getListByCode(tab.pageCode)
-      cfg = JSON.parse(res.listConfig) as ListConfig
+      let res: LowCodeListConfig | null = await getListByCode(tab.pageCode)
+      if (!res && props.allowDraft) {
+        const page = await listLists({ page: 1, size: 1, code: tab.pageCode })
+        res = page.records.find((item) => item.code === tab.pageCode) ?? null
+      }
+      const raw = res?.listConfig
+      if (raw && typeof raw === 'string' && raw.trim()) cfg = JSON.parse(raw) as ListConfig
     } else if (tab.pageType === TabPageType.RELATED_PAGE) {
-      const res = await getRelatedPageByCode(tab.pageCode)
-      cfg = JSON.parse(res.relatedConfig) as RelatedPageConfig
+      let res: LowCodeRelatedPageConfig | null = await getRelatedPageByCode(tab.pageCode)
+      if (!res && props.allowDraft) {
+        const page = await listRelatedPages({ page: 1, size: 1, code: tab.pageCode })
+        res = page.records.find((item) => item.code === tab.pageCode) ?? null
+      }
+      const raw = res?.relatedConfig
+      if (raw && typeof raw === 'string' && raw.trim()) cfg = JSON.parse(raw) as RelatedPageConfig
     }
     if (cfg) {
-      pageConfigCache.value[tab.id] = cfg
+      pageConfigCache.value = { ...pageConfigCache.value, [tab.pageCode]: cfg }
       emit('page-loaded', tab, cfg)
+    } else {
+      errorMap.value[tab.id] = '引用的页面配置为空或不存在'
     }
   } catch (e) {
     errorMap.value[tab.id] = (e as Error).message || '加载失败'
@@ -228,16 +263,20 @@ async function loadPageConfig(tab: TabItemConfig): Promise<void> {
 }
 
 /** 当前激活 tab 变化时触发懒加载 */
-watch(activeName, (name) => {
-  const tab = visibleTabs.value.find((t) => t.name === name)
-  if (tab && tab.lazy !== false) {
-    loadPageConfig(tab)
-  }
-  if (tab) {
-    emit('tab-change', tab)
-    emit('update:modelValue', name)
-  }
-})
+watch(
+  activeName,
+  (name) => {
+    const tab = visibleTabs.value.find((t) => t.name === name)
+    if (tab && tab.lazy !== false) {
+      loadPageConfig(tab)
+    }
+    if (tab) {
+      emit('tab-change', tab)
+      emit('update:modelValue', name)
+    }
+  },
+  { immediate: true }
+)
 
 /** 非懒加载的 tab 在初始化时主动加载 */
 watch(
@@ -313,8 +352,8 @@ function handleCustomNavigate(tab: TabItemConfig) {
             <el-alert :title="`加载表单失败：${errorMap[tab.id]}`" type="error" :closable="false" />
           </div>
           <LowCodeFormRenderer
-            v-else-if="pageConfigCache[tab.id]"
-            :config="pageConfigCache[tab.id] as FormConfig"
+            v-else-if="pageConfigCache[tab.pageCode ?? '']"
+            :config="pageConfigCache[tab.pageCode ?? ''] as FormConfig"
             :model-value="resolveProps(tab)"
           />
         </div>
@@ -325,8 +364,8 @@ function handleCustomNavigate(tab: TabItemConfig) {
             <el-alert :title="`加载列表失败：${errorMap[tab.id]}`" type="error" :closable="false" />
           </div>
           <LowCodeListRenderer
-            v-else-if="pageConfigCache[tab.id]"
-            :config="pageConfigCache[tab.id] as ListConfig"
+            v-else-if="pageConfigCache[tab.pageCode ?? '']"
+            :config="pageConfigCache[tab.pageCode ?? ''] as ListConfig"
             :auto-fetch="true"
           />
         </div>
@@ -337,8 +376,9 @@ function handleCustomNavigate(tab: TabItemConfig) {
             <el-alert :title="`加载关联页失败：${errorMap[tab.id]}`" type="error" :closable="false" />
           </div>
           <LowCodeRelatedPageRenderer
-            v-else-if="pageConfigCache[tab.id]"
-            :config="pageConfigCache[tab.id] as RelatedPageConfig"
+            v-else-if="pageConfigCache[tab.pageCode ?? '']"
+            :config="pageConfigCache[tab.pageCode ?? ''] as RelatedPageConfig"
+            :allow-draft="allowDraft"
             :context-data="resolveProps(tab)"
           />
         </div>

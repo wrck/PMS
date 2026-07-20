@@ -107,15 +107,15 @@ function parseDefinition(raw: string): DecisionTable {
   const rows = (obj.rows as Record<string, unknown>[]) || []
   if (rows.length === 0) return result
   // 由首行推导列结构
-  const firstConds = (rows[0].conditions as ConditionColumn[]) || []
+  const firstConds = (rows[0].conditions as Array<Record<string, unknown>>) || []
   result.conditionColumns = firstConds.map((c) => ({
-    field: c.field || '',
-    operator: c.operator || 'EQ'
+    field: (c.field as string) || '',
+    operator: (c.operator as DecisionOperator) || 'EQ'
   }))
   const firstActions = (rows[0].actions as Record<string, unknown>) || {}
   result.actionColumns = Object.keys(firstActions).map((field) => ({ field }))
   result.rows = rows.map((r) => {
-    const conds = (r.conditions as ConditionColumn[]) || []
+    const conds = (r.conditions as Array<Record<string, unknown>>) || []
     const acts = (r.actions as Record<string, unknown>) || {}
     return {
       conditions: result.conditionColumns.map((_, i) => ({ value: conds[i]?.value ?? '' })),

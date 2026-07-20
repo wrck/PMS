@@ -105,6 +105,26 @@ const total = computed(() => (props.data ? props.data.length : innerTotal.value)
 /** 实际使用的 pageSizes */
 const pageSizes = computed(() => props.config.pageSizes ?? [10, 20, 50, 100])
 
+/**
+ * Runtime list configs generated from an entity historically only stored
+ * entityCode. Derive the standard dynamic-data endpoint so those configs are
+ * immediately runnable without duplicating a URL in every saved page.
+ */
+const effectiveSearchApi = computed(() => {
+  if (props.config.searchApi) return props.config.searchApi
+  if (props.config.entityCode) {
+    return `/api/lowcode/data/${encodeURIComponent(props.config.entityCode)}`
+  }
+  return ''
+})
+
+/** Convention-based form target for entity-generated list pages. */
+const effectiveFormCode = computed(() => {
+  if (props.config.formCode) return props.config.formCode
+  if (props.config.entityCode) return `form_${props.config.entityCode}`
+  return ''
+})
+
 // ===================== 筛选表单 =====================
 
 /** 筛选表单数据（按 filter.prop 为 key） */
@@ -154,7 +174,7 @@ watch(
 function handleSearch() {
   currentPage.value = 1
   emit('filter-change', { ...filterForm })
-  if (props.autoFetch && props.config.searchApi) {
+  if (props.autoFetch && effectiveSearchApi.value) {
     fetchData()
   }
 }
@@ -372,7 +392,9 @@ function renderWithFormatter(row: Record<string, unknown>, col: ListColumnConfig
 
 /** 链接跳转：替换 {prop} 占位符 */
 function resolveLinkUrl(url: string, row: Record<string, unknown>): string {
-  return url.replace(/\{(\w+)\}/g, (_m, key: string) => String(row[key] ?? ''))
+  return url
+    .replace(/\{(\w+)\}/g, (_m, key: string) => String(row[key] ?? ''))
+    .replace(/&amp;/g, '&')
 }
 
 /** 处理链接点击 */
@@ -405,7 +427,7 @@ function getVisibleRowOps(row: Record<string, unknown>): ListOperationConfig[] {
     if (!op.visible) return true
     try {
       // 简单表达式求值：以 row 为上下文
-      // eslint-disable-next-line no-new-function
+      // eslint-disable-next-line no-new-func
       const fn = new Function('row', `return (${op.visible})`)
       return !!fn(row)
     } catch {
@@ -415,7 +437,26 @@ function getVisibleRowOps(row: Record<string, unknown>): ListOperationConfig[] {
 }
 
 /** 行操作点击处理 */
-async function handleRowClick(op: ListOperationConfig, row: Record<string, unknown>) {
+async function handleRowClick(
+  op: ListOperationConfig,
+  row: Record<string, unknown>,
+  index: number,
+  event: MouseEvent
+) {
+  let actualRow = row
+  if (!row || Object.keys(row).length === 0) {
+    const tr = (event.target as HTMLElement).closest('tr')
+    if (tr) {
+      const allRows = Array.from(document.querySelectorAll('.el-table__body-wrapper tbody tr'))
+      const realIndex = allRows.indexOf(tr)
+      const sourceData = props.data ?? innerData.value
+      if (realIndex >= 0 && sourceData?.[realIndex]) actualRow = sourceData[realIndex]
+    }
+    if ((!actualRow || Object.keys(actualRow).length === 0) && index >= 0) {
+      const sourceData = props.data ?? innerData.value
+      if (sourceData?.[index]) actualRow = sourceData[index]
+    }
+  }
   // 二次确认
   if (op.confirm) {
     try {
@@ -428,15 +469,23 @@ async function handleRowClick(op: ListOperationConfig, row: Record<string, unkno
     case ActionType.EDIT:
     case ActionType.VIEW:
       if (op.url) {
-        router.push(resolveLinkUrl(op.url, row))
+        router.push(resolveLinkUrl(op.url, actualRow))
+      } else if (effectiveFormCode.value && actualRow.id != null) {
+        router.push({
+          path: `/lowcode/form/${effectiveFormCode.value}`,
+          query: { mode: op.action === ActionType.EDIT ? 'edit' : 'view', id: String(actualRow.id) }
+        })
+      } else {
+        emit('operation-click', op, actualRow)
       }
       break
     case ActionType.DELETE:
       if (op.api) {
         try {
-          const url = resolveLinkUrl(op.api, row)
+          const url = resolveLinkUrl(op.api, actualRow)
           const method = (op.method || 'DELETE').toUpperCase()
-          await axios.request({ url, method })
+          const token = localStorage.getItem(TOKEN_KEY) || ''
+          await axios.request({ url, method, headers: { Authorization: `Bearer ${token}` } })
           ElMessage.success('删除成功')
           fetchData()
         } catch {
@@ -446,7 +495,7 @@ async function handleRowClick(op: ListOperationConfig, row: Record<string, unkno
       break
     case ActionType.CUSTOM:
     default:
-      emit('operation-click', op, row)
+      emit('operation-click', op, actualRow)
   }
 }
 
@@ -467,6 +516,9 @@ function execToolbar(op: ListOperationConfig) {
     case ActionType.EDIT:
     case ActionType.VIEW:
       if (op.url) router.push(op.url)
+      else if (op.action === ActionType.CREATE && effectiveFormCode.value) {
+        router.push({ path: `/lowcode/form/${effectiveFormCode.value}`, query: { mode: 'create' } })
+      }
       else emit('toolbar-click', op)
       break
     case ActionType.CUSTOM:
@@ -492,7 +544,7 @@ function handleSelectionChange(sel: Array<Record<string, unknown>>) {
 function handleCurrentChange(page: number) {
   currentPage.value = page
   emit('page-change', page, pageSizeRef.value)
-  if (props.autoFetch && props.config.searchApi) fetchData()
+  if (props.autoFetch && effectiveSearchApi.value) fetchData()
 }
 
 /** 每页条数变化 */
@@ -500,13 +552,13 @@ function handleSizeChange(size: number) {
   pageSizeRef.value = size
   currentPage.value = 1
   emit('page-change', 1, size)
-  if (props.autoFetch && props.config.searchApi) fetchData()
+  if (props.autoFetch && effectiveSearchApi.value) fetchData()
 }
 
 /** 排序变化（透传到查询参数） */
 function handleSortChange(_payload: { column: unknown; prop: string; order: string | null }) {
   // 排序交给后端：触发一次查询即可
-  if (props.autoFetch && props.config.searchApi) fetchData()
+  if (props.autoFetch && effectiveSearchApi.value) fetchData()
 }
 
 // ===================== 数据请求 =====================
@@ -516,6 +568,9 @@ function buildQuery(): Record<string, unknown> {
   const q: Record<string, unknown> = {
     current: currentPage.value,
     size: pageSizeRef.value
+  }
+  if (!props.config.searchApi && props.config.entityCode) {
+    q.page = currentPage.value
   }
   for (const f of props.config.filters ?? []) {
     const v = filterForm[f.prop]
@@ -528,7 +583,7 @@ function buildQuery(): Record<string, unknown> {
 
 /** 按 searchApi 拉取数据 */
 async function fetchData(): Promise<void> {
-  const api = props.config.searchApi
+  const api = effectiveSearchApi.value
   if (!api) return
   innerLoading.value = true
   try {
@@ -605,14 +660,14 @@ defineExpose({
 // ===================== 初始化 =====================
 
 onMounted(() => {
-  if (props.autoFetch && props.config.searchApi) {
+  if (props.autoFetch && effectiveSearchApi.value) {
     fetchData()
   }
 })
 
-// 当 searchApi 变化时重新加载
+// 当显式查询接口或实体绑定变化时重新加载
 watch(
-  () => props.config.searchApi,
+  effectiveSearchApi,
   (api) => {
     if (props.autoFetch && api) {
       currentPage.value = 1
@@ -734,6 +789,7 @@ watch(
       v-loading="loading"
       :stripe="config.stripe !== false"
       :border="config.border !== false"
+      row-key="id"
       :style="{ width: '100%' }"
       @selection-change="handleSelectionChange"
       @sort-change="handleSortChange"
@@ -814,16 +870,16 @@ watch(
         :width="operationsWidth"
         fixed="right"
       >
-        <template #default="{ row }">
+        <template #default="scope">
           <el-button
-            v-for="op in getVisibleRowOps(row)"
+            v-for="op in getVisibleRowOps(tableData[scope.$index] || scope.row)"
             :key="op.id"
             :type="(rowButtonType(op) as EpButtonType)"
             :icon="op.icon"
             size="small"
             link
             v-permission="op.permission"
-            @click="handleRowClick(op, row)"
+            @click="handleRowClick(op, tableData[scope.$index] || scope.row, scope.$index, $event)"
           >
             {{ op.label }}
           </el-button>

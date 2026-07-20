@@ -27,6 +27,8 @@ const statusMeta: Record<TaskStatus, { label: string; tagType: EpTagType }> = {
   PENDING: { label: '待接单', tagType: 'info' },
   ACCEPTED: { label: '已接单', tagType: 'warning' },
   IN_PROGRESS: { label: '进行中', tagType: 'primary' },
+  REVIEW: { label: '评审中', tagType: 'warning' },
+  BLOCKED: { label: '已阻塞', tagType: 'danger' },
   COMPLETED: { label: '已完成', tagType: 'success' },
   CONFIRMED: { label: '已确认', tagType: 'success' },
   REJECTED: { label: '已驳回', tagType: 'danger' }

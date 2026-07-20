@@ -15,6 +15,7 @@ interface MenuLeaf {
   title: string
   path: string
   icon: string
+  permissions?: string[]
 }
 interface MenuGroup {
   title: string
@@ -152,11 +153,58 @@ const menuGroups: (MenuGroup | MenuLeaf)[] = [
     title: '演示中心',
     icon: 'Star',
     children: [
+      { title: '割接申请', path: '/lowcode/form/form_demo_network_cutover', icon: 'EditPen' },
+      { title: '割接台账', path: '/lowcode/list/list_demo_network_cutover', icon: 'Connection' },
+      { title: '割接工作台', path: '/lowcode/tab/tab_demo_network_cutover', icon: 'Grid' },
+      { title: '割接关联视图', path: '/lowcode/related-page/related_demo_network_cutover', icon: 'Share' },
       { title: '员工列表', path: '/lowcode/list/list_demo_employee', icon: 'User' },
-      { title: '员工档案', path: '/lowcode/form/form_demo_employee', icon: 'Document' }
+      { title: '员工档案', path: '/lowcode/form/form_demo_employee', icon: 'Document' },
+      { title: '入职任务', path: '/lowcode/list/list_demo_onboarding_task', icon: 'List' },
+      { title: '部门管理', path: '/lowcode/list/list_demo_department', icon: 'OfficeBuilding' }
     ]
   }
 ]
+
+const lowCodeMenuPermissions: Record<string, string[]> = {
+  '/lowcode/entity-designer': ['lowcode:entity:list'],
+  '/lowcode/form-list': ['lowcode:form:list'],
+  '/lowcode/list-list': ['lowcode:list:list'],
+  '/lowcode/tab-list': ['lowcode:tab:edit', 'lowcode:tab:add'],
+  '/lowcode/related-page-list': ['lowcode:relatedPage:edit', 'lowcode:relatedPage:add'],
+  '/lowcode/microflow-designer': ['lowcode:microflow:list'],
+  '/lowcode/rule-designer': ['lowcode:rule:list'],
+  '/lowcode/process-designer': ['lowcode:process:list'],
+  '/lowcode/trigger-list': ['lowcode:trigger:list'],
+  '/lowcode/connector-designer': ['lowcode:connector:list'],
+  '/lowcode/publish-center': ['lowcode:publish:list'],
+  '/lowcode/approval-chain': ['lowcode:approval-chain:list'],
+  '/lowcode/version-history': ['lowcode:version:list'],
+  '/lowcode/template-market': ['lowcode:template:list'],
+  '/lowcode/apm-dashboard': ['lowcode:microflow:list', 'lowcode:rule:list'],
+  '/lowcode/app-source-export': ['lowcode:app-source:export']
+}
+
+function canAccessMenu(item: MenuLeaf): boolean {
+  const runtimePage = item.path.match(/^\/lowcode\/(form|list|tab|related-page)\/([^/?#]+)/)
+  const permissions =
+    item.permissions ??
+    (runtimePage
+      ? [`lowcode:page:${runtimePage[1]}:${runtimePage[2]}`]
+      : lowCodeMenuPermissions[item.path])
+  return !permissions || userStore.hasAnyPermission(permissions)
+}
+
+const visibleMenuGroups = computed<(MenuGroup | MenuLeaf)[]>(() =>
+  menuGroups.reduce<(MenuGroup | MenuLeaf)[]>((result, item) => {
+    if ('children' in item) {
+      const children = item.children.filter(canAccessMenu)
+      if (children.length > 0) result.push({ ...item, children })
+    } else if (canAccessMenu(item)) {
+      result.push(item)
+    }
+    return result
+  }, [])
+)
 
 const activeMenu = computed(() => route.path)
 
@@ -248,7 +296,7 @@ onBeforeUnmount(() => {
         active-text-color="#ffffff"
         class="side-menu"
       >
-        <template v-for="(item, idx) in menuGroups" :key="idx">
+        <template v-for="(item, idx) in visibleMenuGroups" :key="idx">
           <el-sub-menu v-if="'children' in item" :index="String(idx)">
             <template #title>
               <el-icon><component :is="item.icon" /></el-icon>
@@ -289,7 +337,7 @@ onBeforeUnmount(() => {
         class="side-menu"
         @select="handleMenuSelect"
       >
-        <template v-for="(item, idx) in menuGroups" :key="idx">
+        <template v-for="(item, idx) in visibleMenuGroups" :key="idx">
           <el-sub-menu v-if="'children' in item" :index="String(idx)">
             <template #title>
               <el-icon><component :is="item.icon" /></el-icon>

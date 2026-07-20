@@ -388,7 +388,7 @@ async function onCanvasDrop(e: DragEvent) {
   const entityId = Number(e.dataTransfer?.getData('entityId'))
   if (!entityId) return
   const entity = entityList.value.find(x => x.id === entityId)
-  if (!entity) return
+  if (!entity?.id) return
   try {
     const design = await getEntityDesign(entity.id)
     const rect = canvasContainer.value?.getBoundingClientRect()
@@ -432,8 +432,12 @@ function initGraph() {
     }
   })
 
-  graphRef.value.on('edge:connected', ({ source, target }) => {
-    onEdgeConnected({ source, target })
+  graphRef.value.on('edge:connected', ({ edge }) => {
+    const sourceCell = edge.getSourceCell()
+    const targetCell = edge.getTargetCell()
+    if (sourceCell && targetCell) {
+      onEdgeConnected({ source: { cell: sourceCell }, target: { cell: targetCell } })
+    }
   })
 
   // 节点点击：加载该实体到右侧编辑面板并高亮（多实体画布场景）

@@ -379,7 +379,7 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
      * weight = plannedHours（缺省 1）。无子任务时 rolledUpProgress = selfProgress。</p>
      */
     private TaskProgressVO buildProgressVO(Long taskId) {
-        ImplTask task = implTaskMapper.selectById(taskId);
+        ImplTask task = this.getById(taskId);
         if (task == null) {
             throw new BusinessException("实施任务不存在");
         }

@@ -17,7 +17,7 @@ import com.dp.plat.project.entity.Milestone;
 import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.entity.ProjectPhase;
 import com.dp.plat.project.exception.PhaseExitGateFailedException;
-import com.dp.plat.project.mapper.DeliverableMapper;
+import com.dp.plat.project.mapper.ProjectDeliverableMapper;
 import com.dp.plat.project.mapper.MilestoneMapper;
 import com.dp.plat.project.mapper.ProjectMapper;
 import com.dp.plat.project.service.IProjectPhaseService;
@@ -38,7 +38,7 @@ import java.util.Set;
 public class ProjectPhaseServiceImpl implements IProjectPhaseService {
 
     private final ProjectPhaseMapper phaseMapper;
-    private final DeliverableMapper deliverableMapper;
+    private final ProjectDeliverableMapper deliverableMapper;
     private final MilestoneMapper milestoneMapper;
     private final ProjectMapper projectMapper;
 

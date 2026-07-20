@@ -9,7 +9,7 @@ import com.dp.plat.project.entity.ProjectTemplate;
 import com.dp.plat.project.entity.ProjectTemplateVersion;
 import com.dp.plat.project.service.IProjectTemplateService;
 import lombok.RequiredArgsConstructor;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -24,7 +24,7 @@ public class ProjectTemplateController {
     private final IProjectTemplateService templateService;
 
     @GetMapping("/list")
-    @RequiresPermissions("project:template:list")
+    @PreAuthorize("hasAuthority('project:template:list')")
     public Result<Page<ProjectTemplate>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -35,32 +35,32 @@ public class ProjectTemplateController {
     }
 
     @GetMapping("/{id}")
-    @RequiresPermissions("project:template:list")
+    @PreAuthorize("hasAuthority('project:template:list')")
     public Result<ProjectTemplate> getById(@PathVariable Long id) {
         return Result.ok(templateService.getById(id));
     }
 
     @PostMapping
-    @RequiresPermissions("project:template:add")
+    @PreAuthorize("hasAuthority('project:template:add')")
     public Result<ProjectTemplate> create(@RequestBody ProjectTemplate template) {
         return Result.ok(templateService.create(template));
     }
 
     @PutMapping
-    @RequiresPermissions("project:template:add")
+    @PreAuthorize("hasAuthority('project:template:add')")
     public Result<ProjectTemplate> update(@RequestBody ProjectTemplate template) {
         return Result.ok(templateService.update(template));
     }
 
     @DeleteMapping("/{id}")
-    @RequiresPermissions("project:template:add")
+    @PreAuthorize("hasAuthority('project:template:add')")
     public Result<Void> delete(@PathVariable Long id) {
         templateService.delete(id);
         return Result.ok();
     }
 
     @GetMapping("/{id}/versions")
-    @RequiresPermissions("project:template:list")
+    @PreAuthorize("hasAuthority('project:template:list')")
     public Result<Page<ProjectTemplateVersion>> listVersions(
             @PathVariable Long id,
             @RequestParam(defaultValue = "1") int page,
@@ -69,7 +69,7 @@ public class ProjectTemplateController {
     }
 
     @PostMapping("/{id}/publish")
-    @RequiresPermissions("project:template:publish")
+    @PreAuthorize("hasAuthority('project:template:publish')")
     public Result<ProjectTemplateVersion> publishVersion(
             @PathVariable Long id,
             @RequestBody PublishVersionRequest request) {
@@ -79,13 +79,13 @@ public class ProjectTemplateController {
     }
 
     @GetMapping("/{id}/published-version")
-    @RequiresPermissions("project:template:list")
+    @PreAuthorize("hasAuthority('project:template:list')")
     public Result<ProjectTemplateVersion> getPublishedVersion(@PathVariable Long id) {
         return Result.ok(templateService.getPublishedVersion(id));
     }
 
     @PostMapping("/create-project")
-    @RequiresPermissions("project:template:use")
+    @PreAuthorize("hasAuthority('project:template:use')")
     public Result<Project> createProjectFromTemplate(@RequestBody ProjectCreateFromTemplateDTO dto) {
         return Result.ok(templateService.createProjectFromTemplate(dto));
     }

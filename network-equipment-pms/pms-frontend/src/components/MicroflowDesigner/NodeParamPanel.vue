@@ -342,6 +342,7 @@ function getTypeLabel(t: MicroflowNodeType): string {
   padding: 10px 12px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
 .empty-state {

@@ -61,7 +61,11 @@ export function useCollaboration(opts: UseCollaborationOptions) {
       })
       // 组件已卸载则不再启动定时器（竞态保护）
       if (cancelled) {
-        try { await leaveCollaboration(opts.configType, opts.configId, opts.userId) } catch {}
+        try {
+          await leaveCollaboration(opts.configType, opts.configId, opts.userId)
+        } catch {
+          // Best-effort cleanup after an unmount race.
+        }
         return
       }
       joined.value = true

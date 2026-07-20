@@ -1,8 +1,38 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { startRouteLoading, stopRouteLoading } from '@/directives/loading'
 
 const Layout = () => import('@/layouts/DefaultLayout.vue')
+
+const LOWCODE_ROUTE_PERMISSIONS: Array<{ prefix: string; permissions: string[] }> = [
+  { prefix: '/lowcode/entity-designer', permissions: ['lowcode:entity:list'] },
+  { prefix: '/lowcode/form-designer', permissions: ['lowcode:form:edit', 'lowcode:form:add'] },
+  { prefix: '/lowcode/form-list', permissions: ['lowcode:form:list'] },
+  { prefix: '/lowcode/list-designer', permissions: ['lowcode:list:edit', 'lowcode:list:add'] },
+  { prefix: '/lowcode/list-list', permissions: ['lowcode:list:list'] },
+  { prefix: '/lowcode/tab-designer', permissions: ['lowcode:tab:edit', 'lowcode:tab:add'] },
+  { prefix: '/lowcode/tab-list', permissions: ['lowcode:tab:edit', 'lowcode:tab:add'] },
+  { prefix: '/lowcode/related-page-designer', permissions: ['lowcode:relatedPage:edit', 'lowcode:relatedPage:add'] },
+  { prefix: '/lowcode/related-page-list', permissions: ['lowcode:relatedPage:edit', 'lowcode:relatedPage:add'] },
+  { prefix: '/lowcode/microflow-designer', permissions: ['lowcode:microflow:list'] },
+  { prefix: '/lowcode/rule-designer', permissions: ['lowcode:rule:list'] },
+  { prefix: '/lowcode/process-designer', permissions: ['lowcode:process:list'] },
+  { prefix: '/lowcode/trigger-list', permissions: ['lowcode:trigger:list'] },
+  { prefix: '/lowcode/connector-designer', permissions: ['lowcode:connector:list'] },
+  { prefix: '/lowcode/publish-center', permissions: ['lowcode:publish:list'] },
+  { prefix: '/lowcode/approval-chain', permissions: ['lowcode:approval-chain:list'] },
+  { prefix: '/lowcode/version-history', permissions: ['lowcode:version:list'] },
+  { prefix: '/lowcode/template-market', permissions: ['lowcode:template:list'] },
+  { prefix: '/lowcode/apm-dashboard', permissions: ['lowcode:microflow:list', 'lowcode:rule:list'] },
+  { prefix: '/lowcode/app-source-export', permissions: ['lowcode:app-source:export'] }
+]
+
+function requiredLowCodePermissions(path: string): string[] {
+  const runtimePage = path.match(/^\/lowcode\/(form|list|tab|related-page)\/([^/?#]+)/)
+  if (runtimePage) return [`lowcode:page:${runtimePage[1]}:${runtimePage[2]}`]
+  return LOWCODE_ROUTE_PERMISSIONS.find((item) => path.startsWith(item.prefix))?.permissions ?? []
+}
 
 export const routes: RouteRecordRaw[] = [
   {
@@ -355,7 +385,7 @@ const router = createRouter({
 })
 
 // Navigation guard
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   startRouteLoading()
   const userStore = useUserStore()
   const title = (to.meta.title as string | undefined) ?? ''
@@ -372,6 +402,25 @@ router.beforeEach((to, _from, next) => {
 
   if (!userStore.token) {
     next(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
+    return
+  }
+
+  // localStorage only persists the token. Restore user details and permission
+  // codes before evaluating route access after a browser refresh/direct visit.
+  if (!userStore.userInfo) {
+    try {
+      await userStore.fetchUserInfo()
+    } catch {
+      userStore.reset()
+      next(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
+      return
+    }
+  }
+
+  const requiredPermissions = requiredLowCodePermissions(to.path)
+  if (requiredPermissions.length > 0 && !userStore.hasAnyPermission(requiredPermissions)) {
+    ElMessage.error('您没有访问该低代码功能的权限')
+    next('/dashboard')
     return
   }
 

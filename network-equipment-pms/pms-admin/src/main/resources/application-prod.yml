@@ -29,7 +29,8 @@ mybatis-plus:
     map-underscore-to-camel-case: true
 
 jwt:
-  secret: ${JWT_SECRET:ZGVwdGVjaC1wbXMtc2VjcmV0LWtleS1mb3Itand0LXRva2VuLWdlbmVyYXRpb24tMjAyNA==}
+  # 生产环境不提供内置密钥，缺失 JWT_SECRET 时应快速失败。
+  secret: ${JWT_SECRET}
   expiration: 86400000
 
 d365:

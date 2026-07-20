@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useFirstLogin } from '@/composables/useFirstLogin'
 
 /**
@@ -81,9 +82,13 @@ const emit = defineEmits<{
 }>()
 
 const { isFirstLogin, markCompleted } = useFirstLogin()
+const route = useRoute() as ReturnType<typeof useRoute> | undefined
+const routePath = computed(() => route?.path ?? '/dashboard')
 
-/** 内部可见状态：首次登录 或 props.visible 为 true 时显示 */
-const internalVisible = ref(props.visible === true || isFirstLogin.value)
+/** 内部可见状态：首次登录（仅 dashboard 页）或 props.visible 为 true 时显示 */
+const internalVisible = ref(
+  props.visible === true || (isFirstLogin.value && routePath.value === '/dashboard')
+)
 
 /** 当前步骤索引 */
 const currentStep = ref(0)
@@ -119,7 +124,7 @@ async function updatePosition() {
   // querySelector 可能匹配多个元素，取第一个可见的
   const candidates = document.querySelectorAll(step.selector)
   let el: HTMLElement | null = null
-  candidates.forEach((node) => {
+  for (const node of Array.from(candidates)) {
     if (!el) {
       const rect = (node as HTMLElement).getBoundingClientRect()
       // 选取可见（宽高 > 0）的元素
@@ -127,7 +132,7 @@ async function updatePosition() {
         el = node as HTMLElement
       }
     }
-  })
+  }
 
   if (!el) {
     // 找不到目标元素，回退到居中
@@ -202,7 +207,7 @@ async function updatePosition() {
  */
 const overlayStyle = computed<Record<string, string>>(() => {
   if (!targetRect.value) {
-    return { boxShadow: 'none' }
+    return { boxShadow: 'none' } as Record<string, string>
   }
   const r = targetRect.value
   const padding = 6
@@ -273,6 +278,19 @@ watch(
     if (v && !internalVisible.value) {
       internalVisible.value = true
       currentStep.value = 0
+    }
+  }
+)
+
+watch(
+  routePath,
+  (path) => {
+    if (path === '/dashboard' && isFirstLogin.value && !internalVisible.value) {
+      internalVisible.value = true
+      currentStep.value = 0
+    } else if (path !== '/dashboard' && internalVisible.value) {
+      internalVisible.value = false
+      cleanupListeners()
     }
   }
 )
@@ -371,8 +389,8 @@ defineExpose({
 .guide-mask {
   position: absolute;
   inset: 0;
-  background-color: transparent;
-  pointer-events: auto;
+  background-color: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
 }
 
 .guide-spotlight {

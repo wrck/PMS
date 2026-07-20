@@ -12,7 +12,7 @@
 
     <artifactId>pms-workflow</artifactId>
     <name>pms-workflow</name>
-    <description>Flowable workflow engine & 统一审批中心（Story 6）</description>
+    <description>Flowable workflow engine &amp; 统一审批中心（Story 6）</description>
 
     <dependencies>
         <dependency>

@@ -13,7 +13,6 @@
  * <p>自定义组件只需依赖本文件即可获得完整类型支持，无需依赖整个 lowcode-frontend 项目。
  * 配合 vite lib 模式打包，可作为独立 npm 包发布（计划中的 @pms/lowcode-sdk）。</p>
  */
-import type { ComponentObjectPropsOptions } from 'vue'
 import type {
   ComponentPropDef,
   ComponentMeta,
@@ -38,7 +37,7 @@ export type { ComponentPropDef, ComponentMeta, RegisteredComponent }
  * <p>自定义组件可通过 `as const satisfies LowCodeProps` 校验 props 定义合规性，
  * 借鉴 Power Apps PCF 的强类型 props 约束。</p>
  */
-export interface LowCodeProps extends ComponentObjectPropsOptions {
+export interface LowCodeProps {
   /** v-model 绑定值（必填） */
   modelValue: {
     type: any
@@ -59,6 +58,7 @@ export interface LowCodeProps extends ComponentObjectPropsOptions {
     type: StringConstructor
     default: string
   }
+  [key: string]: unknown
 }
 
 /**

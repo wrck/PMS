@@ -40,34 +40,36 @@
 export const SANDBOX_PROTOCOL_VERSION = '1.0' as const
 
 /** Host → Guest 消息类型 */
-export enum HostToGuestMessage {
+export const HostToGuestMessage = {
   /** 注入初始 props + context（iframe READY 后父页面响应） */
-  INIT = 'LC_SANDBOX_INIT',
+  INIT: 'LC_SANDBOX_INIT',
   /** props 变更同步（父页面 props watch 触发） */
-  UPDATE_PROPS = 'LC_SANDBOX_UPDATE_PROPS',
+  UPDATE_PROPS: 'LC_SANDBOX_UPDATE_PROPS',
   /** 上下文变更（formData/mode 等 LowCodeContext 变化） */
-  UPDATE_CONTEXT = 'LC_SANDBOX_UPDATE_CONTEXT',
+  UPDATE_CONTEXT: 'LC_SANDBOX_UPDATE_CONTEXT',
   /** 通知 iframe 容器尺寸变化（响应式布局） */
-  RESIZE = 'LC_SANDBOX_RESIZE',
+  RESIZE: 'LC_SANDBOX_RESIZE',
   /** 请求 iframe 上报自身高度（自适应场景） */
-  REQUEST_HEIGHT = 'LC_SANDBOX_REQUEST_HEIGHT'
-}
+  REQUEST_HEIGHT: 'LC_SANDBOX_REQUEST_HEIGHT'
+} as const
+export type HostToGuestMessage = (typeof HostToGuestMessage)[keyof typeof HostToGuestMessage]
 
 /** Guest → Host 消息类型 */
-export enum GuestToHostMessage {
+export const GuestToHostMessage = {
   /** iframe 加载完成，请求初始 props */
-  READY = 'LC_SANDBOX_READY',
+  READY: 'LC_SANDBOX_READY',
   /** 上报 v-model 值变更 */
-  UPDATE_VALUE = 'LC_SANDBOX_UPDATE_VALUE',
+  UPDATE_VALUE: 'LC_SANDBOX_UPDATE_VALUE',
   /** 上报自定义事件（change/blur/focus 等） */
-  EVENT = 'LC_SANDBOX_EVENT',
+  EVENT: 'LC_SANDBOX_EVENT',
   /** 上报自身内容高度（自适应） */
-  REPORT_HEIGHT = 'LC_SANDBOX_REPORT_HEIGHT',
+  REPORT_HEIGHT: 'LC_SANDBOX_REPORT_HEIGHT',
   /** 上报运行时错误 */
-  ERROR = 'LC_SANDBOX_ERROR',
+  ERROR: 'LC_SANDBOX_ERROR',
   /** 上报日志（调试用） */
-  LOG = 'LC_SANDBOX_LOG'
-}
+  LOG: 'LC_SANDBOX_LOG'
+} as const
+export type GuestToHostMessage = (typeof GuestToHostMessage)[keyof typeof GuestToHostMessage]
 
 /** 协议消息统一结构 */
 export interface SandboxMessage<T = unknown> {
@@ -169,7 +171,7 @@ export function isSandboxMessage(data: unknown): data is SandboxMessage {
   const msg = data as Record<string, unknown>
   if (msg.version !== SANDBOX_PROTOCOL_VERSION) return false
   if (typeof msg.type !== 'string') return false
-  const allTypes = [...Object.values(HostToGuestMessage), ...Object.values(GuestToHostMessage)]
+  const allTypes: readonly string[] = [...Object.values(HostToGuestMessage), ...Object.values(GuestToHostMessage)]
   return allTypes.includes(msg.type as string)
 }
 

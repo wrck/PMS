@@ -240,11 +240,11 @@ class FileControllerIntegrationTest extends AbstractIntegrationTest {
             tiff.write(0x04); tiff.write(0x00);          // entry count = 4
 
             // entry1: GPSLatitudeRef (0x0001, ASCII, count 2, 'N' inline)
-            writeIfdEntry(tiff, 0x0001, 0x0002, 2, packInline('N', (byte) 0));
+            writeIfdEntry(tiff, 0x0001, 0x0002, 2, packInline((byte) 'N', (byte) 0));
             // entry2: GPSLatitude (0x0002, RATIONAL, count 3, offset)
             writeIfdEntry(tiff, 0x0002, 0x0005, 3, latRationalOffset);
             // entry3: GPSLongitudeRef (0x0003, ASCII, count 2, 'E' inline)
-            writeIfdEntry(tiff, 0x0003, 0x0002, 2, packInline('E', (byte) 0));
+            writeIfdEntry(tiff, 0x0003, 0x0002, 2, packInline((byte) 'E', (byte) 0));
             // entry4: GPSLongitude (0x0004, RATIONAL, count 3, offset)
             writeIfdEntry(tiff, 0x0004, 0x0005, 3, lngRationalOffset);
             // next IFD = 0

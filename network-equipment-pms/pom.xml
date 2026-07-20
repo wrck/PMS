@@ -45,10 +45,21 @@
         <mysql.version>8.3.0</mysql.version>
         <lombok.version>1.18.46</lombok.version>
         <easyexcel.version>3.3.4</easyexcel.version>
+        <opentelemetry.version>1.40.0</opentelemetry.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- 与 opentelemetry-spring-boot-starter 2.6.0 对齐。
+                 Spring Boot 3.2 默认管理的 1.31.0 缺少该 Starter 需要的 ComponentLoader。 -->
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${opentelemetry.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <!-- Internal modules -->
             <dependency>
                 <groupId>com.dp.plat</groupId>

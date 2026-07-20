@@ -28,6 +28,7 @@ import {
   exportRelatedPage,
   getRelatedPage,
   importRelatedPage,
+  normalizeRelatedPageConfig,
   publishRelatedPage,
   updateRelatedPage,
   type LowCodeRelatedPageConfig,
@@ -340,7 +341,7 @@ function parseRelatedConfigFromStr() {
       relatedConfig.sections = []
       return
     }
-    const parsed = JSON.parse(metaForm.relatedConfig) as RelatedPageConfig
+    const parsed = normalizeRelatedPageConfig(JSON.parse(metaForm.relatedConfig) as RelatedPageConfig)
     relatedConfig.title = parsed.title ?? ''
     relatedConfig.description = parsed.description ?? ''
     relatedConfig.mainEntity = parsed.mainEntity ?? ''
@@ -904,6 +905,7 @@ onBeforeUnmount(() => {
     >
       <LowCodeRelatedPageRenderer
         :config="relatedConfig"
+        :allow-draft="true"
         :context-data="{
           row: { id: 1, status: 'IN_PROGRESS', projectId: 'P2025001', warrantyStatus: 'ACTIVE' },
           context: {}

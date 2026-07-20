@@ -45,6 +45,8 @@ class EnvironmentPromotionServiceTest {
     private LowCodeConnectorService connectorService;
     @Mock
     private LowCodeRuleService ruleService;
+    @Mock
+    private PromotionGateService promotionGateService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private EnvironmentPromotionService service;
@@ -54,7 +56,7 @@ class EnvironmentPromotionServiceTest {
         // 构造顺序需与 EnvironmentPromotionService 字段声明顺序一致
         service = new EnvironmentPromotionService(
                 configVersionService, objectMapper, entityService, formService,
-                listService, microflowService, connectorService, ruleService);
+                listService, microflowService, connectorService, ruleService, promotionGateService);
     }
 
     /** 构造一个配置包项 */

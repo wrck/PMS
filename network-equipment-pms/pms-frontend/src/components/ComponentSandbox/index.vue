@@ -92,7 +92,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   props: () => ({}),
   context: () => ({}),
-  modelValue: null,
+  modelValue: undefined,
   heightMode: 'auto',
   height: 0,
   minHeight: 32,

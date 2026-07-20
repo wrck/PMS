@@ -31,6 +31,10 @@ function formatDate(date?: string) {
   return date.length > 10 ? date.substring(0, 10) : date
 }
 
+function progressStatus(progress: number | string | undefined): '' | 'success' {
+  return Number(progress ?? 0) >= 100 ? 'success' : ''
+}
+
 // 判断项目是否逾期（计划结束日期早于今天且未完成）
 function isOverdue(project: Project): boolean {
   if (!project.planEndDate) return false
@@ -103,7 +107,7 @@ onMounted(loadDashboard)
                 <el-progress
                   :percentage="Number(project.progress ?? 0)"
                   :stroke-width="8"
-                  :status="(Number(project.progress ?? 0) >= 100 ? 'success' : '') as '' | 'success'"
+                  :status="progressStatus(project.progress)"
                 />
               </div>
               <div class="card-row">

@@ -55,7 +55,7 @@ async function loadApps() {
 async function preview() {
   loading.value = true
   try {
-    manifest.value = await previewManifest(selectedBizType || undefined)
+    manifest.value = await previewManifest(selectedBizType.value || undefined)
     ElMessage.success('清单预览已加载')
   } catch (e) {
     ElMessage.error('预览清单失败：' + (e instanceof Error ? e.message : String(e)))
@@ -68,7 +68,7 @@ async function preview() {
 async function doExport() {
   exporting.value = true
   try {
-    await exportAndDownload(selectedBizType || undefined)
+    await exportAndDownload(selectedBizType.value || undefined)
     ElMessage.success('导出成功，已开始下载 ZIP')
   } catch (e) {
     ElMessage.error('导出失败：' + (e instanceof Error ? e.message : String(e)))

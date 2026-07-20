@@ -2,7 +2,6 @@ package com.dp.plat.admin.testconfig;
 
 import com.dp.plat.admin.PmsApplication;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,8 +29,8 @@ import com.redis.testcontainers.RedisContainer;
  *       {@code @WithMockUser} 注入权限。</li>
  *   <li>{@code @DynamicPropertySource} 将 Testcontainers 容器的动态端口/账号注入到
  *       Spring 配置，覆盖 {@code application.yml} 中的本地默认值。</li>
- *   <li>{@code @EnabledIfSystemProperty(docker.available=true)} 条件启用：沙箱/CI 环境
- *       无 Docker 时自动跳过，保证构建可编译通过。</li>
+ *   <li>{@code @Testcontainers(disabledWithoutDocker = true)}：无 Docker 时自动跳过，
+ *       Docker 可用时直接执行，无需额外系统参数。</li>
  * </ul>
  *
  * <p>子类应继承本类，并按需通过 {@code @WithMockUser(authorities = {...})} 注入权限，
@@ -39,9 +38,8 @@ import com.redis.testcontainers.RedisContainer;
  */
 @SpringBootTest(classes = PmsApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc(addFilters = false)
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @ActiveProfiles("test")
-@EnabledIfSystemProperty(named = "docker.available", matches = "true")
 public abstract class AbstractIntegrationTest {
 
     /** MySQL 8 容器：Flyway 在应用启动时自动执行 classpath:db/migration 下的迁移脚本。 */

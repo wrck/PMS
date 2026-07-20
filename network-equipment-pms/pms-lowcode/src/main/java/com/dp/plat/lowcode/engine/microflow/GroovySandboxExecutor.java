@@ -2,6 +2,11 @@ package com.dp.plat.lowcode.engine.microflow;
 
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.SecureASTCustomizer;
 import org.springframework.stereotype.Component;
@@ -10,6 +15,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Groovy 沙箱执行器（借鉴 Mendix/OutSystems 沙箱机制）。
@@ -27,6 +33,24 @@ import java.util.List;
 @Component
 public class GroovySandboxExecutor {
 
+    private static final Set<String> FORBIDDEN_TYPES = Set.of(
+            System.class.getName(),
+            Runtime.class.getName(),
+            ProcessBuilder.class.getName(),
+            Thread.class.getName(),
+            Class.class.getName(),
+            ClassLoader.class.getName(),
+            File.class.getName(),
+            groovy.lang.GroovyShell.class.getName(),
+            groovy.lang.GroovyClassLoader.class.getName(),
+            groovy.lang.GroovySystem.class.getName()
+    );
+
+    private static final Set<String> FORBIDDEN_METHODS = Set.of(
+            "execute", "getClass", "forName", "getClassLoader", "loadClass",
+            "parseClass", "evaluate", "invokeMethod"
+    );
+
     private final CompilerConfiguration compilerConfiguration;
 
     public GroovySandboxExecutor() {
@@ -41,19 +65,34 @@ public class GroovySandboxExecutor {
         // 禁止静态 import
         customizer.setStaticImportsWhitelist(Collections.emptyList());
         // 禁用危险类的 receivers（方法调用与构造），并阻止通过 GroovyShell/GroovyClassLoader 等绕过沙箱
-        customizer.setReceiversBlackList(Arrays.asList(
-                System.class.getName(),
-                Runtime.class.getName(),
-                ProcessBuilder.class.getName(),
-                Thread.class.getName(),
-                ClassLoader.class.getName(),
-                File.class.getName(),
-                groovy.lang.GroovyShell.class.getName(),
-                groovy.lang.GroovyClassLoader.class.getName(),
-                groovy.lang.GroovySystem.class.getName()
-        ));
+        customizer.setReceiversBlackList(List.copyOf(FORBIDDEN_TYPES));
+        /*
+         * receiversBlackList 只约束方法调用的接收者，不能可靠拦截构造表达式。
+         * 增加 AST 表达式检查，覆盖 new File(...)、全限定类名以及动态反射入口。
+         */
+        customizer.addExpressionCheckers(expression -> {
+            if (expression instanceof ConstructorCallExpression constructorCall) {
+                return !isForbiddenType(constructorCall.getType());
+            }
+            if (expression instanceof ClassExpression classExpression) {
+                return !isForbiddenType(classExpression.getType());
+            }
+            if (expression instanceof StaticMethodCallExpression staticCall) {
+                return !isForbiddenType(staticCall.getOwnerType())
+                        && !FORBIDDEN_METHODS.contains(staticCall.getMethod());
+            }
+            if (expression instanceof MethodCallExpression methodCall) {
+                String methodName = methodCall.getMethodAsString();
+                return methodName == null || !FORBIDDEN_METHODS.contains(methodName);
+            }
+            return true;
+        });
         this.compilerConfiguration = new CompilerConfiguration();
         this.compilerConfiguration.addCompilationCustomizers(customizer);
+    }
+
+    private static boolean isForbiddenType(ClassNode type) {
+        return type != null && FORBIDDEN_TYPES.contains(type.getName());
     }
 
     /**

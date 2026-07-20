@@ -97,14 +97,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     @Override
     public Result<Map<String, Object>> listProcessDefinitions(int page, int size) {
-        int firstResult = toFirstResult(page, size);
+        int safePage = normalizePage(page);
+        int safeSize = normalizeSize(size);
+        int firstResult = toFirstResult(safePage, safeSize);
         ProcessDefinitionQuery query = repositoryService.createProcessDefinitionQuery()
                 .latestVersion()
                 .active()
                 .orderByProcessDefinitionKey().asc();
 
         long total = query.count();
-        List<ProcessDefinition> definitions = query.listPage(firstResult, size);
+        List<ProcessDefinition> definitions = query.listPage(firstResult, safeSize);
 
         Set<String> deploymentIds = definitions.stream()
                 .map(ProcessDefinition::getDeploymentId)
@@ -114,7 +116,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         List<ProcessDefinitionDTO> records = definitions.stream()
                 .map(def -> toProcessDefinitionDTO(def, deploymentMap))
                 .toList();
-        return Result.ok(pageResult(records, total, page, size));
+        return Result.ok(pageResult(records, total, safePage, safeSize));
     }
 
     @Override
@@ -247,12 +249,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     @Override
     public Result<Map<String, Object>> getTodoTasks(int page, int size) {
         String userId = currentUserId();
-        int firstResult = toFirstResult(page, size);
+        int safePage = normalizePage(page);
+        int safeSize = normalizeSize(size);
+        int firstResult = toFirstResult(safePage, safeSize);
 
         List<Task> tasks = taskService.createTaskQuery()
                 .taskCandidateOrAssigned(userId)
                 .orderByTaskCreateTime().desc()
-                .listPage(firstResult, size);
+                .listPage(firstResult, safeSize);
         long total = taskService.createTaskQuery()
                 .taskCandidateOrAssigned(userId)
                 .count();
@@ -263,19 +267,21 @@ public class WorkflowServiceImpl implements WorkflowService {
         List<TaskDTO> records = tasks.stream()
                 .map(task -> toTaskDTO(task, instanceMap))
                 .toList();
-        return Result.ok(pageResult(records, total, page, size));
+        return Result.ok(pageResult(records, total, safePage, safeSize));
     }
 
     @Override
     public Result<Map<String, Object>> getDoneTasks(int page, int size) {
         String userId = currentUserId();
-        int firstResult = toFirstResult(page, size);
+        int safePage = normalizePage(page);
+        int safeSize = normalizeSize(size);
+        int firstResult = toFirstResult(safePage, safeSize);
 
         List<HistoricTaskInstance> tasks = historyService.createHistoricTaskInstanceQuery()
                 .taskAssignee(userId)
                 .finished()
                 .orderByHistoricTaskInstanceEndTime().desc()
-                .listPage(firstResult, size);
+                .listPage(firstResult, safeSize);
         long total = historyService.createHistoricTaskInstanceQuery()
                 .taskAssignee(userId)
                 .finished()
@@ -287,7 +293,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         List<TaskDTO> records = tasks.stream()
                 .map(task -> toHistoricTaskDTO(task, instanceMap))
                 .toList();
-        return Result.ok(pageResult(records, total, page, size));
+        return Result.ok(pageResult(records, total, safePage, safeSize));
     }
 
     @Override
@@ -380,9 +386,15 @@ public class WorkflowServiceImpl implements WorkflowService {
     // ===== Helper methods =====
 
     private int toFirstResult(int page, int size) {
-        int safePage = page < 1 ? 1 : page;
-        int safeSize = size < 1 ? 10 : size;
-        return (safePage - 1) * safeSize;
+        return (normalizePage(page) - 1) * normalizeSize(size);
+    }
+
+    private int normalizePage(int page) {
+        return page < 1 ? 1 : page;
+    }
+
+    private int normalizeSize(int size) {
+        return size < 1 ? 10 : size;
     }
 
     private String currentUserId() {

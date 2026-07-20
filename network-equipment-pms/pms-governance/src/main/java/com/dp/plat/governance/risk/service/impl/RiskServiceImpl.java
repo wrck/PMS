@@ -235,12 +235,16 @@ public class RiskServiceImpl
         for (Risk risk : risks) {
             Integer likelihood = risk.getLikelihood();
             Integer impact = risk.getImpact();
+            boolean highByScore = false;
             if (likelihood != null && impact != null) {
                 int l = clamp(likelihood) - 1;
                 int i = clamp(impact) - 1;
                 matrix.get(l).set(i, matrix.get(l).get(i) + 1);
+                highByScore = likelihood * impact > 12;
             }
-            if (PRIORITY_HIGH.equals(risk.getPriority())) {
+            // 兼容历史数据：priority 可能尚未按最新评分回填，矩阵统计以评分为准，
+            // 无评分记录则仍尊重显式 HIGH 优先级。
+            if (highByScore || PRIORITY_HIGH.equals(risk.getPriority())) {
                 highPriorityCount++;
             }
         }

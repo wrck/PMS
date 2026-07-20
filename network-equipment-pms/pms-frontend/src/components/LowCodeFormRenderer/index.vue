@@ -290,7 +290,7 @@ function isLayoutField(field: FormFieldConfig): boolean {
 }
 
 /** 获取日期选择器的 type 属性 */
-function dateType(field: FormFieldConfig): string {
+function dateType(field: FormFieldConfig): 'date' | 'datetime' | 'daterange' {
   if (field.type === FieldType.DATETIME) return 'datetime'
   if (field.type === FieldType.DATERANGE) return 'daterange'
   return 'date'
@@ -456,7 +456,7 @@ defineExpose({
           <el-date-picker
             v-else-if="field.type === 'date' || field.type === 'datetime' || field.type === 'daterange'"
             v-model="formData[field.prop]"
-            :type="dateType(field) as 'date' | 'datetime' | 'daterange'"
+            :type="dateType(field)"
             :placeholder="field.placeholder"
             :disabled="field.disabled"
             :readonly="field.readonly"

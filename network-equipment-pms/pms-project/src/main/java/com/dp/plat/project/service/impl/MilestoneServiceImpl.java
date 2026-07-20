@@ -107,7 +107,7 @@ public class MilestoneServiceImpl extends ServiceImpl<MilestoneMapper, Milestone
         if (existing == null) {
             throw new BusinessException("里程碑不存在");
         }
-        this.removeById(id);
+        baseMapper.deleteById(id);
         // Recalculate the parent project progress after deletion.
         if (existing.getProjectId() != null) {
             recalculateProjectProgress(existing.getProjectId());

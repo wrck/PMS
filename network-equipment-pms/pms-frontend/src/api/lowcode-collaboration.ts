@@ -1,5 +1,6 @@
 // src/api/lowcode-collaboration.ts
 import { get, post } from '@/utils/request'
+import type { AxiosRequestConfig } from 'axios'
 
 export interface OnlineUser {
   userId: number
@@ -21,7 +22,7 @@ export interface CollaborationChange {
 }
 
 // 协同编辑请求统一使用 silent 模式，失败不弹 ElMessage 错误提示
-const SILENT = { silent: true }
+const SILENT: AxiosRequestConfig & { silent?: boolean } = { silent: true }
 
 export function joinCollaboration(configType: string, configId: number, user: OnlineUser) {
   return post<void>('/api/lowcode/collaboration/join', {

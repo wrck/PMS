@@ -55,15 +55,16 @@ const debounce: Directive<HTMLElement, DebounceOptions | ((event: Event) => void
  *
  * 当前用户不具备任一权限码时，元素将从 DOM 中移除。
  */
-const permission: Directive<HTMLElement, string | string[]> = {
+const permission: Directive<HTMLElement, string | string[] | undefined> = {
   mounted(el, binding) {
+    if (!binding.value) return
     const codes: string[] = Array.isArray(binding.value)
       ? binding.value
       : [binding.value]
-    if (!codes.length) return // 未传权限码时不处理
+    if (!codes.length) return
 
     const store = useUserStore()
-    const hasPermission = codes.some((code) => store.permissions.includes(code))
+    const hasPermission = store.hasAnyPermission(codes)
     if (!hasPermission) {
       el.parentNode?.removeChild(el)
     }

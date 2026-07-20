@@ -338,13 +338,13 @@ public class DynamicEntityDataService {
         fireBeforeCrudTriggers(entityCode, "CREATE",
                 buildContext(entityCode, "CREATE", "BEFORE", null, data));
 
-        // 过滤合法字段
-        Set<String> validFields = design.getFields().stream()
-                .map(LowCodeField::getName)
-                .collect(Collectors.toSet());
+        Map<String, String> fieldTypeMap = design.getFields().stream()
+                .collect(Collectors.toMap(LowCodeField::getName, LowCodeField::getFieldType, (a, b) -> a));
+        Set<String> validFields = fieldTypeMap.keySet();
         Map<String, Object> filtered = data.entrySet().stream()
-                .filter(e -> validFields.contains(e.getKey()))
+                .filter(e -> validFields.contains(e.getKey()) && e.getValue() != null)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap::new));
+        normalizeDateValues(filtered, fieldTypeMap);
 
         String columns = filtered.keySet().stream()
                 .map(f -> "`" + f + "`")
@@ -376,17 +376,19 @@ public class DynamicEntityDataService {
         fireBeforeCrudTriggers(entityCode, "UPDATE",
                 buildContext(entityCode, "UPDATE", "BEFORE", id, data));
 
-        Set<String> validFields = design.getFields().stream()
-                .map(LowCodeField::getName)
+        Map<String, String> fieldTypeMap = design.getFields().stream()
+                .collect(Collectors.toMap(LowCodeField::getName, LowCodeField::getFieldType, (a, b) -> a));
+        Set<String> validFields = fieldTypeMap.keySet().stream()
                 .filter(f -> !"id".equals(f))
                 .collect(Collectors.toSet());
         Map<String, Object> filtered = data.entrySet().stream()
-                .filter(e -> validFields.contains(e.getKey()))
+                .filter(e -> validFields.contains(e.getKey()) && e.getValue() != null)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap::new));
 
         if (filtered.isEmpty()) {
             return;
         }
+        normalizeDateValues(filtered, fieldTypeMap);
 
         String setClause = filtered.keySet().stream()
                 .map(f -> "`" + f + "` = ?")
@@ -427,6 +429,31 @@ public class DynamicEntityDataService {
             throw new IllegalArgumentException("实体不存在: " + entityCode);
         }
         return entityService.getDesign(entity.getId());
+    }
+
+    /**
+     * 将浏览器 ISO-8601 日期值转换为 MySQL DATE/DATETIME 可接受的格式。
+     */
+    private void normalizeDateValues(Map<String, Object> data, Map<String, String> fieldTypeMap) {
+        for (Map.Entry<String, String> entry : fieldTypeMap.entrySet()) {
+            String fieldType = entry.getValue();
+            Object value = data.get(entry.getKey());
+            if ((!"DATE".equals(fieldType) && !"DATETIME".equals(fieldType))
+                    || !(value instanceof String strValue) || !strValue.contains("T")) {
+                continue;
+            }
+            String[] parts = strValue.split("T", 2);
+            if ("DATE".equals(fieldType)) {
+                data.put(entry.getKey(), parts[0]);
+                continue;
+            }
+            String timePart = parts[1].replace("Z", "");
+            int fractionIndex = timePart.indexOf('.');
+            if (fractionIndex >= 0) {
+                timePart = timePart.substring(0, fractionIndex);
+            }
+            data.put(entry.getKey(), parts[0] + " " + timePart);
+        }
     }
 
     // ==================== CRUD 触发器钩子 ====================

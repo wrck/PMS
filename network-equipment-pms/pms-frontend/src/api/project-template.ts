@@ -1,4 +1,4 @@
-import request from '@/utils/request'
+import { del, get, post, put } from '@/utils/request'
 
 export interface ProjectTemplate {
   id?: number
@@ -80,39 +80,37 @@ export function listTemplates(params: {
   category?: string
   status?: string
 }) {
-  return request.get<PageResult<ProjectTemplate>>('/api/project/template/list', { params })
+  return get<PageResult<ProjectTemplate>>('/api/project/template/list', params)
 }
 
 export function getTemplate(id: number) {
-  return request.get<ProjectTemplate>(`/api/project/template/${id}`)
+  return get<ProjectTemplate>(`/api/project/template/${id}`)
 }
 
 export function createTemplate(data: ProjectTemplate) {
-  return request.post<ProjectTemplate>('/api/project/template', data)
+  return post<ProjectTemplate>('/api/project/template', data)
 }
 
 export function updateTemplate(data: ProjectTemplate) {
-  return request.put<ProjectTemplate>('/api/project/template', data)
+  return put<ProjectTemplate>('/api/project/template', data)
 }
 
 export function deleteTemplate(id: number) {
-  return request.del<void>(`/api/project/template/${id}`)
+  return del<void>(`/api/project/template/${id}`)
 }
 
 export function listTemplateVersions(id: number, page = 1, size = 10) {
-  return request.get<PageResult<ProjectTemplateVersion>>(`/api/project/template/${id}/versions`, {
-    params: { page, size }
-  })
+  return get<PageResult<ProjectTemplateVersion>>(`/api/project/template/${id}/versions`, { page, size })
 }
 
 export function publishVersion(id: number, data: PublishVersionRequest) {
-  return request.post<ProjectTemplateVersion>(`/api/project/template/${id}/publish`, data)
+  return post<ProjectTemplateVersion>(`/api/project/template/${id}/publish`, data)
 }
 
 export function getPublishedVersion(id: number) {
-  return request.get<ProjectTemplateVersion>(`/api/project/template/${id}/published-version`)
+  return get<ProjectTemplateVersion>(`/api/project/template/${id}/published-version`)
 }
 
 export function createProjectFromTemplate(data: ProjectCreateFromTemplateDTO) {
-  return request.post('/api/project/template/create-project', data)
+  return post('/api/project/template/create-project', data)
 }

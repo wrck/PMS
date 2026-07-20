@@ -415,6 +415,10 @@ export interface ListExportConfig {
 export interface ListConfig {
   title?: string
   description?: string
+  /** 绑定的动态实体编码；未显式配置 searchApi 时自动使用动态实体分页接口 */
+  entityCode?: string
+  /** 绑定的表单编码；省略时按 form_{entityCode} 约定解析 */
+  formCode?: string
   /** 列表数据查询 API */
   searchApi?: string
   /** 请求方法 GET / POST */
@@ -633,6 +637,32 @@ export interface TabConfig {
   tabs: TabItemConfig[]
 }
 
+/**
+ * Normalize historical tab JSON into the current designer/runtime contract.
+ * Early demo data used `type` (upper-case) and omitted `id`/`name`.
+ */
+export function normalizeTabConfig(config: TabConfig): TabConfig {
+  const tabs = Array.isArray(config.tabs) ? config.tabs : []
+  return {
+    ...config,
+    tabs: tabs.map((item, index) => {
+      const legacy = item as TabItemConfig & { type?: string }
+      const rawPageType = legacy.pageType || legacy.type || TabPageType.CUSTOM
+      const pageType = String(rawPageType).toLowerCase().replaceAll('_', '-')
+      const id = legacy.id || `tab_${index + 1}`
+      return {
+        ...legacy,
+        id,
+        name: legacy.name || id,
+        title: legacy.title || `标签 ${index + 1}`,
+        pageType,
+        lazy: legacy.lazy ?? true,
+        props: legacy.props || {}
+      }
+    })
+  }
+}
+
 // ===================== 标签页 API 方法 =====================
 
 /** 分页查询标签页配置（后端参数为 current/size） */
@@ -799,6 +829,52 @@ export interface RelatedPageConfig {
   layout?: string
   /** 栅格间距（grid 模式生效，默认 16） */
   gutter?: number
+}
+
+/**
+ * Normalize the legacy relation-view contract into section-based composition.
+ * Legacy demo rows used sourceEntity/targetEntity/targetPageCode without
+ * `sections`, which otherwise produced an empty designer and preview.
+ */
+export function normalizeRelatedPageConfig(config: RelatedPageConfig): RelatedPageConfig {
+  const legacy = config as RelatedPageConfig & {
+    sourceEntity?: string
+    targetEntity?: string
+    targetPageCode?: string
+  }
+  let sections = Array.isArray(config.sections) ? config.sections : []
+  if (sections.length === 0 && legacy.targetPageCode) {
+    const code = legacy.targetPageCode
+    const type =
+      code.startsWith('form_') ? SectionType.FORM
+        : code.startsWith('list_') ? SectionType.LIST
+          : code.startsWith('tab_') ? SectionType.TAB
+            : SectionType.CUSTOM
+    sections = [{
+      id: 'section_1',
+      title: legacy.targetEntity || '关联信息',
+      type,
+      pageCode: code,
+      span: 24,
+      order: 100,
+      props: {}
+    }]
+  }
+  return {
+    ...config,
+    mainEntity: config.mainEntity || legacy.sourceEntity || '',
+    layout: config.layout || RelatedPageLayout.GRID,
+    gutter: config.gutter ?? 16,
+    sections: sections.map((section, index) => ({
+      ...section,
+      id: section.id || `section_${index + 1}`,
+      title: section.title || `区块 ${index + 1}`,
+      type: String(section.type || SectionType.CUSTOM).toLowerCase().replaceAll('_', '-'),
+      span: section.span ?? 24,
+      order: section.order ?? (index + 1) * 100,
+      props: section.props || {}
+    }))
+  }
 }
 
 // ===================== 关联页 API 方法 =====================
@@ -1005,4 +1081,3 @@ export function queryEntityData(
 ): Promise<DynamicQueryPage> {
   return post<DynamicQueryPage>(`/api/lowcode/data/${entityCode}/query`, request)
 }
-

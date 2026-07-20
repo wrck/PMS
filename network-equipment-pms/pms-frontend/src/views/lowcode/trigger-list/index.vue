@@ -534,7 +534,7 @@ onMounted(load)
 
       <!-- 执行历史折叠面板（仅在已保存触发器时显示） -->
       <el-collapse
-        v-if="current.id"
+        v-if="current?.id"
         v-model="historyCollapseActive"
         class="history-collapse"
         @change="onHistoryCollapseChange"

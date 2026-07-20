@@ -141,7 +141,8 @@ onMounted(loadEntities)
     <el-form-item label="条件表达式">
       <div class="condition-wrap">
         <ExpressionEditor
-          v-model="form.condition"
+          :model-value="form.condition || ''"
+          @update:model-value="(value: string) => (form.condition = value)"
           language="groovy"
           :variables="conditionVariables"
           :height="160"

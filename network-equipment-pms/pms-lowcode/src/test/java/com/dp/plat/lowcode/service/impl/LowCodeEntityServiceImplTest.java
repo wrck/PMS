@@ -3,6 +3,7 @@ package com.dp.plat.lowcode.service.impl;
 import com.dp.plat.lowcode.dto.EntityDesignDTO;
 import com.dp.plat.lowcode.dto.DdlResultDTO;
 import com.dp.plat.lowcode.engine.DdlGenerator;
+import com.dp.plat.lowcode.engine.ddl.DdlExecutionService;
 import com.dp.plat.lowcode.entity.LowCodeEntity;
 import com.dp.plat.lowcode.entity.LowCodeField;
 import com.dp.plat.lowcode.mapper.LowCodeEntityMapper;
@@ -42,6 +43,8 @@ class LowCodeEntityServiceImplTest {
     private DdlGenerator ddlGenerator;
     @Mock
     private LowCodeConfigVersionService configVersionService;
+    @Mock
+    private DdlExecutionService ddlExecutionService;
     @Mock
     private ObjectMapper objectMapper;
     @Spy
@@ -138,6 +141,7 @@ class LowCodeEntityServiceImplTest {
         LowCodeEntity result = entityService.publish(1L, "首次发布");
 
         assertEquals("PUBLISHED", result.getStatus());
+        verify(ddlExecutionService).executeCreate(1L, false);
         verify(configVersionService)
                 .createSnapshot(any(LowCodeConfigVersionService.SnapshotContext.class));
     }

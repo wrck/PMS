@@ -196,6 +196,7 @@ async function saveBinding() {
 
 // ===== BPMN 设计器对话框 =====
 const designerDialogVisible = ref(false)
+const dialogOpened = ref(false)
 const designerName = ref('')
 const bpmnCanvasRef = ref<InstanceType<typeof BpmnCanvas> | null>(null)
 const modelerRef = shallowRef<BpmnModeler | null>(null)
@@ -208,7 +209,18 @@ function openDesigner() {
   lastDeployedKey.value = ''
   selectedElement.value = null
   modelerRef.value = null
+  dialogOpened.value = false
   designerDialogVisible.value = true
+}
+
+function onDialogOpened() {
+  dialogOpened.value = true
+}
+
+function onDialogClosed() {
+  dialogOpened.value = false
+  modelerRef.value = null
+  selectedElement.value = null
 }
 
 function onCanvasReady(modeler: BpmnModeler) {
@@ -491,8 +503,10 @@ onMounted(load)
       fullscreen
       :close-on-click-modal="false"
       class="designer-dialog"
+      @opened="onDialogOpened"
+      @closed="onDialogClosed"
     >
-      <div v-if="designerDialogVisible" class="designer-layout">
+      <div v-if="dialogOpened" class="designer-layout">
         <div class="designer-toolbar">
           <span class="toolbar-label">流程名称：</span>
           <el-input

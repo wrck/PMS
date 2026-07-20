@@ -55,7 +55,8 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 jwt:
-  secret: ${JWT_SECRET:default-jwt-secret-please-change}
+  # Base64 编码的开发默认密钥；生产环境必须通过 JWT_SECRET 覆盖。
+  secret: ${JWT_SECRET:ZGV2ZWxvcG1lbnQtand0LXNlY3JldC1rZXktY2hhbmdlLW1lLTMydC1ieXRlcw==}
   expiration: 86400000
 app:
   security:

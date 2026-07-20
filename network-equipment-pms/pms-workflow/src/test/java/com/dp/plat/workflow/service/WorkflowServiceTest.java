@@ -232,7 +232,6 @@ class WorkflowServiceTest {
 
         Task task = org.mockito.Mockito.mock(Task.class);
         when(task.getId()).thenReturn("task-2");
-        when(task.getProcessInstanceId()).thenReturn("pi-2");
         when(query.singleResult()).thenReturn(task);
 
         Result<Void> result = workflowService.completeTask(request);

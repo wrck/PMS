@@ -23,7 +23,10 @@ const tableData = ref<ApprovalFieldPermission[]>([])
 // 编辑对话框
 const dialogVisible = ref(false)
 const isEdit = ref(false)
-const form = reactive<ApprovalFieldPermission>({
+type ApprovalFieldPermissionForm = Omit<ApprovalFieldPermission, 'approvalNodeId'> & {
+  approvalNodeId?: number
+}
+const form = reactive<ApprovalFieldPermissionForm>({
   id: undefined,
   approvalNodeId: undefined,
   entityType: '',
@@ -141,13 +144,17 @@ function validateForm(): boolean {
 
 async function handleSubmit() {
   if (!validateForm()) return
+  const payload: ApprovalFieldPermission = {
+    ...form,
+    approvalNodeId: form.approvalNodeId as number
+  }
   submitting.value = true
   try {
     if (isEdit.value) {
-      await updateFieldPermission(form)
+      await updateFieldPermission(payload)
       ElMessage.success('更新成功')
     } else {
-      await saveFieldPermission(form)
+      await saveFieldPermission(payload)
       ElMessage.success('新增成功')
     }
     dialogVisible.value = false

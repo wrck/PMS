@@ -65,6 +65,6 @@ export default tseslint.config(
 
   // ============ 忽略路径 ============
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '*.config.{js,ts}']
+    ignores: ['dist/**', 'dist-sdk/**', 'node_modules/**', 'coverage/**', '*.config.{js,ts}']
   }
 )

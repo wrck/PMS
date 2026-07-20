@@ -59,6 +59,9 @@ public class RuleEngineServiceImpl implements RuleEngineService {
         long startMs = System.currentTimeMillis();
         boolean success = true;
         try {
+            if (definition == null || definition.isBlank()) {
+                return List.of();
+            }
             Map<String, Object> table = objectMapper.readValue(definition, Map.class);
             // 新格式优先：包含 conditionColumns 或 hitPolicy
             if (table.containsKey("conditionColumns") || table.containsKey("hitPolicy")) {
@@ -173,7 +176,10 @@ public class RuleEngineServiceImpl implements RuleEngineService {
      * IN 支持 List 与逗号分隔字符串两种形式；EQ/NE 经类型兼容比较。</p>
      */
     private boolean matchOperator(Object actual, String op, Object expected) {
-        if (actual == null) return false;
+        if (actual == null) {
+            if ("NE".equals(op)) return expected != null;
+            return false;
+        }
         return switch (op) {
             case "EQ" -> equalsWithCoercion(actual, expected);
             case "NE" -> !equalsWithCoercion(actual, expected);

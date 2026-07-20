@@ -53,7 +53,7 @@ export interface BpmnSelectionService {
 
 export interface BpmnEventBus {
   on(events: string | string[], callback: (event: Record<string, unknown>) => void): void
-  off(events: string | string[], callback?: Function): void
+  off(events: string | string[], callback?: (...args: unknown[]) => unknown): void
 }
 
 /** 低代码 moddle 扩展命名空间前缀 */

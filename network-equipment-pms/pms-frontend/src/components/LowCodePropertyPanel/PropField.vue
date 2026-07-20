@@ -34,6 +34,11 @@ function label(): string {
   return props.propDef.label || props.propDef.key
 }
 
+function resolveDateType(): 'date' | 'datetime' | 'daterange' {
+  const type = props.propDef.dateType
+  return type === 'datetime' || type === 'daterange' ? type : 'date'
+}
+
 /** 容器值的安全读取：object 缺省返回 {}，array 缺省返回 [] */
 function containerValue(): any {
   if (props.propDef.type === 'object') {
@@ -151,7 +156,7 @@ function updateArrayItem(idx: number, v: any) {
     <el-date-picker
       v-else-if="propDef.type === 'date'"
       :model-value="modelValue"
-      :type="(propDef.dateType || 'date') as 'date' | 'datetime' | 'daterange'"
+      :type="resolveDateType()"
       :placeholder="propDef.placeholder"
       style="width: 100%"
       @update:model-value="(v: any) => emit('update:modelValue', v)"

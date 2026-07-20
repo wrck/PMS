@@ -149,7 +149,7 @@ class WebSocketIntegrationTest extends AbstractIntegrationTest {
                     .connectAsync(url, new WebSocketHttpHeaders(),
                             new StompSessionHandlerAdapter() {
                                 @Override
-                                public void handleTransportError(Throwable exception) {
+                                public void handleTransportError(StompSession session, Throwable exception) {
                                     error.set(exception);
                                 }
                             })
@@ -171,7 +171,7 @@ class WebSocketIntegrationTest extends AbstractIntegrationTest {
                     .connectAsync(wsUrl(invalidJwt()), new WebSocketHttpHeaders(),
                             new StompSessionHandlerAdapter() {
                                 @Override
-                                public void handleTransportError(Throwable exception) {
+                                public void handleTransportError(StompSession session, Throwable exception) {
                                     error.set(exception);
                                 }
                             })
@@ -232,7 +232,7 @@ class WebSocketIntegrationTest extends AbstractIntegrationTest {
         assertTrue(session.isConnected(), "心跳启用后会话应保持连接");
 
         // 主动断开不应抛异常
-        assertDoesNotThrow(session::disconnect);
+        assertDoesNotThrow(() -> session.disconnect());
     }
 
     @Test

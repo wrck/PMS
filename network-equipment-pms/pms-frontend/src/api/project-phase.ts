@@ -1,4 +1,4 @@
-import request from '@/utils/request'
+import { del, get, post, put } from '@/utils/request'
 
 export interface ProjectPhase {
   id?: number
@@ -17,23 +17,23 @@ export interface ProjectPhase {
 }
 
 export function listPhasesByProjectId(projectId: number) {
-  return request.get<ProjectPhase[]>(`/api/project/phase/project/${projectId}`)
+  return get<ProjectPhase[]>(`/api/project/phase/project/${projectId}`)
 }
 
 export function getPhase(id: number) {
-  return request.get<ProjectPhase>(`/api/project/phase/${id}`)
+  return get<ProjectPhase>(`/api/project/phase/${id}`)
 }
 
 export function createPhase(data: ProjectPhase) {
-  return request.post<ProjectPhase>('/api/project/phase', data)
+  return post<ProjectPhase>('/api/project/phase', data)
 }
 
 export function updatePhase(data: ProjectPhase) {
-  return request.put<ProjectPhase>('/api/project/phase', data)
+  return put<ProjectPhase>('/api/project/phase', data)
 }
 
 export function deletePhase(id: number) {
-  return request.del<void>(`/api/project/phase/${id}`)
+  return del<void>(`/api/project/phase/${id}`)
 }
 
 // ===================== 阶段推进（Phase 3 Story 2） =====================
@@ -71,7 +71,5 @@ export interface PhaseExitGateResult {
 export function advancePhase(
   phaseId: number
 ): Promise<ProjectPhase | PhaseExitGateResult> {
-  return request.post(`/api/project/phase/${phaseId}/advance`) as unknown as Promise<
-    ProjectPhase | PhaseExitGateResult
-  >
+  return post<ProjectPhase | PhaseExitGateResult>(`/api/project/phase/${phaseId}/advance`)
 }

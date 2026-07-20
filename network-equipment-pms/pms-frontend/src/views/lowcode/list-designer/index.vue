@@ -131,13 +131,19 @@ const listConfig = reactive<ListConfig>({
   layout: ListLayout.TABLE,
   stripe: true,
   border: true,
-  showSelection: true,
+  showSelection: false,
   showIndex: true,
   showPagination: true,
   columns: [],
   filters: [],
-  operations: [],
-  toolbar: [],
+  operations: [
+    { id: 'op_1', label: '查看', type: ButtonType.TEXT, action: ActionType.VIEW, icon: 'View' },
+    { id: 'op_2', label: '编辑', type: ButtonType.PRIMARY, action: ActionType.EDIT, icon: 'Edit' },
+    { id: 'op_3', label: '删除', type: ButtonType.DANGER, action: ActionType.DELETE, icon: 'Delete', confirm: '确认删除？' }
+  ],
+  toolbar: [
+    { id: 'op_4', label: '新建', type: ButtonType.PRIMARY, action: ActionType.CREATE, icon: 'Plus' }
+  ],
   export: { enabled: false }
 })
 
@@ -150,7 +156,7 @@ const selectedId = ref<string>('')
 /** 各类型 ID 计数器 */
 let colSeq = 0
 let filterSeq = 0
-let opSeq = 0
+let opSeq = 4
 
 /** 元信息表单 ref */
 const metaFormRef = ref<FormInstance>()
@@ -168,6 +174,16 @@ const previewVisible = ref(false)
 const selectedColumn = computed(() =>
   listConfig.columns.find((c) => c.id === selectedId.value) || null
 )
+const isSelectedRegistryColumn = computed(
+  () => !!selectedColumn.value &&
+    selectedColumn.value.type === ColumnType.CUSTOM &&
+    !!selectedColumn.value.componentName
+)
+const selectedColumnComponentMeta = computed<ComponentMeta | null>(() => {
+  const col = selectedColumn.value
+  if (!col?.componentName) return null
+  return LowCodeComponentRegistry.get(col.componentName)?.meta || null
+})
 /** 当前选中的筛选项 */
 const selectedFilter = computed(() =>
   listConfig.filters?.find((f) => f.id === selectedId.value) || null
@@ -531,7 +547,7 @@ function parseListConfigFromStr() {
     listConfig.layout = parsed.layout ?? ListLayout.TABLE
     listConfig.stripe = parsed.stripe ?? true
     listConfig.border = parsed.border ?? true
-    listConfig.showSelection = parsed.showSelection ?? true
+    listConfig.showSelection = parsed.showSelection ?? false
     listConfig.showIndex = parsed.showIndex ?? true
     listConfig.showPagination = parsed.showPagination ?? true
     listConfig.columns = parsed.columns || []
@@ -1052,17 +1068,12 @@ onBeforeUnmount(() => {
         <el-form v-else-if="activeTab === 'column' && selectedColumn" :model="selectedColumn" label-width="90px" size="small">
           <el-divider content-position="left">基础属性</el-divider>
           <el-form-item label="列类型">
-            <el-select v-model="selectedColumn.type" style="width: 100%">
+            <el-tag v-if="isSelectedRegistryColumn" type="warning" size="small">
+              业务组件：{{ selectedColumnComponentMeta?.displayName || selectedColumn.componentName }}
+            </el-tag>
+            <el-select v-else v-model="selectedColumn.type" style="width: 100%">
               <el-option-group label="列组件">
                 <el-option v-for="c in componentGroups[0].items" :key="c.type" :label="c.label" :value="c.type" />
-              </el-option-group>
-              <el-option-group v-if="registryComponents.length" label="业务组件">
-                <el-option
-                  v-for="meta in registryComponents"
-                  :key="meta.name"
-                  :label="meta.displayName"
-                  :value="ColumnType.CUSTOM"
-                />
               </el-option-group>
             </el-select>
           </el-form-item>

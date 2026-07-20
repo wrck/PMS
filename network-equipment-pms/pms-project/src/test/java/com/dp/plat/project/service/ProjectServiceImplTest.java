@@ -105,7 +105,7 @@ class ProjectServiceImplTest {
         assertEquals("NORMAL", saved.getPriority());
         assertEquals(0, saved.getProgress());
         assertNull(saved.getProjectCode(), "项目编号应在审批时生成，创建时为空");
-        assertNull(saved.getId(), "id 在保存前应被置空（由数据库生成）");
+        assertEquals(1L, saved.getId(), "保存后应返回数据库生成的项目ID");
         verify(projectMapper, times(1)).insert(any(Project.class));
     }
 

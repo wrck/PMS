@@ -10,7 +10,7 @@
  * <p>父级通过 ref 调用 expose 的方法（newDiagram / importXml / exportXml /
  * zoomToFit / getModeler）完成保存、导入、部署等操作。</p>
  */
-import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import type BpmnModeler from 'bpmn-js/lib/Modeler'
 import type { ModdleElement } from 'bpmn-js/lib/model/Types'
 import {
@@ -76,7 +76,10 @@ async function init() {
   emit('ready', modeler)
 }
 
-onMounted(init)
+onMounted(async () => {
+  await nextTick()
+  await init()
+})
 
 onBeforeUnmount(() => {
   try {

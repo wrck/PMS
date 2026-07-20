@@ -22,6 +22,7 @@
 import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import axios from 'axios'
 import {
   checkLowCodePermission,
   getFormByCode,
@@ -34,6 +35,7 @@ import {
   type LowCodeRelatedPageConfig,
   type LowCodeTabConfig
 } from '@/api/lowcode'
+import { TOKEN_KEY } from '@/utils/request'
 
 const route = useRoute()
 const router = useRouter()
@@ -44,9 +46,19 @@ const state = ref<'loading' | 'done' | 'not-found' | 'forbidden' | 'error'>('loa
 /** 解析后的配置对象（FormConfig / ListConfig / TabConfig / RelatedPageConfig 之一） */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const config = ref<any>(null)
+const pageName = ref('')
+const formDataModel = ref<Record<string, unknown>>({})
 
 const pageType = computed(() => route.params.pageType as LowCodePageType)
 const pageCode = computed(() => route.params.pageCode as string)
+const formMode = computed(() => (route.query.mode as string) || 'view')
+const entityCode = computed(() => {
+  const code = pageCode.value
+  if (code.startsWith('form_')) return code.substring(5)
+  if (code.startsWith('list_')) return code.substring(5)
+  return code
+})
+const isFormReadOnly = computed(() => pageType.value === 'form' && formMode.value === 'view')
 
 /** 合法的页面类型集合 */
 const VALID_PAGE_TYPES: ReadonlySet<string> = new Set(['form', 'list', 'tab', 'related-page'])
@@ -163,9 +175,21 @@ async function load() {
       return
     }
     config.value = result.config
+    pageName.value = result.name || ''
     // 更新浏览器标题
     if (result.name) {
       document.title = `${result.name} - 网络设备工程项目管理系统`
+    }
+    formDataModel.value = {}
+    if (pageType.value === 'form' && (formMode.value === 'view' || formMode.value === 'edit')) {
+      const id = route.query.id as string
+      if (id) {
+        const token = localStorage.getItem(TOKEN_KEY) || ''
+        const response = await axios.get(`/api/lowcode/data/${entityCode.value}/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        formDataModel.value = response.data?.data || response.data || {}
+      }
     }
     state.value = 'done'
   } catch (e) {
@@ -184,63 +208,95 @@ watch([pageType, pageCode], () => {
 function goBack() {
   router.back()
 }
+
+async function handleFormSubmit() {
+  try {
+    const formData: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(formDataModel.value)) {
+      formData[key] = value === '' || value === undefined ? null : value
+    }
+    const token = localStorage.getItem(TOKEN_KEY) || ''
+    const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+    const baseUrl = `/api/lowcode/data/${entityCode.value}`
+    const id = route.query.id as string
+    if (formMode.value === 'edit' && id) {
+      await axios.put(`${baseUrl}/${id}`, formData, { headers })
+    } else {
+      await axios.post(baseUrl, formData, { headers })
+    }
+    ElMessage.success('保存成功')
+    router.back()
+  } catch (e) {
+    console.error('表单提交失败', e)
+    ElMessage.error('保存失败，请检查数据')
+  }
+}
 </script>
 
 <template>
-  <div class="lowcode-render-page">
+  <div class="page-container">
     <!-- 加载中：骨架屏 -->
-    <el-skeleton v-if="state === 'loading'" :rows="10" animated />
+    <el-card v-if="state === 'loading'" shadow="never">
+      <el-skeleton :rows="10" animated />
+    </el-card>
 
     <!-- 404：配置不存在 -->
-    <el-result
-      v-else-if="state === 'not-found'"
-      icon="warning"
-      title="页面不存在"
-      sub-title="请检查页面编码或联系管理员"
-    >
-      <template #extra>
-        <el-button type="primary" @click="goBack">返回</el-button>
-      </template>
-    </el-result>
+    <el-card v-else-if="state === 'not-found'" shadow="never">
+      <el-result icon="warning" title="页面不存在" sub-title="请检查页面编码或联系管理员">
+        <template #extra><el-button type="primary" @click="goBack">返回</el-button></template>
+      </el-result>
+    </el-card>
 
     <!-- 403：无权限 -->
-    <el-result
-      v-else-if="state === 'forbidden'"
-      icon="error"
-      title="无访问权限"
-      sub-title="您没有访问该低代码页面的权限，请联系管理员授权"
-    >
-      <template #extra>
-        <el-button type="primary" @click="goBack">返回</el-button>
-      </template>
-    </el-result>
+    <el-card v-else-if="state === 'forbidden'" shadow="never">
+      <el-result icon="error" title="无访问权限" sub-title="您没有访问该低代码页面的权限，请联系管理员授权">
+        <template #extra><el-button type="primary" @click="goBack">返回</el-button></template>
+      </el-result>
+    </el-card>
 
     <!-- 加载异常 -->
-    <el-result
-      v-else-if="state === 'error'"
-      icon="error"
-      title="加载失败"
-      sub-title="低代码页面加载异常，请稍后重试"
-    >
-      <template #extra>
-        <el-button type="primary" @click="load">重试</el-button>
-        <el-button @click="goBack">返回</el-button>
-      </template>
-    </el-result>
+    <el-card v-else-if="state === 'error'" shadow="never">
+      <el-result icon="error" title="加载失败" sub-title="低代码页面加载异常，请稍后重试">
+        <template #extra>
+          <el-button type="primary" @click="load">重试</el-button>
+          <el-button @click="goBack">返回</el-button>
+        </template>
+      </el-result>
+    </el-card>
 
-    <!-- 正常渲染 -->
-    <component
-      v-else-if="state === 'done' && renderer && config"
-      :is="renderer"
-      :config="config"
-      :context-data="contextData"
-    />
+    <el-card v-else-if="state === 'done' && renderer && config" shadow="never">
+      <template #header><span class="page-title">{{ pageName || '低代码页面' }}</span></template>
+      <component
+        :is="renderer"
+        v-model="formDataModel"
+        :config="config"
+        :context-data="contextData"
+        :auto-fetch="true"
+        :disabled="isFormReadOnly"
+      />
+      <div v-if="pageType === 'form'" class="form-actions">
+        <template v-if="!isFormReadOnly">
+          <el-button type="primary" @click="handleFormSubmit">保存</el-button>
+          <el-button @click="goBack">取消</el-button>
+        </template>
+        <el-button v-else type="primary" @click="goBack">返回</el-button>
+      </div>
+    </el-card>
   </div>
 </template>
 
 <style scoped>
-.lowcode-render-page {
-  padding: 12px;
-  min-height: calc(100vh - 110px);
+.page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.page-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.form-actions {
+  margin-top: 20px;
+  text-align: center;
 }
 </style>

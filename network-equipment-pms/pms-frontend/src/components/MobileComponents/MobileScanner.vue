@@ -96,7 +96,7 @@ let barcodeDetector: any = null
 async function initBarcodeDetector(): Promise<boolean> {
   if ('BarcodeDetector' in window) {
     try {
-      // @ts-ignore - BarcodeDetector 是实验性 API
+      // @ts-expect-error - BarcodeDetector 是实验性 API，尚未进入 TypeScript DOM 类型
       barcodeDetector = new window.BarcodeDetector({
         formats: props.formats
       })
