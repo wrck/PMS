@@ -1,11 +1,15 @@
 package com.dp.plat.project.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.dp.plat.common.dto.ApprovalViolation;
 import com.dp.plat.common.dto.DeliverableViolation;
 import com.dp.plat.common.dto.PhaseExitGate;
+import com.dp.plat.common.dto.TaskCompletionViolation;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.result.Result;
+import com.dp.plat.common.spi.ApprovalStatusChecker;
 import com.dp.plat.common.spi.MandatoryDeliverableValidator;
+import com.dp.plat.common.spi.TaskCompletionChecker;
 import com.dp.plat.project.dao.ProjectPhaseMapper;
 import com.dp.plat.project.dto.PhaseExitGateViolation;
 import com.dp.plat.project.entity.Deliverable;
@@ -47,6 +51,24 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
      */
     @Autowired(required = false)
     private MandatoryDeliverableValidator mandatoryDeliverableValidator;
+
+    /**
+     * 任务完成率校验 SPI（TD-P8-005）。
+     *
+     * <p>由 {@code pms-implementation} 模块实现并注册为 Spring Bean。若该模块未加载
+     * （bean 不存在），TASK 分支跳过校验（仅 log.warn），避免在无任务数据时锁死阶段推进。</p>
+     */
+    @Autowired(required = false)
+    private TaskCompletionChecker taskCompletionChecker;
+
+    /**
+     * 审批状态校验 SPI（TD-P8-005）。
+     *
+     * <p>由 {@code pms-workflow} 模块实现并注册为 Spring Bean。若该模块未加载
+     * （bean 不存在），APPROVAL 分支跳过校验（仅 log.warn）。</p>
+     */
+    @Autowired(required = false)
+    private ApprovalStatusChecker approvalStatusChecker;
 
     /** 阶段状态常量（关联设计文档 §3.2） */
     private static final String PHASE_NOT_STARTED = "NOT_STARTED";
@@ -153,10 +175,15 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
     /**
      * 校验阶段退出条件（PhaseExitGate，4 类）。
      *
-     * <p>当前已实现 DELIVERABLE、MILESTONE 两类（依赖 pms-project 内的 DeliverableMapper、
-     * MilestoneMapper）。TASK、APPROVAL 两类依赖 pms-implementation 的 ImplTask 与 Story 4 的
-     * ApprovalRecord，pms-project 模块当前未依赖这些实体；为避免在无任务/审批数据时锁死阶段推进，
-     * 暂不阻断（仅记录 TODO），待 Story 3/4 接入对应服务后补充校验。
+     * <p>已实现全部 4 类：
+     * <ul>
+     *   <li>DELIVERABLE：必需交付件状态校验（TD-P8-011/012，优先走 SPI，fallback 内联集合判断）</li>
+     *   <li>MILESTONE：必需里程碑 mustReached=true 时须为 COMPLETED</li>
+     *   <li>TASK：必需任务 allCompleted=true 时通过 TaskCompletionChecker SPI 校验（TD-P8-005）</li>
+     *   <li>APPROVAL：必需审批 mustApproved=true 时通过 ApprovalStatusChecker SPI 校验（TD-P8-005）</li>
+     * </ul>
+     * TASK/APPROVAL 通过 SPI 解耦 pms-implementation/pms-workflow，bean 不存在时跳过校验（仅 log.warn），
+     * 避免在无任务/审批数据时锁死阶段推进。
      */
     private List<PhaseExitGateViolation> validateExitGate(ProjectPhase phase) {
         List<PhaseExitGateViolation> violations = new ArrayList<>();
@@ -260,9 +287,64 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
             }
         }
 
-        // 3. 必需任务（requiredTasks）：ImplTask 在 pms-implementation 模块，pms-project 未依赖。
-        //    Story 3 接入任务服务后，在此按 phaseId + allCompleted 校验未完成任务并生成 violations。
-        // 4. 必需审批（requiredApprovals）：ApprovalRecord 待 Story 4 接入，同上策略。
+        // 3. 必需任务（requiredTasks）：TD-P8-005 通过 TaskCompletionChecker SPI 跨模块校验。
+        //    设计 §3.4 定义 TASK 类退出条件为「阶段内任务完成率达阈值」，本实现按 allCompleted
+        //    标志查询指定 phaseId 下未完成任务。
+        if (gate.getRequiredTasks() != null) {
+            for (PhaseExitGate.RequiredTask req : gate.getRequiredTasks()) {
+                if (!Boolean.TRUE.equals(req.getAllCompleted())) {
+                    continue; // 不要求全部完成，跳过
+                }
+                if (taskCompletionChecker == null) {
+                    log.warn("TASK 退出条件校验跳过：TaskCompletionChecker SPI 未注入（pms-implementation 模块未加载），phaseId={}",
+                            req.getPhaseId());
+                    continue;
+                }
+                List<TaskCompletionViolation> taskViolations =
+                        taskCompletionChecker.findUncompletedTasks(req.getPhaseId());
+                if (taskViolations != null) {
+                    for (TaskCompletionViolation tv : taskViolations) {
+                        violations.add(PhaseExitGateViolation.builder()
+                                .gateType("TASK")
+                                .message("阶段内存在未完成任务")
+                                .businessId(tv.getTaskId())
+                                .businessName(tv.getTaskName())
+                                .expectedStatus(tv.getExpectedStatus())
+                                .actualStatus(tv.getActualStatus())
+                                .build());
+                    }
+                }
+            }
+        }
+
+        // 4. 必需审批（requiredApprovals）：TD-P8-005 通过 ApprovalStatusChecker SPI 跨模块校验。
+        //    设计 §3.4 定义 APPROVAL 类退出条件为「关联审批通过」。
+        if (gate.getRequiredApprovals() != null) {
+            for (PhaseExitGate.RequiredApproval req : gate.getRequiredApprovals()) {
+                if (!Boolean.TRUE.equals(req.getMustApproved())) {
+                    continue; // 不要求已通过，跳过
+                }
+                if (approvalStatusChecker == null) {
+                    log.warn("APPROVAL 退出条件校验跳过：ApprovalStatusChecker SPI 未注入（pms-workflow 模块未加载），approvalType={}",
+                            req.getApprovalType());
+                    continue;
+                }
+                List<ApprovalViolation> approvalViolations = approvalStatusChecker.findApprovalViolations(
+                        phase.getProjectId(), req.getApprovalType(), Boolean.TRUE.equals(req.getMustApproved()));
+                if (approvalViolations != null) {
+                    for (ApprovalViolation av : approvalViolations) {
+                        violations.add(PhaseExitGateViolation.builder()
+                                .gateType("APPROVAL")
+                                .message("关联审批未通过")
+                                .businessId(av.getApprovalRecordId())
+                                .businessName(av.getApprovalType())
+                                .expectedStatus(av.getExpectedStatus())
+                                .actualStatus(av.getActualStatus())
+                                .build());
+                    }
+                }
+            }
+        }
         return violations;
     }
 
