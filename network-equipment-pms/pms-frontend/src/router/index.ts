@@ -81,6 +81,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '项目详情', hidden: true }
       },
       {
+        path: 'workspace/:id',
+        name: 'ProjectWorkspace',
+        component: () => import('@/views/project/workspace/index.vue'),
+        meta: { title: '项目工作区', hidden: true }
+      },
+      {
         path: 'tree',
         name: 'ProjectTree',
         component: () => import('@/views/project/tree/index.vue'),
