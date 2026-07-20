@@ -11,19 +11,9 @@ import NotificationBell from '@/components/NotificationBell/index.vue'
 import UserGuide from '@/components/UserGuide/index.vue'
 import FeedbackButton from '@/components/FeedbackButton/index.vue'
 import ProjectTreeSidebar from '@/components/project/ProjectTreeSidebar.vue'
+import SidebarMenu from '@/components/layout/SidebarMenu.vue'
+import { useVisibleMenuGroups } from '@/config/menu'
 import { provideProjectContext } from '@/composables/useProjectContext'
-
-interface MenuLeaf {
-  title: string
-  path: string
-  icon: string
-  permissions?: string[]
-}
-interface MenuGroup {
-  title: string
-  icon: string
-  children: MenuLeaf[]
-}
 
 const appStore = useAppStore()
 const userStore = useUserStore()
@@ -33,6 +23,9 @@ const router = useRouter()
 
 // 在 Layout 根节点提供项目上下文，供项目树侧栏 / 工作区 / 阶段面板注入
 provideProjectContext()
+
+// ===== 菜单数据源（已按权限过滤） — 从 @/config/menu 注入 =====
+const visibleMenuGroups = useVisibleMenuGroups()
 
 // ===== 移动端响应式检测 =====
 const MOBILE_BREAKPOINT = 768
@@ -54,177 +47,6 @@ if (typeof window !== 'undefined') {
   updateMobileFlag()
   window.addEventListener('resize', updateMobileFlag)
 }
-
-// Sidebar menu structure (grouped by business module)
-const menuGroups: (MenuGroup | MenuLeaf)[] = [
-  { title: '首页', path: '/dashboard', icon: 'HomeFilled' },
-  {
-    title: '系统管理',
-    icon: 'Setting',
-    children: [
-      { title: '用户管理', path: '/system/user', icon: 'User' },
-      { title: '角色管理', path: '/system/role', icon: 'UserFilled' },
-      { title: '菜单管理', path: '/system/menu', icon: 'Menu' },
-      { title: '字典管理', path: '/system/dict', icon: 'Document' }
-    ]
-  },
-  {
-    title: '项目管理',
-    icon: 'Folder',
-    children: [
-      { title: '项目列表', path: '/project/list', icon: 'Folder' },
-      { title: '主子项目树', path: '/project/tree', icon: 'Share' },
-      { title: '交付看板', path: '/project/kanban', icon: 'Grid' },
-      { title: '项目模板', path: '/project/template', icon: 'Files', permissions: ['project:template:list'] }
-    ]
-  },
-  {
-    title: '资产管理',
-    icon: 'Box',
-    children: [
-      { title: '设备分类', path: '/asset/category', icon: 'Files' },
-      { title: '设备型号', path: '/asset/model', icon: 'Box' },
-      { title: '资产清单', path: '/asset/list', icon: 'List' }
-    ]
-  },
-  {
-    title: '实施管理',
-    icon: 'Tools',
-    children: [
-      { title: '实施任务', path: '/implementation/task', icon: 'Tickets' },
-      { title: '任务树列表', path: '/implementation/task/list', icon: 'Connection' },
-      { title: '服务商管理', path: '/implementation/agent', icon: 'OfficeBuilding' },
-      { title: '结算管理', path: '/implementation/settlement', icon: 'Money' }
-    ]
-  },
-  {
-    title: '计划基线',
-    icon: 'Histogram',
-    children: [
-      { title: '基线管理', path: '/baseline/list', icon: 'Histogram' }
-    ]
-  },
-  {
-    title: '工作流',
-    icon: 'Connection',
-    children: [
-      { title: '待办中心', path: '/workflow/todo', icon: 'Bell' },
-      { title: '统一审批中心', path: '/workflow/approval-center', icon: 'Checked', permissions: ['workflow:approval:list'] },
-      { title: '字段权限配置', path: '/workflow/field-perm', icon: 'Lock', permissions: ['workflow:field:perm'] }
-    ]
-  },
-  {
-    title: '交付治理',
-    icon: 'Operation',
-    children: [
-      { title: 'Punch List', path: '/punch-list', icon: 'WarningFilled' },
-      { title: 'RMA 返修', path: '/rma', icon: 'RefreshRight' },
-      { title: '质保期管理', path: '/warranty', icon: 'Timer' },
-      { title: '终验交付物', path: '/deliverable', icon: 'Document' },
-      { title: '交付件全生命周期', path: '/deliverable/lifecycle', icon: 'Files' }
-    ]
-  },
-  {
-    title: '项目治理',
-    icon: 'SetUp',
-    children: [
-      { title: '风险登记册', path: '/risk', icon: 'Warning' },
-      { title: '变更管理', path: '/change-request', icon: 'EditPen' },
-      { title: '问题日志', path: '/issue', icon: 'ChatLineSquare' }
-    ]
-  },
-  {
-    title: '系统监控',
-    icon: 'DataLine',
-    children: [
-      { title: '消息中心', path: '/notification', icon: 'Bell' },
-      { title: '集成健康', path: '/integration-health', icon: 'Monitor' },
-      { title: '系统状态', path: '/system-status', icon: 'Monitor' },
-      { title: '缓存管理', path: '/system/cache', icon: 'Coin' },
-      { title: '定时任务', path: '/system/schedule', icon: 'Timer' },
-      { title: '审计日志', path: '/system/audit', icon: 'DocumentChecked' },
-      { title: '版本日志', path: '/changelog', icon: 'Notebook' }
-    ]
-  },
-  { title: '报表统计', path: '/report', icon: 'TrendCharts' },
-  {
-    title: '低代码',
-    icon: 'MagicStick',
-    children: [
-      { title: '实体设计器', path: '/lowcode/entity-designer', icon: 'Connection' },
-      { title: '表单配置', path: '/lowcode/form-list', icon: 'Document' },
-      { title: '列表配置', path: '/lowcode/list-list', icon: 'List' },
-      { title: '标签页配置', path: '/lowcode/tab-list', icon: 'Files' },
-      { title: '关联页配置', path: '/lowcode/related-page-list', icon: 'Share' },
-      { title: '微流设计器', path: '/lowcode/microflow-designer', icon: 'Share' },
-      { title: '规则设计器', path: '/lowcode/rule-designer', icon: 'Filter' },
-      { title: '流程设计器', path: '/lowcode/process-designer', icon: 'Connection' },
-      { title: '触发器', path: '/lowcode/trigger-list', icon: 'BellFilled' },
-      { title: '连接器配置', path: '/lowcode/connector-designer', icon: 'Connection' },
-      { title: '发布中心', path: '/lowcode/publish-center', icon: 'Promotion' },
-      { title: '审批链配置', path: '/lowcode/approval-chain', icon: 'SetUp' },
-      { title: '版本历史', path: '/lowcode/version-history', icon: 'Timer' },
-      { title: '模板市场', path: '/lowcode/template-market', icon: 'Goods' },
-      { title: 'APM 看板', path: '/lowcode/apm-dashboard', icon: 'TrendCharts' },
-      { title: '应用源码导出', path: '/lowcode/app-source-export', icon: 'Download' }
-    ]
-  },
-  {
-    title: '演示中心',
-    icon: 'Star',
-    children: [
-      { title: '割接申请', path: '/lowcode/form/form_demo_network_cutover', icon: 'EditPen' },
-      { title: '割接台账', path: '/lowcode/list/list_demo_network_cutover', icon: 'Connection' },
-      { title: '割接工作台', path: '/lowcode/tab/tab_demo_network_cutover', icon: 'Grid' },
-      { title: '割接关联视图', path: '/lowcode/related-page/related_demo_network_cutover', icon: 'Share' },
-      { title: '员工列表', path: '/lowcode/list/list_demo_employee', icon: 'User' },
-      { title: '员工档案', path: '/lowcode/form/form_demo_employee', icon: 'Document' },
-      { title: '入职任务', path: '/lowcode/list/list_demo_onboarding_task', icon: 'List' },
-      { title: '部门管理', path: '/lowcode/list/list_demo_department', icon: 'OfficeBuilding' }
-    ]
-  }
-]
-
-const lowCodeMenuPermissions: Record<string, string[]> = {
-  '/lowcode/entity-designer': ['lowcode:entity:list'],
-  '/lowcode/form-list': ['lowcode:form:list'],
-  '/lowcode/list-list': ['lowcode:list:list'],
-  '/lowcode/tab-list': ['lowcode:tab:edit', 'lowcode:tab:add'],
-  '/lowcode/related-page-list': ['lowcode:relatedPage:edit', 'lowcode:relatedPage:add'],
-  '/lowcode/microflow-designer': ['lowcode:microflow:list'],
-  '/lowcode/rule-designer': ['lowcode:rule:list'],
-  '/lowcode/process-designer': ['lowcode:process:list'],
-  '/lowcode/trigger-list': ['lowcode:trigger:list'],
-  '/lowcode/connector-designer': ['lowcode:connector:list'],
-  '/lowcode/publish-center': ['lowcode:publish:list'],
-  '/lowcode/approval-chain': ['lowcode:approval-chain:list'],
-  '/lowcode/version-history': ['lowcode:version:list'],
-  '/lowcode/template-market': ['lowcode:template:list'],
-  '/lowcode/apm-dashboard': ['lowcode:microflow:list', 'lowcode:rule:list'],
-  '/lowcode/app-source-export': ['lowcode:app-source:export']
-}
-
-function canAccessMenu(item: MenuLeaf): boolean {
-  const runtimePage = item.path.match(/^\/lowcode\/(form|list|tab|related-page)\/([^/?#]+)/)
-  const permissions =
-    item.permissions ??
-    (runtimePage
-      ? [`lowcode:page:${runtimePage[1]}:${runtimePage[2]}`]
-      : lowCodeMenuPermissions[item.path])
-  return !permissions || userStore.hasAnyPermission(permissions)
-}
-
-const visibleMenuGroups = computed<(MenuGroup | MenuLeaf)[]>(() =>
-  menuGroups.reduce<(MenuGroup | MenuLeaf)[]>((result, item) => {
-    if ('children' in item) {
-      const children = item.children.filter(canAccessMenu)
-      if (children.length > 0) result.push({ ...item, children })
-    } else if (canAccessMenu(item)) {
-      result.push(item)
-    }
-    return result
-  }, [])
-)
 
 const activeMenu = computed(() => route.path)
 
@@ -318,32 +140,11 @@ onBeforeUnmount(() => {
         <el-icon :size="24" color="#fff"><Cpu /></el-icon>
         <span v-show="!appStore.sidebarCollapsed" class="logo-text">网络设备 PMS</span>
       </div>
-      <el-menu
-        :default-active="activeMenu"
+      <SidebarMenu
+        :items="visibleMenuGroups"
+        :active-menu="activeMenu"
         :collapse="appStore.sidebarCollapsed"
-        router
-        background-color="#001529"
-        text-color="#cfd5dc"
-        active-text-color="#ffffff"
-        class="side-menu"
-      >
-        <template v-for="(item, idx) in visibleMenuGroups" :key="idx">
-          <el-sub-menu v-if="'children' in item" :index="String(idx)">
-            <template #title>
-              <el-icon><component :is="item.icon" /></el-icon>
-              <span>{{ item.title }}</span>
-            </template>
-            <el-menu-item v-for="child in item.children" :key="child.path" :index="child.path">
-              <el-icon><component :is="child.icon" /></el-icon>
-              <template #title>{{ child.title }}</template>
-            </el-menu-item>
-          </el-sub-menu>
-          <el-menu-item v-else :index="(item as MenuLeaf).path">
-            <el-icon><component :is="(item as MenuLeaf).icon" /></el-icon>
-            <template #title>{{ (item as MenuLeaf).title }}</template>
-          </el-menu-item>
-        </template>
-      </el-menu>
+      />
     </el-aside>
 
     <!-- 移动端抽屉侧边栏 -->
@@ -359,32 +160,11 @@ onBeforeUnmount(() => {
         <el-icon :size="24" color="#fff"><Cpu /></el-icon>
         <span class="logo-text">网络设备 PMS</span>
       </div>
-      <el-menu
-        :default-active="activeMenu"
-        router
-        background-color="#001529"
-        text-color="#cfd5dc"
-        active-text-color="#ffffff"
-        class="side-menu"
+      <SidebarMenu
+        :items="visibleMenuGroups"
+        :active-menu="activeMenu"
         @select="handleMenuSelect"
-      >
-        <template v-for="(item, idx) in visibleMenuGroups" :key="idx">
-          <el-sub-menu v-if="'children' in item" :index="String(idx)">
-            <template #title>
-              <el-icon><component :is="item.icon" /></el-icon>
-              <span>{{ item.title }}</span>
-            </template>
-            <el-menu-item v-for="child in item.children" :key="child.path" :index="child.path">
-              <el-icon><component :is="child.icon" /></el-icon>
-              <template #title>{{ child.title }}</template>
-            </el-menu-item>
-          </el-sub-menu>
-          <el-menu-item v-else :index="(item as MenuLeaf).path">
-            <el-icon><component :is="(item as MenuLeaf).icon" /></el-icon>
-            <template #title>{{ (item as MenuLeaf).title }}</template>
-          </el-menu-item>
-        </template>
-      </el-menu>
+      />
     </el-drawer>
 
     <el-container>
