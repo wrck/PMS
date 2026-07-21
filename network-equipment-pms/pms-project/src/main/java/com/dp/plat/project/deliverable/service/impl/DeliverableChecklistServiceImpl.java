@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,5 +116,48 @@ public class DeliverableChecklistServiceImpl
         }
         this.saveBatch(records);
         return Result.ok(records);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<?> markUploaded(Long id, Long attachmentId) {
+        if (id == null) {
+            throw new BusinessException("清单项 ID 不能为空");
+        }
+        if (attachmentId == null) {
+            throw new BusinessException("附件 ID 不能为空");
+        }
+        DeliverableChecklist existing = super.getById(id);
+        if (existing == null) {
+            throw new BusinessException("交付物清单项不存在");
+        }
+        // 仅更新附件相关字段，保留 projectId/deliverableType/required 等原值
+        DeliverableChecklist patch = new DeliverableChecklist();
+        patch.setId(id);
+        patch.setAttachmentId(attachmentId);
+        patch.setUploaded(true);
+        patch.setCheckedAt(LocalDateTime.now());
+        this.updateById(patch);
+        return Result.ok();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<?> cancelUploaded(Long id) {
+        if (id == null) {
+            throw new BusinessException("清单项 ID 不能为空");
+        }
+        DeliverableChecklist existing = super.getById(id);
+        if (existing == null) {
+            throw new BusinessException("交付物清单项不存在");
+        }
+        // updateById 默认忽略 null 字段，使用 LambdaUpdateWrapper 显式置空 attachmentId
+        this.baseMapper.update(null,
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<DeliverableChecklist>()
+                        .eq(DeliverableChecklist::getId, id)
+                        .set(DeliverableChecklist::getAttachmentId, null)
+                        .set(DeliverableChecklist::getUploaded, false)
+                        .set(DeliverableChecklist::getCheckedAt, LocalDateTime.now()));
+        return Result.ok();
     }
 }

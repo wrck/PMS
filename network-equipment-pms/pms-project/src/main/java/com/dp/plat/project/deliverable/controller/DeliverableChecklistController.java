@@ -74,4 +74,41 @@ public class DeliverableChecklistController {
     public Result<List<DeliverableChecklist>> initChecklist(@PathVariable Long projectId) {
         return deliverableChecklistService.initChecklist(projectId);
     }
+
+    /**
+     * 标记指定清单项已上传附件。
+     *
+     * <p>专用端点，绕开 {@link #update(DeliverableChecklist)} 的 {@code @Valid}
+     * 全字段校验，仅更新 attachmentId / uploaded / checkedAt 字段。</p>
+     *
+     * @param id      清单项 id
+     * @param body    请求体，仅包含 {@code attachmentId}
+     */
+    @Operation(summary = "标记交付物已上传附件")
+    @PutMapping("/{id}/mark-uploaded")
+    @PreAuthorize("hasAuthority('project:deliverable:edit')")
+    @OperLog(title = "终验交付物清单", businessType = 2)
+    public Result<?> markUploaded(@PathVariable Long id,
+                                   @RequestBody MarkUploadedRequest body) {
+        return deliverableChecklistService.markUploaded(id, body.attachmentId());
+    }
+
+    /**
+     * 取消指定清单项的上传标记。
+     */
+    @Operation(summary = "取消交付物上传标记")
+    @PutMapping("/{id}/cancel-uploaded")
+    @PreAuthorize("hasAuthority('project:deliverable:edit')")
+    @OperLog(title = "终验交付物清单", businessType = 2)
+    public Result<?> cancelUploaded(@PathVariable Long id) {
+        return deliverableChecklistService.cancelUploaded(id);
+    }
+
+    /**
+     * 标记已上传请求体。
+     *
+     * @param attachmentId 附件 id
+     */
+    public record MarkUploadedRequest(Long attachmentId) {
+    }
 }

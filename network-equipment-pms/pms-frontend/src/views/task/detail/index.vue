@@ -14,8 +14,7 @@ import {
   ElMessage,
   ElMessageBox,
   type FormInstance,
-  type FormRules,
-  type UploadFile
+  type FormRules
 } from 'element-plus'
 import {
   approveTask,
@@ -58,7 +57,16 @@ import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import TaskPriorityTag from '@/components/common/TaskPriorityTag.vue'
 import UserSelect from '@/components/common/UserSelect.vue'
+import FileUploader from '@/components/FileUploader/index.vue'
 import TaskChecklist from '@/components/TaskChecklist.vue'
+import {
+  attachmentDownloadUrl,
+  deleteAttachment,
+  formatFileSize,
+  formatUploadTime,
+  listAttachmentsByBiz,
+  type Attachment
+} from '@/api/attachment'
 
 defineOptions({ name: 'TaskDetail' })
 
@@ -204,6 +212,7 @@ async function loadTask() {
     comments.value = []
     activities.value = []
     dependencies.value = []
+    attachments.value = []
     loading.value = false
     nextTick(() => handleEdit())
     return
@@ -217,8 +226,13 @@ async function loadTask() {
     } catch {
       progressVO.value = null
     }
-    // 并行加载：父任务 / 子树 / 评论 / 活动 / 依赖
-    const parallel: Promise<unknown>[] = [loadSubtree(), loadComments(), loadActivities()]
+    // 并行加载：父任务 / 子树 / 评论 / 活动 / 依赖 / 附件
+    const parallel: Promise<unknown>[] = [
+      loadSubtree(),
+      loadComments(),
+      loadActivities(),
+      loadAttachments()
+    ]
     if (task.value.parentTaskId) {
       parallel.push(
         getTaskDetail(task.value.parentTaskId)
@@ -435,31 +449,53 @@ function depTypeLabel(t?: DependencyType): string {
   return t ? (dependencyTypeOptions.find((o) => o.value === t)?.desc ?? t) : '-'
 }
 
-// ============ 附件（本地暂存，后端 API 待实现） ============
-interface AttachmentItem {
-  name: string
-  size: number
-  uploadTime: string
-}
-const attachments = ref<AttachmentItem[]>([])
+// ============ 附件（持久化到后端 /api/file） ============
+// 任务附件 bizType 约定为 'TASK'，bizId 为任务 id；新建模式（id=0）下隐藏上传入口
+const TASK_ATTACHMENT_BIZ_TYPE = 'TASK'
+const attachments = ref<Attachment[]>([])
+const attachmentLoading = ref(false)
 
-function handleAttachmentChange(file: UploadFile) {
-  if (!file.raw) return
-  attachments.value.push({
-    name: file.name,
-    size: file.size ?? 0,
-    uploadTime: new Date().toISOString().slice(0, 19).replace('T', ' ')
-  })
+async function loadAttachments() {
+  const id = taskId.value
+  if (!id || id <= 0) {
+    attachments.value = []
+    return
+  }
+  attachmentLoading.value = true
+  try {
+    attachments.value = (await listAttachmentsByBiz(TASK_ATTACHMENT_BIZ_TYPE, id)) ?? []
+  } catch {
+    attachments.value = []
+  } finally {
+    attachmentLoading.value = false
+  }
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+// FileUploader 上传成功回调：刷新附件列表
+async function handleAttachmentUploaded() {
+  await loadAttachments()
 }
 
-function handleRemoveAttachment(idx: number) {
-  attachments.value.splice(idx, 1)
+function handleDownloadAttachment(att: Attachment) {
+  if (!att.id) return
+  window.open(attachmentDownloadUrl(att.id), '_blank')
+}
+
+function handleDeleteAttachment(att: Attachment) {
+  if (!att.id) return
+  ElMessageBox.confirm(
+    `确认删除附件「${att.fileName ?? ''}」吗？`,
+    '删除确认',
+    { type: 'warning' }
+  )
+    .then(async () => {
+      await deleteAttachment(att.id!)
+      ElMessage.success('附件已删除')
+      await loadAttachments()
+    })
+    .catch(() => {
+      /* cancelled */
+    })
 }
 
 // ============ 顶部操作（开始 / 提交评审 / 验收完成 / 编辑 / 移动） ============
@@ -1319,39 +1355,55 @@ onMounted(async () => {
             <template #header>
               <div class="card-header">
                 <span class="card-title">附件</span>
-                <el-upload
-                  :auto-upload="false"
-                  :show-file-list="false"
-                  multiple
-                  @change="handleAttachmentChange"
-                >
-                  <el-button link type="primary" size="small" :icon="'Upload'">上传</el-button>
-                </el-upload>
               </div>
             </template>
-            <div v-if="attachments.length" class="attachment-list">
+            <!-- 新建模式（任务尚未保存）下不允许上传 -->
+            <FileUploader
+              v-if="taskId > 0"
+              :biz-type="TASK_ATTACHMENT_BIZ_TYPE"
+              :biz-id="taskId"
+              :max-size="50"
+              @success="handleAttachmentUploaded"
+            />
+            <div v-else class="empty-mini">请先保存任务后再上传附件</div>
+
+            <div
+              v-if="attachments.length"
+              v-loading="attachmentLoading"
+              class="attachment-list"
+            >
               <div
-                v-for="(a, idx) in attachments"
-                :key="idx"
+                v-for="att in attachments"
+                :key="att.id"
                 class="attachment-item"
               >
                 <el-icon class="att-icon"><Document /></el-icon>
                 <div class="att-info">
-                  <div class="att-name">{{ a.name }}</div>
-                  <div class="att-meta">{{ formatFileSize(a.size) }} · {{ a.uploadTime }}</div>
+                  <div class="att-name" :title="att.fileName">{{ att.fileName }}</div>
+                  <div class="att-meta">
+                    {{ formatFileSize(att.fileSize) }} · {{ formatUploadTime(att.uploadTime) }}
+                    <span v-if="att.uploadUserName">· {{ att.uploadUserName }}</span>
+                  </div>
                 </div>
+                <el-button
+                  link
+                  type="primary"
+                  size="small"
+                  @click="handleDownloadAttachment(att)"
+                >
+                  下载
+                </el-button>
                 <el-button
                   link
                   type="danger"
                   size="small"
-                  @click="handleRemoveAttachment(idx)"
+                  @click="handleDeleteAttachment(att)"
                 >
-                  移除
+                  删除
                 </el-button>
               </div>
             </div>
-            <div v-else class="empty-mini">暂无附件</div>
-            <div class="att-hint">附件暂存于本地，后端持久化 API 待实现。</div>
+            <div v-else-if="!attachmentLoading" class="empty-mini">暂无附件</div>
           </el-card>
 
           <!-- 5. 操作历史 -->
@@ -1908,11 +1960,6 @@ onMounted(async () => {
 .att-meta {
   font-size: 11px;
   color: var(--pms-color-text-secondary);
-}
-.att-hint {
-  margin-top: 8px;
-  font-size: 11px;
-  color: var(--pms-color-text-placeholder);
 }
 
 /* 侧栏：操作历史 */

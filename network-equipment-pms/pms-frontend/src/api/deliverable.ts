@@ -34,12 +34,19 @@ export function markUploaded(
   id: number,
   attachmentId: number
 ): Promise<DeliverableChecklist> {
-  return put<DeliverableChecklist>('/api/project/deliverable-checklist', { id, attachmentId, uploaded: true })
+  // 专用端点：仅更新 attachmentId / uploaded / checkedAt 字段，
+  // 绕开 PUT /api/project/deliverable-checklist 的 @Valid 全字段校验
+  return put<DeliverableChecklist>(
+    `/api/project/deliverable-checklist/${id}/mark-uploaded`,
+    { attachmentId }
+  )
 }
 
 /** 取消已上传的附件标记 */
 export function cancelUploaded(id: number): Promise<DeliverableChecklist> {
-  return put<DeliverableChecklist>('/api/project/deliverable-checklist', { id, attachmentId: null, uploaded: false })
+  return put<DeliverableChecklist>(
+    `/api/project/deliverable-checklist/${id}/cancel-uploaded`
+  )
 }
 
 /** 附件下载地址 */

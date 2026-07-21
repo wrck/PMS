@@ -45,7 +45,7 @@ public class FileController {
     @OperLog(title = "文件附件", businessType = 1)
     public Result<Attachment> upload(@RequestParam("file") MultipartFile file,
                                      @RequestParam String bizType,
-                                     @RequestParam Long bizId,
+                                     @RequestParam(required = false) Long bizId,
                                      @RequestParam(required = false) BigDecimal siteLat,
                                      @RequestParam(required = false) BigDecimal siteLng,
                                      @RequestParam(required = false, defaultValue = "0") double fenceRadius) {

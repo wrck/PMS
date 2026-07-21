@@ -60,4 +60,25 @@ public interface IDeliverableChecklistService extends IService<DeliverableCheckl
      * @return operation result containing the initialised checklist records
      */
     Result<List<DeliverableChecklist>> initChecklist(Long projectId);
+
+    /**
+     * 标记指定清单项已上传附件。
+     *
+     * <p>专用端点：仅更新 attachmentId / uploaded / checkedAt 字段，绕开
+     * {@link #update(DeliverableChecklist)} 的 {@code @Valid} 全字段校验，
+     * 避免前端只传部分字段时触发 projectId/deliverableType 非空校验失败。</p>
+     *
+     * @param id           清单项 id
+     * @param attachmentId 附件 id
+     * @return 操作结果
+     */
+    Result<?> markUploaded(Long id, Long attachmentId);
+
+    /**
+     * 取消指定清单项的上传标记。
+     *
+     * @param id 清单项 id
+     * @return 操作结果
+     */
+    Result<?> cancelUploaded(Long id);
 }
