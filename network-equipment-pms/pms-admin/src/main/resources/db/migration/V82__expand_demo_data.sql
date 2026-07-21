@@ -665,41 +665,32 @@ VALUES
 
 -- =============================================================
 -- 11. 交付件引用关系（≥10 条，演示交付件被引用的场景）
+--     表结构由 V75 创建，本节仅 INSERT。V75 语义：
+--       source_deliverable_id = 被引用方（源头）
+--       target_deliverable_id = 引用方交付件ID（NULL 时引用方非交付件）
+--       reference_type        = 引用方业务类型：TASK/PHASE/PROJECT/DELIVERABLE/REPORT
+--       referenced_by_id      = 引用方业务ID（NOT NULL）
+--       referenced_by_name    = 引用方名称（冗余）
+--       create_by/update_by   = VARCHAR(64)
 -- =============================================================
-CREATE TABLE IF NOT EXISTS pms_deliverable_reference (
-    id                  BIGINT       NOT NULL AUTO_INCREMENT,
-    source_deliverable_id BIGINT     NOT NULL COMMENT '引用方交付件ID',
-    target_deliverable_id BIGINT     NOT NULL COMMENT '被引用方交付件ID',
-    target_version_no   INT          NULL COMMENT '被引用版本号',
-    reference_type      VARCHAR(32)  NOT NULL DEFAULT 'CITATION' COMMENT 'CITATION/DERIVATIVE/REPLACES/ATTACHMENT',
-    description         VARCHAR(255) NULL,
-    create_by           BIGINT       NULL,
-    create_time         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_by           BIGINT       NULL,
-    update_time         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted             TINYINT(1)   NOT NULL DEFAULT 0,
-    version             INT          NOT NULL DEFAULT 0,
-    PRIMARY KEY (id),
-    KEY idx_source (source_deliverable_id),
-    KEY idx_target (target_deliverable_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='交付件引用关系';
-
 INSERT IGNORE INTO `pms_deliverable_reference`
-    (`id`, `source_deliverable_id`, `target_deliverable_id`, `target_version_no`, `reference_type`, `description`,
-     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+    (`id`, `source_deliverable_id`, `target_deliverable_id`,
+     `reference_type`, `referenced_by_id`, `referenced_by_name`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
 VALUES
-(1, 2011, 2010, 2, 'CITATION',   '需求确认书引用总体方案',     1, NOW(), 1, NOW(), 0, 0),
-(2, 2012, 2010, 2, 'DERIVATIVE', '网络架构设计基于总体方案',   1, NOW(), 1, NOW(), 0, 0),
-(3, 2013, 2012, 2, 'CITATION',   '风险评估引用网络架构',       1, NOW(), 1, NOW(), 0, 0),
-(4, 2017, 2010, 2, 'DERIVATIVE', '省行核心方案衍生自总体方案', 1, NOW(), 1, NOW(), 0, 0),
-(5, 2018, 2017, 1, 'CITATION',   '勘察报告引用核心方案',       1, NOW(), 1, NOW(), 0, 0),
-(6, 2019, 2017, 1, 'DERIVATIVE', '设备部署方案基于省行核心方案', 1, NOW(), 1, NOW(), 0, 0),
-(7, 2020, 2019, 1, 'CITATION',   '初验报告引用部署方案',       1, NOW(), 1, NOW(), 0, 0),
-(8, 2022, 2010, 2, 'CITATION',   '广域网设计引用总体方案',     1, NOW(), 1, NOW(), 0, 0),
-(9, 2024, 2010, 2, 'DERIVATIVE', '5G 核心网架构基于总体方案', 1, NOW(), 1, NOW(), 0, 0),
-(10, 2025, 2024, 2, 'CITATION',  '采购评估引用 5G 架构',       1, NOW(), 1, NOW(), 0, 0),
-(11, 2026, 2024, 2, 'CITATION',  '设备调测引用 5G 架构',       1, NOW(), 1, NOW(), 0, 0),
-(12, 2027, 2024, 2, 'DERIVATIVE', '端到端测试基于 5G 架构',    1, NOW(), 1, NOW(), 0, 0);
+-- 语义：source=被引用的交付件，target=引用方交付件，reference_type='DELIVERABLE'
+(1,  2010, 2011, 'DELIVERABLE', 2011, '客户需求确认书',     'admin', NOW(), 'admin', NOW(), 0),
+(2,  2010, 2012, 'DELIVERABLE', 2012, '网络架构设计文档',   'admin', NOW(), 'admin', NOW(), 0),
+(3,  2012, 2013, 'DELIVERABLE', 2013, '风险评估报告',       'admin', NOW(), 'admin', NOW(), 0),
+(4,  2010, 2017, 'DELIVERABLE', 2017, '省行核心方案',       'admin', NOW(), 'admin', NOW(), 0),
+(5,  2017, 2018, 'DELIVERABLE', 2018, '省行勘察报告',       'admin', NOW(), 'admin', NOW(), 0),
+(6,  2017, 2019, 'DELIVERABLE', 2019, '设备部署方案',       'admin', NOW(), 'admin', NOW(), 0),
+(7,  2019, 2020, 'DELIVERABLE', 2020, '初验测试报告',       'admin', NOW(), 'admin', NOW(), 0),
+(8,  2010, 2022, 'DELIVERABLE', 2022, '广域网总体设计',     'admin', NOW(), 'admin', NOW(), 0),
+(9,  2010, 2024, 'DELIVERABLE', 2024, '5G 核心网架构',      'admin', NOW(), 'admin', NOW(), 0),
+(10, 2024, 2025, 'DELIVERABLE', 2025, '5G 核心网采购评估',  'admin', NOW(), 'admin', NOW(), 0),
+(11, 2024, 2026, 'DELIVERABLE', 2026, '设备调测报告',       'admin', NOW(), 'admin', NOW(), 0),
+(12, 2024, 2027, 'DELIVERABLE', 2027, '端到端测试方案',     'admin', NOW(), 'admin', NOW(), 0);
 
 -- =============================================================
 -- 12. 基线快照补齐（覆盖 DRAFT/APPROVED/SUPERSEDED 全 3 态，≥10 条）
@@ -1073,27 +1064,11 @@ VALUES
 
 -- =============================================================
 -- 19. 任务评论补齐（≥10 条，演示协作记录）
+--     表结构由 V72 创建，本节仅 INSERT。V72 字段：
+--       task_id, user_id, user_name, content(TEXT), parent_comment_id
 -- =============================================================
-CREATE TABLE IF NOT EXISTS pms_task_comment (
-    id              BIGINT       NOT NULL AUTO_INCREMENT,
-    task_id         BIGINT       NOT NULL COMMENT '任务ID',
-    parent_id       BIGINT       NULL COMMENT '父评论ID（回复）',
-    author_id       BIGINT       NOT NULL,
-    author_name     VARCHAR(64)  NULL,
-    content         VARCHAR(2000) NOT NULL,
-    create_by       BIGINT       NULL,
-    create_time     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_by       BIGINT       NULL,
-    update_time     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted         TINYINT(1)   NOT NULL DEFAULT 0,
-    version         INT          NOT NULL DEFAULT 0,
-    PRIMARY KEY (id),
-    KEY idx_task_id (task_id),
-    KEY idx_parent_id (parent_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务评论';
-
 INSERT IGNORE INTO `pms_task_comment`
-    (`id`, `task_id`, `parent_id`, `author_id`, `author_name`, `content`,
+    (`id`, `task_id`, `parent_comment_id`, `user_id`, `user_name`, `content`,
      `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
 VALUES
 (1, 8010, NULL, 1,   'Administrator', '启动会准备就绪，请大家准时参会', 1, NOW() - INTERVAL 200 DAY, 1, NOW() - INTERVAL 200 DAY, 0, 0),
@@ -1111,38 +1086,26 @@ VALUES
 
 -- =============================================================
 -- 20. 任务活动日志补齐（≥10 条）
+--     表结构由 V72 创建，本节仅 INSERT。V72 字段：
+--       task_id, user_id, user_name, activity_type(VARCHAR(50)),
+--       content(TEXT), metadata(JSON, 默认 NULL)
 -- =============================================================
-CREATE TABLE IF NOT EXISTS pms_task_activity (
-    id              BIGINT       NOT NULL AUTO_INCREMENT,
-    task_id         BIGINT       NOT NULL,
-    activity_type   VARCHAR(32)  NOT NULL COMMENT 'CREATE/UPDATE/STATUS_CHANGE/ASSIGN/COMMENT/UPLOAD/COMPLETE',
-    operator_id     BIGINT       NOT NULL,
-    operator_name   VARCHAR(64)  NULL,
-    description     VARCHAR(500) NULL,
-    create_by       BIGINT       NULL,
-    create_time     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         TINYINT(1)   NOT NULL DEFAULT 0,
-    PRIMARY KEY (id),
-    KEY idx_task_id (task_id),
-    KEY idx_create_time (create_time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务活动日志';
-
 INSERT IGNORE INTO `pms_task_activity`
-    (`id`, `task_id`, `activity_type`, `operator_id`, `operator_name`, `description`,
-     `create_by`, `create_time`, `deleted`)
+    (`id`, `task_id`, `user_id`, `user_name`, `activity_type`, `content`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
 VALUES
-(1, 8010, 'CREATE',       1, 'Administrator', '创建任务：总集项目启动会', 1, NOW() - INTERVAL 200 DAY, 0),
-(2, 8010, 'STATUS_CHANGE',1, 'Administrator', '状态：PENDING → IN_PROGRESS', 1, NOW() - INTERVAL 200 DAY, 0),
-(3, 8010, 'COMPLETE',     1, 'Administrator', '任务完成', 1, NOW() - INTERVAL 198 DAY, 0),
-(4, 8011, 'CREATE',       1, 'Administrator', '创建任务：总体方案设计', 1, NOW() - INTERVAL 120 DAY, 0),
-(5, 8011, 'STATUS_CHANGE',1, 'Administrator', '状态：PENDING → IN_PROGRESS', 1, NOW() - INTERVAL 120 DAY, 0),
-(6, 8011, 'COMMENT',      1, 'Administrator', '总体方案初稿已完成', 1, NOW() - INTERVAL 100 DAY, 0),
-(7, 8015, 'STATUS_CHANGE',1, 'Administrator', '状态：PENDING → REJECTED', 1, NOW() - INTERVAL 25 DAY, 0),
-(8, 8017, 'STATUS_CHANGE',3, '刘伟',          '状态：PENDING → IN_PROGRESS', 3, NOW() - INTERVAL 120 DAY, 0),
-(9, 8021, 'UPLOAD',       5, '孙磊',          '上传测试报告', 5, NOW() - INTERVAL 5 DAY, 0),
-(10, 8026, 'CREATE',      1, 'Administrator', '创建任务：5G 核心网总体设计', 1, NOW() - INTERVAL 200 DAY, 0),
-(11, 8026, 'COMPLETE',    1, 'Administrator', '任务完成', 1, NOW() - INTERVAL 170 DAY, 0),
-(12, 8028, 'ASSIGN',      3, '刘伟',          '分配任务给调测团队', 3, NOW() - INTERVAL 140 DAY, 0);
+(1, 8010, 1, 'Administrator', 'CREATE',        '创建任务：总集项目启动会',          1, NOW() - INTERVAL 200 DAY, 1, NOW() - INTERVAL 200 DAY, 0, 0),
+(2, 8010, 1, 'Administrator', 'STATUS_CHANGE', '状态：PENDING → IN_PROGRESS',       1, NOW() - INTERVAL 200 DAY, 1, NOW() - INTERVAL 200 DAY, 0, 0),
+(3, 8010, 1, 'Administrator', 'UPDATE',        '任务完成',                          1, NOW() - INTERVAL 198 DAY, 1, NOW() - INTERVAL 198 DAY, 0, 0),
+(4, 8011, 1, 'Administrator', 'CREATE',        '创建任务：总体方案设计',            1, NOW() - INTERVAL 120 DAY, 1, NOW() - INTERVAL 120 DAY, 0, 0),
+(5, 8011, 1, 'Administrator', 'STATUS_CHANGE', '状态：PENDING → IN_PROGRESS',       1, NOW() - INTERVAL 120 DAY, 1, NOW() - INTERVAL 120 DAY, 0, 0),
+(6, 8011, 1, 'Administrator', 'COMMENT',       '总体方案初稿已完成',                1, NOW() - INTERVAL 100 DAY, 1, NOW() - INTERVAL 100 DAY, 0, 0),
+(7, 8015, 1, 'Administrator', 'STATUS_CHANGE', '状态：PENDING → REJECTED',          1, NOW() - INTERVAL 25 DAY,  1, NOW() - INTERVAL 25 DAY,  0, 0),
+(8, 8017, 3, '刘伟',          'STATUS_CHANGE', '状态：PENDING → IN_PROGRESS',       3, NOW() - INTERVAL 120 DAY, 3, NOW() - INTERVAL 120 DAY, 0, 0),
+(9, 8021, 5, '孙磊',          'UPDATE',        '上传测试报告',                      5, NOW() - INTERVAL 5 DAY,   5, NOW() - INTERVAL 5 DAY,   0, 0),
+(10, 8026, 1, 'Administrator', 'CREATE',        '创建任务：5G 核心网总体设计',       1, NOW() - INTERVAL 200 DAY, 1, NOW() - INTERVAL 200 DAY, 0, 0),
+(11, 8026, 1, 'Administrator', 'UPDATE',        '任务完成',                          1, NOW() - INTERVAL 170 DAY, 1, NOW() - INTERVAL 170 DAY, 0, 0),
+(12, 8028, 3, '刘伟',          'ASSIGN',        '分配任务给调测团队',                3, NOW() - INTERVAL 140 DAY, 3, NOW() - INTERVAL 140 DAY, 0, 0);
 
 -- =============================================================
 -- 21. 项目配置补齐（每个主子项目≥2 条配置项）
