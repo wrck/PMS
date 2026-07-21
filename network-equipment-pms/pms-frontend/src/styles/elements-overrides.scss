@@ -74,11 +74,37 @@
 }
 
 // =============================================================================
-// 5. 表单统一
+// 5. 表单统一（钉飞风格 - label/error/required/间距）
 // =============================================================================
+.el-form-item {
+  margin-bottom: $spacing-5;
+
+  // 错误状态过渡（钉飞风格 - 平滑变红）
+  .el-form-item__error {
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  &.is-error .el-form-item__error {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .el-form-item__label {
   font-weight: $font-weight-medium;
   color: $color-text-regular;
+  line-height: $line-height-base;
+  padding-right: $spacing-3;
+
+  // 必填标记 * 钉飞风格：红色加粗，与 label 间距 4px
+  &::before {
+    color: $color-danger;
+    font-weight: $font-weight-bold;
+    margin-right: $spacing-1;
+  }
 }
 
 // =============================================================================
@@ -328,4 +354,366 @@
 // =============================================================================
 .el-collapse-item__wrap {
   transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// =============================================================================
+// 20. 输入框/文本域钉飞风格（focus 高亮 + 圆角 + hover 边框）
+// -----------------------------------------------------------------------------
+// Element Plus 默认 .el-input__wrapper 是灰色背景无边框，
+// 钉飞风格改为白底 + 浅边框 + focus 蓝色 ring，更接近飞书表单体验。
+// =============================================================================
+.el-input__wrapper,
+.el-textarea__inner {
+  background-color: $color-bg-card;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-input__wrapper {
+  // 内部 input 字体与设计令牌一致
+  .el-input__inner {
+    color: $color-text-primary;
+    font-size: $font-size-base;
+
+    &::placeholder {
+      color: $color-text-placeholder;
+    }
+  }
+
+  // hover 边框加深（钉飞风格预提示）
+  &:hover {
+    border-color: $color-text-placeholder;
+  }
+
+  // focus 蓝色 ring（钉飞风格 - 双层阴影内嵌）
+  &.is-focus {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.15);
+  }
+
+  // 禁用状态
+  &.is-disabled {
+    background-color: $color-bg-page;
+    border-color: $color-border-light;
+    cursor: not-allowed;
+  }
+}
+
+// 文本域 hover/focus 同步输入框
+.el-textarea__inner {
+  padding: $spacing-2 $spacing-3;
+  font-size: $font-size-base;
+  color: $color-text-primary;
+
+  &::placeholder {
+    color: $color-text-placeholder;
+  }
+
+  &:hover {
+    border-color: $color-text-placeholder;
+  }
+
+  &:focus {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.15);
+  }
+}
+
+// 输入框前缀/后缀图标颜色
+.el-input__prefix,
+.el-input__suffix {
+  color: $color-text-secondary;
+}
+
+// =============================================================================
+// 21. 选择器（el-select）钉飞风格 - 与输入框统一
+// =============================================================================
+.el-select {
+  .el-input__wrapper {
+    // hover/focus 已由第 20 节统一处理
+    cursor: pointer;
+  }
+
+  // 标签模式（多选 tags）单个 tag 圆角 + 背景
+  .el-tag {
+    border-radius: $radius-base;
+    background-color: $color-primary-light-9;
+    border-color: $color-primary-light-7;
+    color: $color-primary-dark-2;
+  }
+}
+
+// =============================================================================
+// 22. 数字输入框（el-input-number）钉飞风格
+// =============================================================================
+.el-input-number {
+  .el-input__wrapper {
+    padding-left: $spacing-3;
+    padding-right: $spacing-3;
+  }
+
+  // 减号/加号按钮钉飞风格 - 圆角无边框
+  .el-input-number__decrease,
+  .el-input-number__increase {
+    background-color: transparent;
+    border-color: transparent;
+    color: $color-text-secondary;
+    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      color: $color-primary;
+      background-color: $color-primary-light-9;
+    }
+  }
+}
+
+// =============================================================================
+// 23. 单选/多选（radio/checkbox）钉飞风格
+// -----------------------------------------------------------------------------
+// 圆形/方形指示器 focus ring + 选中色统一品牌色，hover 浅色背景
+// =============================================================================
+.el-radio,
+.el-checkbox {
+  // 文字颜色
+  color: $color-text-regular;
+  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    color: $color-primary;
+  }
+
+  // 指示器（外圈/方框）
+  .el-radio__input,
+  .el-checkbox__input {
+    transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+// 单选 - 圆形指示器
+.el-radio__input {
+  &.is-checked .el-radio__inner {
+    background-color: $color-primary;
+    border-color: $color-primary;
+  }
+
+  .el-radio__inner {
+    border-color: $color-border;
+    transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      border-color: $color-primary;
+    }
+  }
+
+  // label 文字
+  .el-radio__label {
+    padding-left: $spacing-2;
+    font-size: $font-size-base;
+  }
+}
+
+// 多选 - 方形指示器
+.el-checkbox__input {
+  &.is-checked .el-checkbox__inner {
+    background-color: $color-primary;
+    border-color: $color-primary;
+  }
+
+  .el-checkbox__inner {
+    border-color: $color-border;
+    border-radius: $radius-sm;
+    transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      border-color: $color-primary;
+    }
+  }
+
+  .el-checkbox__label {
+    padding-left: $spacing-2;
+    font-size: $font-size-base;
+  }
+}
+
+// =============================================================================
+// 24. 开关（el-switch）钉飞风格 - 选中色统一 + 过渡曲线
+// =============================================================================
+.el-switch {
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.is-checked .el-switch__core {
+    background-color: $color-primary;
+    border-color: $color-primary;
+  }
+
+  .el-switch__core {
+    border-radius: $radius-full;
+    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+// =============================================================================
+// 25. 日期选择器/时间选择器钉飞风格 - 范围分隔符 + 输入框统一
+// =============================================================================
+.el-date-editor {
+  // 范围选择器中间的分隔符
+  .el-range-separator {
+    color: $color-text-secondary;
+    padding: 0 $spacing-2;
+  }
+
+  // 范围图标
+  .el-range__icon,
+  .el-input__icon {
+    color: $color-text-secondary;
+  }
+}
+
+// 日期面板（popper 弹出）选中态钉飞风格
+.el-picker-panel {
+  .el-date-table td.current:not(.disabled) span,
+  .el-date-table td.today span {
+    background-color: $color-primary;
+    color: #fff;
+    border-radius: $radius-base;
+  }
+
+  // hover 态浅蓝
+  .el-date-table td:hover span {
+    color: $color-primary;
+    background-color: $color-primary-light-9;
+    border-radius: $radius-base;
+  }
+}
+
+// =============================================================================
+// 26. 级联选择器（el-cascader）钉飞风格 - 节点 hover/选中
+// =============================================================================
+.el-cascader {
+  .el-input__wrapper {
+    cursor: pointer;
+  }
+}
+
+.el-cascader-node {
+  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    background-color: $color-primary-light-9;
+  }
+
+  &.in-active-path,
+  &.is-active {
+    color: $color-primary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+// =============================================================================
+// 27. 上传组件（el-upload）钉飞风格 - 拖拽区域虚线边框 + hover 高亮
+// =============================================================================
+.el-upload-dragger {
+  border: 1px dashed $color-border;
+  border-radius: $radius-md;
+  background-color: $color-bg-page;
+  transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    border-color: $color-primary;
+    background-color: $color-primary-light-9;
+  }
+
+  .el-icon--upload {
+    color: $color-text-placeholder;
+    margin-bottom: $spacing-3;
+  }
+
+  .el-upload__text {
+    color: $color-text-secondary;
+    font-size: $font-size-base;
+
+    em {
+      color: $color-primary;
+    }
+  }
+}
+
+// =============================================================================
+// 28. 滑块（el-slider）钉飞风格 - 轨道与按钮过渡
+// =============================================================================
+.el-slider__runway {
+  background-color: $color-border-light;
+  border-radius: $radius-full;
+}
+
+.el-slider__bar {
+  background-color: $color-primary;
+  border-radius: $radius-full;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-slider__button {
+  border: 2px solid $color-primary;
+  background-color: $color-bg-card;
+  box-shadow: $shadow-sm;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover,
+  &.hover,
+  &.dragging {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 4px rgba(64, 158, 255, 0.2);
+  }
+}
+
+// =============================================================================
+// 29. 速率评分（el-rate）钉飞风格 - hover 浮起
+// =============================================================================
+.el-rate__icon {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+// =============================================================================
+// 30. 传送门式选择器（el-select-v2）虚拟列表滚动条统一
+// =============================================================================
+.el-select-v2__dropdown {
+  .el-select-dropdown__item {
+    transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &.hover,
+    &:hover {
+      background-color: $color-primary-light-9;
+    }
+
+    &.selected {
+      color: $color-primary;
+      font-weight: $font-weight-medium;
+    }
+  }
+}
+
+// =============================================================================
+// 31. 表单只读文本（el-form-item__content 内纯文本）钉飞风格 - 灰底弱化
+// -----------------------------------------------------------------------------
+// 适用于 :readonly 或 disabled 显示模式下的内容文本
+// =============================================================================
+.el-input.is-disabled .el-input__inner,
+.el-textarea.is-disabled .el-textarea__inner {
+  color: $color-text-secondary;
+  -webkit-text-fill-color: $color-text-secondary;
+  background-color: $color-bg-page;
 }
