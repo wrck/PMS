@@ -46,6 +46,11 @@ export interface PhaseExitGate {
   requiredApprovals?: RequiredApproval[]
 }
 
+export interface PhaseResourceOption {
+  id: number
+  label: string
+}
+
 // ===================== Props / Emits =====================
 
 defineOptions({ name: 'PhaseExitGateEditor' })
@@ -55,6 +60,12 @@ const props = defineProps<{
   modelValue?: PhaseExitGate | null
   /** 是否禁用（查看态） */
   disabled?: boolean
+  /** 当前项目交付件选项 */
+  deliverableOptions?: PhaseResourceOption[]
+  /** 当前项目阶段选项（必需任务按阶段校验全部完成） */
+  phaseOptions?: PhaseResourceOption[]
+  /** 当前项目里程碑选项 */
+  milestoneOptions?: PhaseResourceOption[]
 }>()
 
 const emit = defineEmits<{
@@ -111,6 +122,14 @@ function removeDeliverable(idx: number) {
 function onDeliverableChange(idx: number, patch: Partial<RequiredDeliverable>) {
   const list = deliverables.value.map((d, i) => (i === idx ? { ...d, ...patch } : d))
   emitChange({ ...gate.value, requiredDeliverables: list })
+}
+
+function selectDeliverable(idx: number, deliverableId?: number) {
+  const option = props.deliverableOptions?.find((item) => item.id === deliverableId)
+  onDeliverableChange(idx, {
+    deliverableId,
+    deliverableName: option?.label ?? ''
+  })
 }
 
 // ===================== 必需任务 =====================
@@ -180,7 +199,7 @@ const totalCount = computed(
 function validate(): boolean {
   for (const d of deliverables.value) {
     if (!d.deliverableId) {
-      ElMessage.warning('存在未填写交付件 ID 的必需交付件条目')
+      ElMessage.warning('存在未选择交付件的必需交付件条目')
       return false
     }
     if (!d.requiredStatus) {
@@ -190,13 +209,13 @@ function validate(): boolean {
   }
   for (const t of tasks.value) {
     if (!t.phaseId) {
-      ElMessage.warning('存在未填写阶段 ID 的必需任务条目')
+      ElMessage.warning('存在未选择任务所属阶段的必需任务条目')
       return false
     }
   }
   for (const m of milestones.value) {
     if (!m.milestoneId) {
-      ElMessage.warning('存在未填写里程碑 ID 的必需里程碑条目')
+      ElMessage.warning('存在未选择里程碑的必需里程碑条目')
       return false
     }
   }
@@ -233,27 +252,24 @@ defineExpose({ validate })
         </template>
         <el-table :data="deliverables" border stripe size="small" empty-text="暂无必需交付件">
           <el-table-column type="index" label="#" width="50" align="center" />
-          <el-table-column label="交付件 ID" width="140">
+          <el-table-column label="交付件" min-width="220">
             <template #default="{ row, $index }">
-              <el-input-number
+              <el-select
                 :model-value="row.deliverableId"
                 :disabled="disabled"
-                :controls="false"
-                :min="1"
+                filterable
+                clearable
                 style="width: 100%"
-                placeholder="交付件 ID"
-                @update:model-value="(v: number | undefined) => onDeliverableChange($index, { deliverableId: v ?? undefined })"
-              />
-            </template>
-          </el-table-column>
-          <el-table-column label="交付件名称" min-width="180">
-            <template #default="{ row, $index }">
-              <el-input
-                :model-value="row.deliverableName"
-                :disabled="disabled"
-                placeholder="交付件名称（可选）"
-                @update:model-value="(v: string) => onDeliverableChange($index, { deliverableName: v })"
-              />
+                placeholder="请选择当前项目交付件"
+                @update:model-value="(v: number | undefined) => selectDeliverable($index, v ?? undefined)"
+              >
+                <el-option
+                  v-for="option in deliverableOptions ?? []"
+                  :key="option.id"
+                  :label="option.label"
+                  :value="option.id"
+                />
+              </el-select>
             </template>
           </el-table-column>
           <el-table-column label="要求状态" width="200">
@@ -309,17 +325,24 @@ defineExpose({ validate })
         </template>
         <el-table :data="tasks" border stripe size="small" empty-text="暂无必需任务">
           <el-table-column type="index" label="#" width="50" align="center" />
-          <el-table-column label="阶段 ID" width="180">
+          <el-table-column label="任务所属阶段" min-width="220">
             <template #default="{ row, $index }">
-              <el-input-number
+              <el-select
                 :model-value="row.phaseId"
                 :disabled="disabled"
-                :controls="false"
-                :min="1"
+                filterable
+                clearable
                 style="width: 100%"
-                placeholder="任务所属阶段 ID"
+                placeholder="请选择当前项目阶段"
                 @update:model-value="(v: number | undefined) => onTaskChange($index, { phaseId: v ?? undefined })"
-              />
+              >
+                <el-option
+                  v-for="option in phaseOptions ?? []"
+                  :key="option.id"
+                  :label="option.label"
+                  :value="option.id"
+                />
+              </el-select>
             </template>
           </el-table-column>
           <el-table-column label="校验规则" min-width="200">
@@ -370,17 +393,24 @@ defineExpose({ validate })
         </template>
         <el-table :data="milestones" border stripe size="small" empty-text="暂无必需里程碑">
           <el-table-column type="index" label="#" width="50" align="center" />
-          <el-table-column label="里程碑 ID" width="180">
+          <el-table-column label="里程碑" min-width="220">
             <template #default="{ row, $index }">
-              <el-input-number
+              <el-select
                 :model-value="row.milestoneId"
                 :disabled="disabled"
-                :controls="false"
-                :min="1"
+                filterable
+                clearable
                 style="width: 100%"
-                placeholder="里程碑 ID"
+                placeholder="请选择当前项目里程碑"
                 @update:model-value="(v: number | undefined) => onMilestoneChange($index, { milestoneId: v ?? undefined })"
-              />
+              >
+                <el-option
+                  v-for="option in milestoneOptions ?? []"
+                  :key="option.id"
+                  :label="option.label"
+                  :value="option.id"
+                />
+              </el-select>
             </template>
           </el-table-column>
           <el-table-column label="校验规则" min-width="200">

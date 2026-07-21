@@ -1,4 +1,5 @@
 import { del, get, post, put } from '@/utils/request'
+import request from '@/utils/request'
 
 /** 终验交付物类型 */
 export type DeliverableType =
@@ -202,6 +203,21 @@ export function getDeliverable(id: number): Promise<Deliverable> {
 /** 新建交付件（默认 DRAFT，若提供 filePath 则同步创建 v1 版本） */
 export function createDeliverable(data: Deliverable): Promise<Deliverable> {
   return post<Deliverable>('/api/deliverable', data)
+}
+
+/** 上传交付件初始文件并创建 v1 版本。 */
+export async function uploadDeliverableInitialVersion(
+  id: number,
+  file: File,
+  changeLog?: string
+): Promise<DeliverableVersion> {
+  const form = new FormData()
+  form.append('file', file)
+  if (changeLog) form.append('changeLog', changeLog)
+  return request.post(`/api/deliverable/${id}/upload`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    skipValidate: true
+  }) as Promise<DeliverableVersion>
 }
 
 /** 更新交付件基础信息 */

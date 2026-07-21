@@ -8,19 +8,22 @@
 // 推进阶段：退出条件 violations 校验 + 二次确认。
 // 入口：1) 工作区 Tab 嵌入（props.projectId）；2) 独立路由 /project/phase/:projectId。
 // =============================================================================
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowRight, InfoFilled, WarningFilled } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox, type UploadFile } from 'element-plus'
+import { ArrowRight, Delete, Edit, InfoFilled, Plus, Upload, WarningFilled } from '@element-plus/icons-vue'
 import {
   advancePhase,
+  createPhase,
+  deletePhase,
   listPhasesByProjectId,
+  updatePhase,
   type PhaseExitGateResult,
   type PhaseExitGateViolation,
   type ProjectPhase
 } from '@/api/project-phase'
 import { getProject, listMilestones, type Milestone, type Project } from '@/api/project'
-import { listFullDeliverables, type Deliverable } from '@/api/deliverable'
+import { listFullDeliverables, uploadDeliverableInitialVersion, type Deliverable } from '@/api/deliverable'
 import { getTasksByProject, type ImplTask } from '@/api/implementation'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
@@ -58,11 +61,32 @@ const phases = ref<ProjectPhase[]>([])
 
 // ===== 阶段详情抽屉 =====
 const drawerVisible = ref(false)
+const drawerMode = ref<'view' | 'create' | 'edit'>('view')
 const selectedPhase = ref<ProjectPhase | null>(null)
 const detailLoading = ref(false)
 const phaseDeliverables = ref<Deliverable[]>([])
 const phaseTasks = ref<ImplTask[]>([])
 const phaseMilestones = ref<Milestone[]>([])
+const projectDeliverables = ref<Deliverable[]>([])
+const projectMilestones = ref<Milestone[]>([])
+const uploadVisible = ref(false)
+const uploadDeliverable = ref<Deliverable | null>(null)
+const uploadFile = ref<File | null>(null)
+const uploadChangeLog = ref('')
+const uploadSaving = ref(false)
+
+// ===== 新增/编辑阶段 =====
+const formMode = ref<'create' | 'edit'>('create')
+const formSaving = ref(false)
+const phaseForm = reactive<ProjectPhase>({
+  projectId: 0,
+  phaseName: '',
+  phaseCode: '',
+  sortOrder: 1,
+  status: 'NOT_STARTED',
+  plannedStartDate: undefined,
+  plannedEndDate: undefined
+})
 
 // ===== 推进 violations 弹窗 =====
 const violationDialogVisible = ref(false)
@@ -75,6 +99,15 @@ const currentPhase = computed<ProjectPhase | null>(
 
 const inProgressCount = computed(() => phases.value.filter((p) => p.status === 'IN_PROGRESS').length)
 const completedCount = computed(() => phases.value.filter((p) => p.status === 'COMPLETED').length)
+const deliverableOptions = computed(() => projectDeliverables.value
+  .filter((item): item is Deliverable & { id: number } => item.id != null)
+  .map((item) => ({ id: item.id, label: item.deliverableName || '未命名交付件' })))
+const phaseOptions = computed(() => phases.value
+  .filter((item): item is ProjectPhase & { id: number } => item.id != null)
+  .map((item) => ({ id: item.id, label: item.phaseName })))
+const milestoneOptions = computed(() => projectMilestones.value
+  .filter((item): item is Milestone & { id: number } => item.id != null)
+  .map((item) => ({ id: item.id, label: item.milestoneName || item.name || '未命名里程碑' })))
 
 // ===== 工具函数 =====
 function formatDate(date?: string): string {
@@ -156,8 +189,22 @@ async function loadPhases() {
   }
 }
 
+async function loadProjectResources() {
+  if (!projectId.value || Number.isNaN(projectId.value)) {
+    projectDeliverables.value = []
+    projectMilestones.value = []
+    return
+  }
+  const [deliverables, milestones] = await Promise.all([
+    listFullDeliverables({ projectId: projectId.value }).catch(() => [] as Deliverable[]),
+    listMilestones(projectId.value).catch(() => [] as Milestone[])
+  ])
+  projectDeliverables.value = deliverables ?? []
+  projectMilestones.value = milestones ?? []
+}
+
 async function reload() {
-  await Promise.all([loadProject(), loadPhases()])
+  await Promise.all([loadProject(), loadPhases(), loadProjectResources()])
 }
 
 /** 加载阶段详情关联数据（交付件/任务/里程碑） */
@@ -172,7 +219,9 @@ async function loadPhaseDetails(phase: ProjectPhase) {
     ])
     phaseDeliverables.value = (deliverables ?? []).filter((d) => d.phaseId === phase.id)
     phaseTasks.value = (tasks ?? []).filter((t) => t.phaseId === phase.id)
-    phaseMilestones.value = (milestones ?? []).filter((m) => m.id != null)
+    phaseMilestones.value = (milestones ?? []).filter(
+      (m) => m.id != null && m.ppdiooPhase === phase.phaseCode
+    )
   } finally {
     detailLoading.value = false
   }
@@ -181,8 +230,100 @@ async function loadPhaseDetails(phase: ProjectPhase) {
 // ===== 交互 =====
 function selectPhase(phase: ProjectPhase) {
   selectedPhase.value = phase
+  drawerMode.value = 'view'
   drawerVisible.value = true
   loadPhaseDetails(phase)
+}
+
+function resetPhaseForm(phase?: ProjectPhase) {
+  Object.assign(phaseForm, {
+    id: phase?.id,
+    projectId: projectId.value,
+    templatePhaseId: phase?.templatePhaseId,
+    phaseName: phase?.phaseName ?? '',
+    phaseCode: phase?.phaseCode ?? '',
+    sortOrder: phase?.sortOrder ?? phases.value.length + 1,
+    entryCriteria: phase?.entryCriteria,
+    exitCriteria: phase?.exitCriteria,
+    status: phase?.status ?? 'NOT_STARTED',
+    plannedStartDate: phase?.plannedStartDate,
+    plannedEndDate: phase?.plannedEndDate,
+    actualStartDate: phase?.actualStartDate,
+    actualEndDate: phase?.actualEndDate
+  })
+}
+
+function openCreatePhase() {
+  formMode.value = 'create'
+  resetPhaseForm()
+  selectedPhase.value = null
+  drawerMode.value = 'create'
+  drawerVisible.value = true
+}
+
+function openEditPhase(phase: ProjectPhase) {
+  formMode.value = 'edit'
+  resetPhaseForm(phase)
+  drawerMode.value = 'edit'
+}
+
+function closePhaseForm() {
+  if (selectedPhase.value) {
+    drawerMode.value = 'view'
+  } else {
+    drawerVisible.value = false
+  }
+}
+
+async function savePhase() {
+  const name = phaseForm.phaseName.trim()
+  const code = phaseForm.phaseCode.trim().toUpperCase()
+  if (!name || !code) {
+    ElMessage.warning('请填写阶段名称和阶段编码')
+    return
+  }
+  if (phaseForm.plannedStartDate && phaseForm.plannedEndDate && phaseForm.plannedStartDate > phaseForm.plannedEndDate) {
+    ElMessage.warning('计划结束日期不能早于计划开始日期')
+    return
+  }
+  formSaving.value = true
+  try {
+    const payload = { ...phaseForm, phaseName: name, phaseCode: code }
+    const saved = formMode.value === 'create'
+      ? await createPhase(payload)
+      : await updatePhase(payload)
+    ElMessage.success(formMode.value === 'create' ? '阶段已新增' : '阶段已保存')
+    await loadPhases()
+    selectedPhase.value = phases.value.find((item) => item.id === saved.id) ?? saved
+    drawerMode.value = 'view'
+    if (selectedPhase.value) {
+      await loadPhaseDetails(selectedPhase.value)
+    }
+  } finally {
+    formSaving.value = false
+  }
+}
+
+async function handleDeletePhase(phase: ProjectPhase) {
+  if (!phase.id) return
+  if (phase.status !== 'NOT_STARTED') {
+    ElMessage.warning('仅允许删除未开始的阶段')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `确认删除阶段「${phase.phaseName}」？此操作不可撤销。`,
+      '删除阶段',
+      { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
+    )
+  } catch {
+    return
+  }
+  await deletePhase(phase.id)
+  ElMessage.success('阶段已删除')
+  drawerVisible.value = false
+  selectedPhase.value = null
+  await loadPhases()
 }
 
 /** 推进阶段：二次确认 + violations 校验 */
@@ -235,6 +376,38 @@ function goTaskDetail(id?: number) {
   if (id != null) router.push({ name: 'TaskDetail', params: { id: String(id) } })
 }
 
+function openDeliverableUpload(deliverable: Deliverable) {
+  uploadDeliverable.value = deliverable
+  uploadFile.value = null
+  uploadChangeLog.value = ''
+  uploadVisible.value = true
+}
+
+function handleUploadFileChange(file: UploadFile) {
+  uploadFile.value = file.raw ?? null
+}
+
+async function submitDeliverableUpload() {
+  if (!uploadDeliverable.value?.id || !uploadFile.value) {
+    ElMessage.warning('请选择需要上传的文件')
+    return
+  }
+  uploadSaving.value = true
+  try {
+    await uploadDeliverableInitialVersion(
+      uploadDeliverable.value.id,
+      uploadFile.value,
+      uploadChangeLog.value
+    )
+    ElMessage.success('交付件初始版本上传成功')
+    uploadVisible.value = false
+    if (selectedPhase.value) await loadPhaseDetails(selectedPhase.value)
+    await loadProjectResources()
+  } finally {
+    uploadSaving.value = false
+  }
+}
+
 // ===== 生命周期 =====
 watch(projectId, reload)
 onMounted(reload)
@@ -254,7 +427,11 @@ onMounted(reload)
           <el-radio-button label="pipeline">流水线</el-radio-button>
           <el-radio-button label="timeline">时间轴</el-radio-button>
         </el-radio-group>
+        <el-button v-permission="'project:phase:advance'" :icon="Plus" @click="openCreatePhase">
+          新增阶段
+        </el-button>
         <el-button
+          v-permission="'project:phase:advance'"
           type="primary"
           :disabled="!currentPhase"
           :loading="advancing"
@@ -394,12 +571,18 @@ onMounted(reload)
     <!-- 阶段详情抽屉 -->
     <el-drawer
       v-model="drawerVisible"
-      :title="selectedPhase ? `阶段详情 · ${selectedPhase.phaseName}` : '阶段详情'"
+      :title="drawerMode === 'create'
+        ? '阶段详情 · 新增阶段'
+        : drawerMode === 'edit'
+          ? `阶段详情 · ${phaseForm.phaseName || '编辑阶段'}`
+          : selectedPhase
+            ? `阶段详情 · ${selectedPhase.phaseName}`
+            : '阶段详情'"
       size="55%"
       destroy-on-close
     >
       <div v-loading="detailLoading" class="drawer-body">
-        <template v-if="selectedPhase">
+        <template v-if="drawerMode === 'view' && selectedPhase">
           <!-- 基本信息 -->
           <el-descriptions :column="2" border size="small" class="block">
             <el-descriptions-item label="阶段名称">{{ selectedPhase.phaseName }}</el-descriptions-item>
@@ -420,6 +603,9 @@ onMounted(reload)
             <PhaseExitGateEditor
               :model-value="selectedPhase.exitCriteria"
               :disabled="true"
+              :deliverable-options="deliverableOptions"
+              :phase-options="phaseOptions"
+              :milestone-options="milestoneOptions"
             />
           </div>
 
@@ -442,6 +628,21 @@ onMounted(reload)
                 </template>
               </el-table-column>
               <el-table-column label="版本" width="80" align="center" prop="currentVersion" />
+              <el-table-column label="操作" width="110" align="center" fixed="right">
+                <template #default="{ row }">
+                  <el-button
+                    v-if="row.status === 'DRAFT' && !row.filePath"
+                    v-permission="'project:deliverable:upload'"
+                    link
+                    type="primary"
+                    :icon="Upload"
+                    @click="openDeliverableUpload(row)"
+                  >
+                    上传文件
+                  </el-button>
+                  <span v-else>-</span>
+                </template>
+              </el-table-column>
             </el-table>
           </div>
 
@@ -478,15 +679,19 @@ onMounted(reload)
             <div class="block-title">项目里程碑（{{ phaseMilestones.length }}）</div>
             <el-table :data="phaseMilestones" border stripe size="small" empty-text="暂无里程碑">
               <el-table-column type="index" label="#" width="50" align="center" />
-              <el-table-column label="名称" min-width="180" prop="name" show-overflow-tooltip />
-              <el-table-column label="类型" width="120" prop="type" />
+              <el-table-column label="名称" min-width="180" show-overflow-tooltip>
+                <template #default="{ row }">{{ row.milestoneName || row.name || '-' }}</template>
+              </el-table-column>
+              <el-table-column label="类型" width="120">
+                <template #default="{ row }">{{ row.milestoneType || row.type || '-' }}</template>
+              </el-table-column>
               <el-table-column label="状态" width="100" align="center">
                 <template #default="{ row }">
                   <el-tag size="small" type="info">{{ row.status || '-' }}</el-tag>
                 </template>
               </el-table-column>
               <el-table-column label="计划日期" width="120" align="center">
-                <template #default="{ row }">{{ formatDate(row.plannedDate) }}</template>
+                <template #default="{ row }">{{ formatDate(row.planDate || row.plannedDate) }}</template>
               </el-table-column>
               <el-table-column label="实际日期" width="120" align="center">
                 <template #default="{ row }">{{ formatDate(row.actualDate) }}</template>
@@ -494,15 +699,140 @@ onMounted(reload)
             </el-table>
           </div>
 
-          <!-- 推进按钮 -->
-          <div v-if="selectedPhase.status === 'IN_PROGRESS'" class="drawer-footer">
-            <el-button type="primary" :loading="advancing" @click="handleAdvance(selectedPhase)">
-              推进该阶段
-            </el-button>
+        </template>
+
+        <template v-else>
+          <el-form :model="phaseForm" label-position="top">
+          <div class="detail-block form-first-block">
+            <div class="block-title">基本信息</div>
+            <div class="phase-form-grid">
+              <el-form-item label="阶段名称" required>
+                <el-input v-model="phaseForm.phaseName" maxlength="100" show-word-limit />
+              </el-form-item>
+              <el-form-item label="阶段编码" required>
+                <el-input v-model="phaseForm.phaseCode" placeholder="例如 DESIGN" maxlength="50" />
+              </el-form-item>
+              <el-form-item label="阶段状态">
+                <el-select v-model="phaseForm.status" disabled style="width: 100%">
+                  <el-option label="未开始" value="NOT_STARTED" />
+                  <el-option label="进行中" value="IN_PROGRESS" />
+                  <el-option label="已完成" value="COMPLETED" />
+                  <el-option label="已跳过" value="SKIPPED" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="排序" required>
+                <el-input-number v-model="phaseForm.sortOrder" :min="1" :max="999" style="width: 100%" />
+              </el-form-item>
+              <el-form-item label="计划开始">
+                <el-date-picker
+                  v-model="phaseForm.plannedStartDate"
+                  type="date"
+                  value-format="YYYY-MM-DD"
+                  placeholder="选择开始日期"
+                  style="width: 100%"
+                />
+              </el-form-item>
+              <el-form-item label="计划结束">
+                <el-date-picker
+                  v-model="phaseForm.plannedEndDate"
+                  type="date"
+                  value-format="YYYY-MM-DD"
+                  placeholder="选择结束日期"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </div>
           </div>
+
+          <div class="detail-block">
+            <div class="block-title">退出条件</div>
+            <div class="exit-gate-editor-wrap">
+              <PhaseExitGateEditor
+                v-model="phaseForm.exitCriteria"
+                :deliverable-options="deliverableOptions"
+                :phase-options="phaseOptions"
+                :milestone-options="milestoneOptions"
+              />
+            </div>
+          </div>
+          </el-form>
+
         </template>
       </div>
+
+      <template #footer>
+        <div class="drawer-footer">
+          <template v-if="drawerMode === 'view' && selectedPhase">
+            <el-button v-permission="'project:phase:advance'" :icon="Edit" @click="openEditPhase(selectedPhase)">
+              编辑阶段
+            </el-button>
+            <el-button
+              v-if="selectedPhase.status === 'NOT_STARTED'"
+              v-permission="'project:phase:advance'"
+              type="danger"
+              plain
+              :icon="Delete"
+              @click="handleDeletePhase(selectedPhase)"
+            >
+              删除阶段
+            </el-button>
+            <el-button
+              v-if="selectedPhase.status === 'IN_PROGRESS'"
+              v-permission="'project:phase:advance'"
+              type="primary"
+              :loading="advancing"
+              @click="handleAdvance(selectedPhase)"
+            >
+              推进该阶段
+            </el-button>
+          </template>
+          <template v-else>
+            <el-button @click="closePhaseForm">取消</el-button>
+            <el-button v-permission="'project:phase:advance'" type="primary" :loading="formSaving" @click="savePhase">
+              保存
+            </el-button>
+          </template>
+        </div>
+      </template>
     </el-drawer>
+
+    <el-dialog v-model="uploadVisible" title="上传阶段交付件" width="560px" destroy-on-close>
+      <el-alert
+        v-if="uploadDeliverable"
+        :title="`阶段：${selectedPhase?.phaseName ?? '-'} · 交付件：${uploadDeliverable.deliverableName}`"
+        type="info"
+        :closable="false"
+        show-icon
+        class="upload-context"
+      />
+      <el-form label-position="top">
+        <el-form-item label="文件" required>
+          <el-upload
+            drag
+            :auto-upload="false"
+            :limit="1"
+            :on-change="handleUploadFileChange"
+          >
+            <el-icon class="el-icon--upload"><Upload /></el-icon>
+            <div class="el-upload__text">拖拽文件到此处，或<em>点击选择</em></div>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="版本说明">
+          <el-input v-model="uploadChangeLog" type="textarea" :rows="3" placeholder="可选，默认记录为初始版本" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="uploadVisible = false">取消</el-button>
+        <el-button
+          v-permission="'project:deliverable:upload'"
+          type="primary"
+          :loading="uploadSaving"
+          @click="submitDeliverableUpload"
+        >
+          上传并创建 v1
+        </el-button>
+      </template>
+    </el-dialog>
 
     <!-- violations 弹窗 -->
     <el-dialog
@@ -791,11 +1121,35 @@ onMounted(reload)
   border-left: 3px solid var(--pms-color-primary, #409eff);
 }
 .drawer-footer {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--pms-color-border-light, #ebeef5);
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  min-height: 32px;
+}
+.upload-context {
+  margin-bottom: 16px;
+}
+.form-first-block {
+  margin-top: 0;
+}
+.phase-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24px;
+}
+.phase-form-grid :deep(.el-form-item) {
+  margin-bottom: 18px;
+}
+.exit-gate-editor-wrap {
+  padding: 12px;
+  border: 1px solid var(--pms-color-border-light, #ebeef5);
+  border-radius: 6px;
+  background: var(--pms-color-fill-lighter, #fafafa);
+}
+@media (max-width: 900px) {
+  .phase-form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ===== violations 弹窗 ===== */

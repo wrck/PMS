@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -71,19 +72,27 @@ public class DeliverableController {
         return Result.ok(deliverableService.create(deliverable));
     }
 
+    @Operation(summary = "上传交付件初始文件并创建 v1 版本")
+    @PostMapping(value = "/{id}/upload", consumes = "multipart/form-data")
+    @PreAuthorize("hasAuthority('project:deliverable:upload')")
+    @OperLog(title = "交付件-上传初始版本", businessType = 1)
+    public Result<DeliverableVersion> upload(@PathVariable Long id,
+                                             @RequestParam("file") MultipartFile file,
+                                             @RequestParam(required = false) String changeLog) {
+        return Result.ok(deliverableService.uploadInitialVersion(id, file, changeLog));
+    }
+
     @Operation(summary = "更新交付件基础信息（不允许直接修改 status，请走状态流转接口）")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:deliverable:add')")
+    @PreAuthorize("hasAuthority('project:deliverable:edit')")
     @OperLog(title = "交付件", businessType = 2)
     public Result<Deliverable> update(@PathVariable Long id, @Valid @RequestBody Deliverable deliverable) {
-        deliverable.setId(id);
-        deliverableService.updateById(deliverable);
-        return Result.ok(deliverableService.getById(id));
+        return Result.ok(deliverableService.updateBaseInfo(id, deliverable));
     }
 
     @Operation(summary = "删除交付件（仅 DRAFT 状态建议删除）")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:deliverable:add')")
+    @PreAuthorize("hasAuthority('project:deliverable:remove')")
     @OperLog(title = "交付件", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         deliverableService.removeById(id);
@@ -142,7 +151,7 @@ public class DeliverableController {
 
     @Operation(summary = "修订：新建版本不覆盖旧版本（Story 5 验收 1）")
     @PostMapping("/{id}/revise")
-    @PreAuthorize("hasAuthority('project:deliverable:add')")
+    @PreAuthorize("hasAuthority('project:deliverable:revise')")
     @OperLog(title = "交付件-修订", businessType = 1)
     public Result<DeliverableVersion> revise(@PathVariable Long id,
                                              @RequestParam String filePath,

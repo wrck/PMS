@@ -156,6 +156,11 @@ export interface Milestone {
   description?: string
   status?: string
   progress?: number
+  /** 后端里程碑实体字段；用于在阶段详情中按 PPDIOO 阶段归属筛选。 */
+  ppdiooPhase?: string
+  milestoneName?: string
+  milestoneType?: string
+  planDate?: string
 }
 
 export function createMilestone(data: Milestone): Promise<Milestone> {

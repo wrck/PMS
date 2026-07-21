@@ -17,6 +17,9 @@ import com.dp.plat.deliverable.mapper.DeliverableReferenceMapper;
 import com.dp.plat.deliverable.mapper.DeliverableSignatureMapper;
 import com.dp.plat.deliverable.mapper.DeliverableVersionMapper;
 import com.dp.plat.deliverable.service.DeliverableService;
+import com.dp.plat.common.dto.StoredBusinessFile;
+import com.dp.plat.common.spi.BusinessFileStorage;
+import com.dp.plat.common.spi.ProjectPhaseLookup;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 交付件全生命周期服务实现 — 7 态状态机。
@@ -44,6 +48,8 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
     private final DeliverableVersionMapper deliverableVersionMapper;
     private final DeliverableSignatureMapper deliverableSignatureMapper;
     private final DeliverableReferenceMapper deliverableReferenceMapper;
+    private final BusinessFileStorage businessFileStorage;
+    private final ProjectPhaseLookup projectPhaseLookup;
 
     // ==================== CRUD ====================
 
@@ -66,6 +72,7 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
         if (deliverable.getDeliverableName() == null || deliverable.getDeliverableName().isBlank()) {
             throw new BusinessException("交付件名称不能为空");
         }
+        validatePhaseOwnership(deliverable.getProjectId(), deliverable.getPhaseId());
         // 默认值：DRAFT / currentVersion=1 / mandatory=false
         if (deliverable.getStatus() == null || deliverable.getStatus().isBlank()) {
             deliverable.setStatus(DeliverableStatus.DRAFT.code());
@@ -91,6 +98,72 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
             deliverableVersionMapper.insert(v1);
         }
         return deliverable;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Deliverable updateBaseInfo(Long id, Deliverable patch) {
+        Deliverable current = loadOrThrow(id);
+        Long projectId = patch.getProjectId() == null ? current.getProjectId() : patch.getProjectId();
+        Long phaseId = patch.getPhaseId();
+        validatePhaseOwnership(projectId, phaseId);
+        current.setProjectId(projectId);
+        current.setPhaseId(phaseId);
+        current.setDeliverableName(patch.getDeliverableName());
+        current.setDeliverableType(patch.getDeliverableType());
+        current.setMandatory(patch.getMandatory());
+        current.setApproverRole(patch.getApproverRole());
+        updateById(current);
+        return current;
+    }
+
+    private void validatePhaseOwnership(Long projectId, Long phaseId) {
+        if (phaseId == null) return;
+        Long phaseProjectId = projectPhaseLookup.findProjectId(phaseId);
+        if (phaseProjectId == null) {
+            throw new BusinessException("所属阶段不存在");
+        }
+        if (!phaseProjectId.equals(projectId)) {
+            throw new BusinessException("所属阶段不属于当前项目");
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public DeliverableVersion uploadInitialVersion(Long deliverableId, MultipartFile file, String changeLog) {
+        Deliverable deliverable = loadOrThrow(deliverableId);
+        if (DeliverableStatus.of(deliverable.getStatus()) != DeliverableStatus.DRAFT) {
+            throw new BusinessException("仅草稿状态交付件可上传初始版本，当前状态：" + deliverable.getStatus());
+        }
+        Long versionCount = deliverableVersionMapper.selectCount(
+                new LambdaQueryWrapper<DeliverableVersion>()
+                        .eq(DeliverableVersion::getDeliverableId, deliverableId));
+        if (versionCount != null && versionCount > 0) {
+            throw new BusinessException("交付件已存在版本，请使用修订功能上传新版本");
+        }
+
+        StoredBusinessFile stored = businessFileStorage.upload(file, "DELIVERABLE", deliverableId);
+        try {
+            DeliverableVersion version = DeliverableVersion.builder()
+                    .deliverableId(deliverableId)
+                    .versionNo(1)
+                    .filePath(stored.getAccessPath())
+                    .uploadedBy(stored.getUploadedBy())
+                    .uploadedAt(LocalDateTime.now())
+                    .changeLog(changeLog == null || changeLog.isBlank() ? "初始版本" : changeLog)
+                    .status(DeliverableStatus.DRAFT.code())
+                    .build();
+            deliverableVersionMapper.insert(version);
+
+            deliverable.setFilePath(stored.getAccessPath());
+            deliverable.setCurrentVersion(1);
+            deliverable.setStatus(DeliverableStatus.DRAFT.code());
+            updateById(deliverable);
+            return version;
+        } catch (RuntimeException ex) {
+            businessFileStorage.delete(stored.getAttachmentId());
+            throw ex;
+        }
     }
 
     // ==================== 7 态状态机 ====================

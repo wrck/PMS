@@ -8,6 +8,7 @@ import com.dp.plat.deliverable.entity.DeliverableSignature;
 import com.dp.plat.deliverable.entity.DeliverableVersion;
 
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 交付件全生命周期服务（7 态状态机）。
@@ -38,6 +39,12 @@ public interface DeliverableService extends IService<Deliverable> {
      * @return 已创建的交付件（含生成的 id）
      */
     Deliverable create(Deliverable deliverable);
+
+    /** 更新基础信息，并保护项目、阶段归属和生命周期状态。 */
+    Deliverable updateBaseInfo(Long id, Deliverable patch);
+
+    /** 上传交付件初始文件并创建 v1 版本；仅适用于尚无版本记录的 DRAFT 交付件。 */
+    DeliverableVersion uploadInitialVersion(Long deliverableId, MultipartFile file, String changeLog);
 
     // ==================== 7 态状态机 ====================
 
