@@ -298,7 +298,7 @@ function computeCriticalPath(): { nodes: string[]; edges: string[] } {
 
 function applyCriticalPath() {
   if (!graph) return
-  // 清除旧高亮
+  // 清除旧高亮（G6 v5 setElementState 需传数组，传单个字符串可能不生效）
   for (const id of prevCriticalNodeIds) graph.setElementState(id, [])
   for (const id of prevCriticalEdgeIds) graph.setElementState(id, [])
   prevCriticalNodeIds = []
@@ -306,11 +306,11 @@ function applyCriticalPath() {
   if (!criticalPathEnabled.value) return
   const cp = criticalPath.value
   for (const id of cp.nodes) {
-    graph.setElementState(id, 'critical')
+    graph.setElementState(id, ['critical'])
     prevCriticalNodeIds.push(id)
   }
   for (const id of cp.edges) {
-    graph.setElementState(id, 'critical')
+    graph.setElementState(id, ['critical'])
     prevCriticalEdgeIds.push(id)
   }
 }
@@ -338,7 +338,7 @@ function initGraph() {
         fill: '#9ca3af',
         stroke: '#6b7280',
         lineWidth: 1,
-        labelText: (d: NodeData) => (d.data as ImplTask)?.taskName ?? '',
+        labelText: (d: NodeData) => (d.data as unknown as ImplTask | undefined)?.taskName ?? '',
         labelFill: '#1f2937',
         labelFontSize: 12,
         labelPosition: 'right'
@@ -403,11 +403,17 @@ function showTooltip(task: ImplTask, evt: any) {
     <div class="gt-row"><span>负责人</span><b>${escapeHtml(engineer)}</b></div>
   `
   el.style.display = 'block'
+  // G6 v5 事件对象：优先用 originalEvent 的 client 坐标（DOM MouseEvent）
+  // 否则回退到 canvasX/canvasY（相对画布的坐标）+ canvas 容器位置
+  const domEvt = evt?.originalEvent as MouseEvent | undefined
   const canvas = canvasRef.value
-  if (canvas) {
+  if (domEvt && typeof domEvt.clientX === 'number') {
+    el.style.left = `${domEvt.clientX + 12}px`
+    el.style.top = `${domEvt.clientY + 12}px`
+  } else if (canvas) {
     const rect = canvas.getBoundingClientRect()
-    const x = (evt.canvasX ?? evt.x ?? 0) as number
-    const y = (evt.canvasY ?? evt.y ?? 0) as number
+    const x = (evt?.canvasX ?? evt?.x ?? 0) as number
+    const y = (evt?.canvasY ?? evt?.y ?? 0) as number
     el.style.left = `${rect.left + x + 12}px`
     el.style.top = `${rect.top + y + 12}px`
   }
@@ -438,6 +444,13 @@ function renderGraph() {
   const edges = buildEdges()
   graph.setData({ nodes, edges })
   graph.render()
+  // G6 v5 渲染后需显式 fitView 才能将所有节点适配到可视区域
+  // （autoFit: 'view' 仅首次创建时生效，setData/render 后需手动调用）
+  try {
+    graph.fitView({ when: 'always', direction: 'both' })
+  } catch {
+    /* fitView 失败时忽略，不影响渲染 */
+  }
   // 重新渲染后重新应用关键路径
   prevCriticalNodeIds = []
   prevCriticalEdgeIds = []
@@ -455,10 +468,11 @@ function zoomOut() {
 }
 function fitView() {
   if (!graph) return
-  if (typeof graph.fitView === 'function') {
-    graph.fitView(20)
-  } else if (typeof graph.autoFit === 'function') {
-    graph.autoFit('view')
+  // G6 v5：autoFit 为私有方法，统一用 fitView
+  try {
+    graph.fitView({ when: 'always', direction: 'both' })
+  } catch {
+    /* ignore */
   }
 }
 async function exportPng() {
@@ -560,9 +574,9 @@ const isEmpty = computed(() => !loading.value && tasks.value.length === 0)
   <div class="project-gantt" ref="containerRef">
     <div class="gantt-toolbar">
       <el-radio-group v-model="viewMode" size="small">
-        <el-radio-button label="day">日</el-radio-button>
-        <el-radio-button label="week">周</el-radio-button>
-        <el-radio-button label="month">月</el-radio-button>
+        <el-radio-button value="day">日</el-radio-button>
+        <el-radio-button value="week">周</el-radio-button>
+        <el-radio-button value="month">月</el-radio-button>
       </el-radio-group>
       <el-divider direction="vertical" />
       <el-switch

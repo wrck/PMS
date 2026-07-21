@@ -52,10 +52,12 @@ import {
 } from '@/api/task-dependency'
 import { useUserStore } from '@/stores/user'
 import type { EpTagType } from '@/types'
+import type { MentionUser } from '@/api/system'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import TaskPriorityTag from '@/components/common/TaskPriorityTag.vue'
+import UserSelect from '@/components/common/UserSelect.vue'
 import TaskChecklist from '@/components/TaskChecklist.vue'
 
 defineOptions({ name: 'TaskDetail' })
@@ -571,6 +573,27 @@ async function loadProjectOptions() {
   }
 }
 
+// 工程师选择回调：同步 ID + 姓名
+function onEditEngineerChange(user: MentionUser | null) {
+  if (user) {
+    editForm.engineerId = user.id
+    editForm.engineerName = user.realName || user.username
+  } else {
+    editForm.engineerId = undefined
+    editForm.engineerName = ''
+  }
+}
+
+function onAddChildEngineerChange(user: MentionUser | null) {
+  if (user) {
+    addChildForm.engineerId = user.id
+    addChildForm.engineerName = user.realName || user.username
+  } else {
+    addChildForm.engineerId = undefined
+    addChildForm.engineerName = ''
+  }
+}
+
 function handleEdit() {
   if (!task.value) return
   Object.assign(editForm, task.value)
@@ -606,6 +629,7 @@ const addChildSubmitting = ref(false)
 const addChildFormRef = ref<FormInstance>()
 const addChildForm = reactive<Partial<ImplTask>>({
   taskName: '',
+  taskType: 'OEM',
   projectId: undefined,
   engineerId: undefined,
   engineerName: '',
@@ -620,8 +644,11 @@ const addChildRules: FormRules = {
 
 function handleAddChild() {
   if (!task.value) return
+  // 显式清空 id，确保走「新建」分支（assignOemTask 后端按 id 是否存在区分创建/更新）
   Object.assign(addChildForm, {
+    id: undefined,
     taskName: '',
+    taskType: 'OEM',
     projectId: task.value.projectId,
     engineerId: undefined,
     engineerName: '',
@@ -1397,11 +1424,12 @@ onMounted(async () => {
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="工程师ID">
-          <el-input-number v-model="editForm.engineerId" :min="1" controls-position="right" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="工程师姓名">
-          <el-input v-model="editForm.engineerName" placeholder="请输入工程师姓名" />
+        <el-form-item label="工程师">
+          <UserSelect
+            v-model="editForm.engineerId"
+            placeholder="请搜索选择工程师"
+            @change="onEditEngineerChange"
+          />
         </el-form-item>
         <el-form-item label="计划开始">
           <el-date-picker
@@ -1455,11 +1483,12 @@ onMounted(async () => {
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="工程师ID">
-          <el-input-number v-model="addChildForm.engineerId" :min="1" controls-position="right" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="工程师姓名">
-          <el-input v-model="addChildForm.engineerName" placeholder="请输入工程师姓名" />
+        <el-form-item label="工程师">
+          <UserSelect
+            v-model="addChildForm.engineerId"
+            placeholder="请搜索选择工程师"
+            @change="onAddChildEngineerChange"
+          />
         </el-form-item>
         <el-form-item label="计划开始">
           <el-date-picker

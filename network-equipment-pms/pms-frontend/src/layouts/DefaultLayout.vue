@@ -10,7 +10,6 @@ import TagsView from '@/components/TagsView/index.vue'
 import NotificationBell from '@/components/NotificationBell/index.vue'
 import UserGuide from '@/components/UserGuide/index.vue'
 import FeedbackButton from '@/components/FeedbackButton/index.vue'
-import ProjectTreeSidebar from '@/components/project/ProjectTreeSidebar.vue'
 import SidebarMenu from '@/components/layout/SidebarMenu.vue'
 import {
   useVisibleMenuGroups,
@@ -94,17 +93,6 @@ if (typeof window !== 'undefined') {
 }
 
 const activeMenu = computed(() => route.path)
-
-/**
- * 是否在主内容区左侧显示项目树侧栏。
- * 优先看 route.meta.showProjectSidebar 显式声明，否则 fallback 到 /project 前缀。
- * 其他业务模块路由（资产 / 实施管理等）不受影响。
- */
-const showProjectSidebar = computed<boolean>(() => {
-  const meta = route.meta as { showProjectSidebar?: boolean }
-  if (typeof meta.showProjectSidebar === 'boolean') return meta.showProjectSidebar
-  return route.path.startsWith('/project')
-})
 
 // Breadcrumb derived from the matched route records
 const breadcrumbs = computed(() =>
@@ -302,9 +290,8 @@ onBeforeUnmount(() => {
           <TagsView />
         </div>
 
-        <!-- 主内容区：项目管理相关路由左侧额外渲染项目树侧栏 -->
+        <!-- 主内容区：项目导航树已去除，全宽展示主内容 -->
         <div class="main-wrapper">
-          <ProjectTreeSidebar v-if="showProjectSidebar && !isMobile" />
           <el-main class="layout-main">
             <router-view v-slot="{ Component, route }">
               <transition

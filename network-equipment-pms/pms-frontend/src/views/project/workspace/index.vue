@@ -28,6 +28,7 @@ import TaskListView from '@/views/task/list/index.vue'
 import DeliverableList from '@/views/deliverable/index.vue'
 import BaselineList from '@/views/baseline/index.vue'
 import ApprovalCenter from '@/views/workflow/approval-center/index.vue'
+import ProjectMemberList from '@/views/project-member/index.vue'
 import ProjectConfig from '@/views/project-config/index.vue'
 
 defineOptions({ name: 'ProjectWorkspace' })
@@ -206,8 +207,8 @@ onBeforeUnmount(() => {
         <el-empty v-else description="暂无项目数据" />
       </el-tab-pane>
       <el-tab-pane label="成员" name="member">
-        <!-- 成员管理组件将在后续 Task 中创建，此处占位 -->
-        <el-empty description="成员管理（待后续 Task 实现）" />
+        <ProjectMemberList v-if="project" :project-id="projectId" />
+        <el-empty v-else description="暂无项目数据" />
       </el-tab-pane>
       <el-tab-pane label="配置" name="config">
         <ProjectConfig v-if="project" :project-id="projectId" />

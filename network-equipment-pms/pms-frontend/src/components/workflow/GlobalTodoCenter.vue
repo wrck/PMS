@@ -33,7 +33,7 @@ import {
   Tickets,
   WarningFilled
 } from '@element-plus/icons-vue'
-import { ElBadge, ElButton, ElCard, ElIcon, ElPagination, ElSelect, ElOption, ElSwitch, ElTabPane, ElTabs, ElTag } from 'element-plus'
+import { ElBadge, ElButton, ElCard, ElIcon, ElMessage, ElPagination, ElSelect, ElOption, ElSwitch, ElTabPane, ElTabs, ElTag } from 'element-plus'
 import { getPendingApprovals, getApprovalsByProject, type ApprovalRecord } from '@/api/approval-center'
 import { getTasksByProject, listTasks, type ImplTask, type ImplTaskNode } from '@/api/implementation'
 import { listProjects, type Project } from '@/api/project'
@@ -331,17 +331,40 @@ function onAutoRefreshChange(val: boolean | string | number) {
 // ============================================================================
 // 跳转
 // ============================================================================
+// 严格 id 校验：避免 todo.id 为 0/null/undefined/NaN 时 router.push
+// 拼出无效路径（如 /implementation/task/detail/0），被 404 兜底重定向到 /dashboard，
+// 造成「点待办跳首页」的表象。校验失败时给出明确提示。
+function isValidId(id: unknown): id is number {
+  return typeof id === 'number' && Number.isFinite(id) && id > 0
+}
+
 function goApproval(todo: ApprovalRecord) {
-  if (todo.id) router.push(`/workflow/approval-detail/${todo.id}`)
+  if (!isValidId(todo.id)) {
+    ElMessage.warning('该审批待办缺少有效 ID，无法跳转')
+    return
+  }
+  router.push(`/workflow/approval-detail/${todo.id}`)
 }
 function goTask(todo: ImplTask) {
-  if (todo.id) router.push(`/implementation/task/detail/${todo.id}`)
+  if (!isValidId(todo.id)) {
+    ElMessage.warning('该任务待办缺少有效 ID，无法跳转')
+    return
+  }
+  router.push(`/implementation/task/detail/${todo.id}`)
 }
 function goPhase(todo: Project) {
-  if (todo.id) router.push(`/project/workspace/${todo.id}`)
+  if (!isValidId(todo.id)) {
+    ElMessage.warning('该项目待办缺少有效 ID，无法跳转')
+    return
+  }
+  router.push(`/project/workspace/${todo.id}`)
 }
 function goBaseline(todo: BaselineTodoItem) {
-  if (todo.baseline.id) router.push(`/baseline/diff/${todo.baseline.id}`)
+  if (!isValidId(todo.baseline.id)) {
+    ElMessage.warning('该基线待办缺少有效 ID，无法跳转')
+    return
+  }
+  router.push(`/baseline/diff/${todo.baseline.id}`)
 }
 
 // ============================================================================

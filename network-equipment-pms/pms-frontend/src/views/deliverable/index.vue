@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import FileUploader from '@/components/FileUploader/index.vue'
 import {
@@ -13,9 +13,19 @@ import {
 } from '@/api/deliverable'
 import type { EpTagType } from '@/types'
 
+// 工作区以 props 传入项目 ID 时，自动加载该项目的交付件并隐藏手动输入区。
+// 独立路由进入时（无 props.projectId）保留手动输入项目 ID 的查询方式。
+const props = defineProps<{ projectId?: number }>()
+
 const loading = ref(false)
 const tableData = ref<DeliverableChecklist[]>([])
-const projectId = ref<number | undefined>(undefined)
+const localProjectId = ref<number | undefined>(undefined)
+
+// 实际生效的项目 ID：优先用 props 传入，其次用手动输入
+const effectiveProjectId = computed(() => props.projectId ?? localProjectId.value)
+
+// 是否嵌入工作区（隐藏项目 ID 输入框）
+const embedded = computed(() => typeof props.projectId === 'number')
 
 // 8 种交付物类型中文映射
 const typeLabels: Record<DeliverableType, string> = {
@@ -63,13 +73,13 @@ const currentRow = ref<DeliverableChecklist | null>(null)
 
 // ============== 数据加载 ==============
 async function loadData() {
-  if (!projectId.value) {
+  if (!effectiveProjectId.value) {
     ElMessage.warning('请输入项目 ID')
     return
   }
   loading.value = true
   try {
-    const res = await listDeliverables(projectId.value)
+    const res = await listDeliverables(effectiveProjectId.value)
     tableData.value = res ?? []
   } catch {
     /* handled by interceptor */
@@ -84,15 +94,17 @@ function handleSearch() {
 
 // 初始化清单
 function handleInit() {
-  if (!projectId.value) {
+  if (!effectiveProjectId.value) {
     ElMessage.warning('请输入项目 ID')
     return
   }
-  ElMessageBox.confirm(`确认为项目「${projectId.value}」初始化终验交付物清单吗？`, '初始化清单', {
-    type: 'warning'
-  })
+  ElMessageBox.confirm(
+    `确认为项目「${effectiveProjectId.value}」初始化终验交付物清单吗？`,
+    '初始化清单',
+    { type: 'warning' }
+  )
     .then(async () => {
-      await initChecklist(projectId.value!)
+      await initChecklist(effectiveProjectId.value!)
       ElMessage.success('清单已初始化')
       loadData()
     })
@@ -107,17 +119,25 @@ function handleUpload(row: DeliverableChecklist) {
   uploadVisible.value = true
 }
 
-// FileUploader 上传成功回调：可能直接返回附件 ID，也可能返回 { id } 对象
-async function handleUploaded(payload: number | { id?: number }) {
+// FileUploader 上传成功回调：组件 emit 'success' 事件，负载为 Attachment 对象
+// （含 id / fileName / fileSize / mimeType / uploadTime 等字段）
+interface UploadedAttachment {
+  id: number
+  fileName?: string
+  fileSize?: number
+  mimeType?: string
+  uploadTime?: string
+}
+
+async function handleUploaded(file: UploadedAttachment) {
   const row = currentRow.value
   if (!row?.id) return
-  const attachmentId = typeof payload === 'number' ? payload : payload?.id
-  if (typeof attachmentId !== 'number') {
+  if (!file || typeof file.id !== 'number') {
     ElMessage.warning('未获取到附件 ID')
     return
   }
   try {
-    await markUploaded(row.id, attachmentId)
+    await markUploaded(row.id, file.id)
     ElMessage.success('已标记上传')
     uploadVisible.value = false
     loadData()
@@ -145,19 +165,35 @@ function handleCancelUpload(row: DeliverableChecklist) {
       /* cancelled */
     })
 }
+
+// 嵌入工作区时：项目 ID 变化或首次进入自动加载
+watch(
+  () => props.projectId,
+  (val) => {
+    if (typeof val === 'number') loadData()
+  }
+)
+
+onMounted(() => {
+  if (embedded.value) loadData()
+})
 </script>
 
 <template>
   <div class="page-container">
     <el-card shadow="never">
       <template #header>
-        <span class="page-title">终验交付物清单</span>
+        <div class="card-header">
+          <span class="page-title">终验交付物清单</span>
+          <span v-if="embedded" class="header-project-id">项目 ID：{{ effectiveProjectId }}</span>
+        </div>
       </template>
 
-      <el-form :inline="true" @submit.prevent>
+      <!-- 嵌入工作区时不显示手动输入区；独立路由进入时保留 -->
+      <el-form v-if="!embedded" :inline="true" @submit.prevent>
         <el-form-item label="项目 ID">
           <el-input-number
-            v-model="projectId"
+            v-model="localProjectId"
             :min="1"
             :controls="false"
             placeholder="请输入项目 ID"
@@ -169,6 +205,11 @@ function handleCancelUpload(row: DeliverableChecklist) {
           <el-button type="success" :icon="'Files'" @click="handleInit">初始化清单</el-button>
         </el-form-item>
       </el-form>
+
+      <div v-else class="embedded-toolbar">
+        <el-button type="success" :icon="'Files'" @click="handleInit">初始化清单</el-button>
+        <el-button :icon="'Refresh'" @click="loadData">刷新</el-button>
+      </div>
 
       <el-table v-loading="loading" :data="tableData" border stripe>
         <el-table-column prop="id" label="ID" width="70" />
@@ -217,7 +258,7 @@ function handleCancelUpload(row: DeliverableChecklist) {
           </template>
         </el-table-column>
         <template #empty>
-          <el-empty description="请输入项目 ID 并查询，或点击「初始化清单」" />
+          <el-empty :description="embedded ? '当前项目暂无交付件，点击「初始化清单」生成' : '请输入项目 ID 并查询，或点击「初始化清单」'" />
         </template>
       </el-table>
 
@@ -237,7 +278,8 @@ function handleCancelUpload(row: DeliverableChecklist) {
       <div v-if="currentRow" class="upload-tip">
         当前交付物：<strong>{{ typeLabel(currentRow.deliverableType) }}</strong>
       </div>
-      <FileUploader biz-type="DELIVERABLE" @uploaded="handleUploaded" />
+      <!-- 修复：FileUploader 组件 emit 'success' 事件（非 'uploaded'） -->
+      <FileUploader biz-type="DELIVERABLE" @success="handleUploaded" />
       <template #footer>
         <el-button @click="uploadVisible = false">关闭</el-button>
       </template>
@@ -251,9 +293,23 @@ function handleCancelUpload(row: DeliverableChecklist) {
   flex-direction: column;
   gap: 12px;
 }
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 .page-title {
   font-size: 16px;
   font-weight: 600;
+}
+.header-project-id {
+  font-size: 13px;
+  color: var(--pms-color-text-secondary, #909399);
+}
+.embedded-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 .upload-tip {
   margin-bottom: 12px;

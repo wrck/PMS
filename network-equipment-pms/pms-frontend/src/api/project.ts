@@ -43,6 +43,7 @@ export interface Project {
   contractAmount?: number
   planStartDate?: string
   planEndDate?: string
+  projectManagerId?: number
   projectManagerName?: string
   priority?: number
   description?: string

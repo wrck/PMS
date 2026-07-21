@@ -13,7 +13,7 @@
 // - 空状态：EmptyState + CTA
 // - 分页 12/24/48（默认 12）
 // =============================================================================
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ElMessage,
@@ -46,6 +46,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ProjectStatusTag from '@/components/common/ProjectStatusTag.vue'
+import UserSelect from '@/components/common/UserSelect.vue'
 import ProjectTemplateSelector from '@/components/ProjectTemplateSelector.vue'
 import type { EpTagType } from '@/types'
 
@@ -60,7 +61,26 @@ const submitting = ref(false)
 const closing = ref<number | null>(null)
 const tableData = ref<Project[]>([])
 const total = ref(0)
-const viewMode = ref<'card' | 'table'>('card')
+// 视图模式默认列表，并持久化到 localStorage（下次进入时恢复用户上次选择）
+const VIEW_MODE_STORAGE_KEY = 'pms:project-list:view-mode'
+const viewMode = ref<'card' | 'table'>(
+  ((): 'card' | 'table' => {
+    try {
+      const saved = localStorage.getItem(VIEW_MODE_STORAGE_KEY)
+      if (saved === 'card' || saved === 'table') return saved
+    } catch {
+      /* localStorage 不可用时降级到默认值 */
+    }
+    return 'table'
+  })()
+)
+watch(viewMode, (val) => {
+  try {
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, val)
+  } catch {
+    /* 忽略写入失败 */
+  }
+})
 
 const query = reactive<{
   page: number
@@ -160,6 +180,7 @@ interface ProjectForm {
   contractAmount?: number
   planStartDate?: string
   planEndDate?: string
+  projectManagerId?: number
   projectManagerName?: string
   priority?: number
   description?: string
@@ -177,9 +198,21 @@ function createEmptyForm(): ProjectForm {
     contractAmount: undefined,
     planStartDate: '',
     planEndDate: '',
+    projectManagerId: undefined,
     projectManagerName: '',
     priority: 2,
     description: ''
+  }
+}
+
+// 项目经理选择回调：同步 ID + 名称
+function onManagerChange(user: { id: number; username: string; realName?: string } | null) {
+  if (user) {
+    form.projectManagerId = user.id
+    form.projectManagerName = user.realName || user.username
+  } else {
+    form.projectManagerId = undefined
+    form.projectManagerName = ''
   }
 }
 
@@ -717,7 +750,11 @@ onMounted(loadData)
           </el-col>
           <el-col :xs="24" :sm="12">
             <el-form-item label="项目经理">
-              <el-input v-model="form.projectManagerName" placeholder="请输入项目经理" />
+              <UserSelect
+                v-model="form.projectManagerId"
+                placeholder="请搜索选择项目经理"
+                @change="onManagerChange"
+              />
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12">

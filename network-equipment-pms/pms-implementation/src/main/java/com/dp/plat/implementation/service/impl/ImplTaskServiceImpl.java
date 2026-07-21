@@ -54,6 +54,27 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ImplTask assignOemTask(ImplTask task) {
+        // 编辑场景：id 存在 → 走 updateById，保留原 status / progress / actualStart 等
+        // 新建场景：id 为空 → 走 save，初始化 taskType/status/progress 并发通知
+        if (task.getId() != null) {
+            ImplTask existing = loadOrThrow(task.getId());
+            // 强制 taskType 为 OEM（不允许通过本接口改类型）
+            task.setTaskType(TYPE_OEM);
+            // 保留后端已有的状态、进度、实际开始/结束时间，避免编辑覆盖
+            task.setStatus(existing.getStatus());
+            task.setProgress(existing.getProgress());
+            task.setActualStartDate(existing.getActualStartDate());
+            task.setActualEnd(existing.getActualEnd());
+            // 工程师变更时发通知
+            boolean engineerChanged = !java.util.Objects.equals(existing.getEngineerId(), task.getEngineerId())
+                    && task.getEngineerId() != null;
+            this.updateById(task);
+            if (engineerChanged) {
+                notificationService.notifyUser(task.getEngineerId(), "派工变更通知",
+                        "您负责的原厂实施任务已更新：" + task.getTaskName());
+            }
+            return task;
+        }
         task.setTaskType(TYPE_OEM);
         task.setStatus(STATUS_PENDING);
         if (task.getProgress() == null) {
@@ -70,6 +91,22 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ImplTask assignAgentTask(ImplTask task) {
+        if (task.getId() != null) {
+            ImplTask existing = loadOrThrow(task.getId());
+            task.setTaskType(TYPE_AGENT);
+            task.setStatus(existing.getStatus());
+            task.setProgress(existing.getProgress());
+            task.setActualStartDate(existing.getActualStartDate());
+            task.setActualEnd(existing.getActualEnd());
+            boolean agentChanged = !java.util.Objects.equals(existing.getAgentId(), task.getAgentId())
+                    && task.getAgentId() != null;
+            this.updateById(task);
+            if (agentChanged) {
+                notificationService.notifyUser(task.getAgentId(), "委派变更通知",
+                        "您负责的代理商实施任务已更新：" + task.getTaskName());
+            }
+            return task;
+        }
         task.setTaskType(TYPE_AGENT);
         task.setStatus(STATUS_PENDING);
         if (task.getProgress() == null) {

@@ -62,13 +62,13 @@ export const routes: RouteRecordRaw[] = [
     ]
   },
   // ============ 项目管理（嵌套，以 workspace/:id 为枢纽） ============
-  // 父级 meta.showProjectSidebar: true 由 Vue Router 合并继承到所有子路由，
-  // 让 DefaultLayout 中的 ProjectTreeSidebar 在项目管理相关路由常驻显示。
+  // 注：项目导航树（ProjectTreeSidebar）已去除，项目管理以「项目列表」为入口。
+  // 用户在列表页选择项目后跳转到 /project/workspace/:id 进入工作区。
   {
     path: '/project',
     component: Layout,
     redirect: '/project/list',
-    meta: { title: '项目管理', icon: 'Folder', requiresAuth: true, showProjectSidebar: true },
+    meta: { title: '项目管理', icon: 'Folder', requiresAuth: true },
     children: [
       {
         path: 'list',
@@ -92,7 +92,7 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '项目工作区', hidden: true }
       },
       {
-        path: 'todo/:id',
+        path: ':id/todo',
         name: 'ProjectTodo',
         component: () => import('@/views/project/todo/index.vue'),
         meta: { title: '项目待办', hidden: true }
