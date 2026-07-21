@@ -18,7 +18,10 @@ import java.util.List;
 
 /**
  * Implementation of {@link IDeliverableChecklistService}.
+ *
+ * @deprecated 终验校验已改为直接查 pms_deliverable 表，本实现保留用于历史兼容，将在下版本删除。
  */
+@Deprecated
 @Service
 @RequiredArgsConstructor
 public class DeliverableChecklistServiceImpl

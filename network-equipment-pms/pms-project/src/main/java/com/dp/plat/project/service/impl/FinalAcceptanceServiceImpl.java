@@ -5,14 +5,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.result.Result;
 import com.dp.plat.common.util.SecurityUtils;
-import com.dp.plat.project.deliverable.entity.DeliverableChecklist;
-import com.dp.plat.project.deliverable.enums.DeliverableType;
-import com.dp.plat.project.deliverable.service.IDeliverableChecklistService;
+import com.dp.plat.project.entity.Deliverable;
 import com.dp.plat.project.entity.FinalAcceptance;
 import com.dp.plat.project.entity.Milestone;
 import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.event.FinalAcceptanceApprovedEvent;
 import com.dp.plat.project.mapper.FinalAcceptanceMapper;
+import com.dp.plat.project.mapper.ProjectDeliverableMapper;
 import com.dp.plat.project.mapper.ProjectMapper;
 import com.dp.plat.project.punchlist.service.IPunchListService;
 import com.dp.plat.project.service.IFinalAcceptanceService;
@@ -48,7 +47,7 @@ public class FinalAcceptanceServiceImpl extends ServiceImpl<FinalAcceptanceMappe
     private final ProjectMapper projectMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final IPunchListService punchListService;
-    private final IDeliverableChecklistService deliverableChecklistService;
+    private final ProjectDeliverableMapper deliverableMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -75,26 +74,27 @@ public class FinalAcceptanceServiceImpl extends ServiceImpl<FinalAcceptanceMappe
         if (!punchListService.isAllVerified(projectId)) {
             throw new BusinessException("存在未验证的 Punch List 项，无法申请终验");
         }
-        // All mandatory deliverables must be uploaded. Auto-init the standard checklist
-        // when no checklist record exists yet for the project.
-        List<DeliverableChecklist> checklist = deliverableChecklistService.list(
-                new LambdaQueryWrapper<DeliverableChecklist>()
-                        .eq(DeliverableChecklist::getProjectId, projectId));
-        if (checklist == null || checklist.isEmpty()) {
-            Result<List<DeliverableChecklist>> initResult = deliverableChecklistService.initChecklist(projectId);
-            checklist = initResult != null ? initResult.getData() : null;
+        // All mandatory deliverables must reach at least PUBLISHED status.
+        // Auto-init standard deliverables when none exist for the project.
+        List<Deliverable> deliverables = deliverableMapper.selectList(
+                new LambdaQueryWrapper<Deliverable>()
+                        .eq(Deliverable::getProjectId, projectId));
+        boolean hasMandatory = deliverables.stream()
+                .anyMatch(d -> Boolean.TRUE.equals(d.getMandatory()));
+        if (!hasMandatory) {
+            initStandardDeliverables(projectId);
+            deliverables = deliverableMapper.selectList(
+                    new LambdaQueryWrapper<Deliverable>()
+                            .eq(Deliverable::getProjectId, projectId));
         }
         List<String> missing = new ArrayList<>();
-        if (checklist != null) {
-            for (DeliverableChecklist item : checklist) {
-                if (Boolean.TRUE.equals(item.getRequired()) && !Boolean.TRUE.equals(item.getUploaded())) {
-                    DeliverableType type = resolveDeliverableType(item.getDeliverableType());
-                    missing.add(type != null ? type.getDisplayName() : item.getDeliverableType());
-                }
+        for (Deliverable item : deliverables) {
+            if (Boolean.TRUE.equals(item.getMandatory()) && !isDeliverableReady(item.getStatus())) {
+                missing.add(item.getDeliverableName() != null ? item.getDeliverableName() : item.getDeliverableType());
             }
         }
         if (!missing.isEmpty()) {
-            throw new BusinessException("终验交付物未齐全，缺失: " + String.join("、", missing));
+            throw new BusinessException("终验交付物未就绪，缺失: " + String.join("、", missing));
         }
         // Prevent duplicate pending applications.
         FinalAcceptance existing = this.getOne(new LambdaQueryWrapper<FinalAcceptance>()
@@ -179,19 +179,40 @@ public class FinalAcceptanceServiceImpl extends ServiceImpl<FinalAcceptanceMappe
     }
 
     /**
-     * Resolve a deliverable type name to its enum, returning {@code null} when unknown.
-     *
-     * @param typeName deliverable type name
-     * @return resolved deliverable type, or {@code null}
+     * 检查交付件状态是否达到终验就绪标准（PUBLISHED/REFERENCED/ARCHIVED）。
      */
-    private DeliverableType resolveDeliverableType(String typeName) {
-        if (typeName == null || typeName.isBlank()) {
-            return null;
-        }
-        try {
-            return DeliverableType.valueOf(typeName.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return null;
+    private boolean isDeliverableReady(String status) {
+        return "PUBLISHED".equals(status)
+                || "REFERENCED".equals(status)
+                || "ARCHIVED".equals(status);
+    }
+
+    /**
+     * 为项目初始化 8 类标准终验交付件记录（phaseId=null, mandatory=true, status=DRAFT）。
+     *
+     * <p>替代原 {@code DeliverableChecklistService.initChecklist}，直接在 pms_deliverable 表中
+     * 创建标准类型记录，统一数据源。</p>
+     */
+    private void initStandardDeliverables(Long projectId) {
+        String[] standardTypes = {
+                "AS_BUILT", "TEST_REPORT", "ACCEPTANCE_CERT", "TRAINING_RECORD",
+                "OPERATION_MANUAL", "ASSET_REGISTER", "WARRANTY_CERT", "SPARE_PARTS_LIST"
+        };
+        String[] standardNames = {
+                "竣工资料", "测试报告", "验收证书", "培训记录",
+                "操作手册", "资产清单", "质保证书", "备件清单"
+        };
+        for (int i = 0; i < standardTypes.length; i++) {
+            Deliverable deliverable = Deliverable.builder()
+                    .projectId(projectId)
+                    .phaseId(null)
+                    .deliverableName(standardNames[i])
+                    .deliverableType(standardTypes[i])
+                    .status("DRAFT")
+                    .currentVersion(1)
+                    .mandatory(Boolean.TRUE)
+                    .build();
+            deliverableMapper.insert(deliverable);
         }
     }
 }

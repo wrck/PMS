@@ -22,7 +22,10 @@ import java.util.List;
 
 /**
  * Final acceptance deliverable checklist controller.
+ *
+ * @deprecated 终验校验已改为直接查 pms_deliverable 表，本控制器保留用于历史兼容，将在下版本删除。
  */
+@Deprecated
 @Tag(name = "终验交付物清单", description = "Deliverable checklist management APIs")
 @RestController
 @RequestMapping("/api/project/deliverable-checklist")

@@ -8,7 +8,10 @@ import java.util.List;
 
 /**
  * Service for {@link DeliverableChecklist}.
+ *
+ * @deprecated 终验校验已改为直接查 pms_deliverable 表，本服务保留用于历史兼容，将在下版本删除。
  */
+@Deprecated
 public interface IDeliverableChecklistService extends IService<DeliverableChecklist> {
 
     /**

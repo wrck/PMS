@@ -25,12 +25,24 @@ public class Deliverable extends BaseEntity {
     /** Deliverable name. */
     private String deliverableName;
 
-    /** Deliverable type (DOCUMENT, CONFIG, REPORT, OTHER). */
+    /** 交付件类型（AS_BUILT/TEST_REPORT/ACCEPTANCE_CERT/TRAINING_RECORD/OPERATION_MANUAL/ASSET_REGISTER/WARRANTY_CERT/SPARE_PARTS_LIST/OTHER）。 */
     private String deliverableType;
 
     /** File path. */
     private String filePath;
 
-    /** Status (PENDING, SUBMITTED, CONFIRMED). */
+    /** 状态（7 态）：DRAFT/SUBMITTED/REVIEWED/SIGNED/PUBLISHED/REFERENCED/ARCHIVED。 */
     private String status;
+
+    /** 所属阶段ID（终验交付件可为 null）。 */
+    private Long phaseId;
+
+    /** 当前版本号，从 1 开始。 */
+    private Integer currentVersion;
+
+    /** 是否必需交付件（影响阶段退出校验和终验校验）。 */
+    private Boolean mandatory;
+
+    /** 签核角色。 */
+    private String approverRole;
 }

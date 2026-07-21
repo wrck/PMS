@@ -36,7 +36,7 @@ public class Deliverable extends BaseEntity {
     /** 交付件名称。 */
     private String deliverableName;
 
-    /** 交付件类型（DOCUMENT/CONFIG/REPORT/OTHER）。 */
+    /** 交付件类型（AS_BUILT/TEST_REPORT/ACCEPTANCE_CERT/TRAINING_RECORD/OPERATION_MANUAL/ASSET_REGISTER/WARRANTY_CERT/SPARE_PARTS_LIST/OTHER）。 */
     private String deliverableType;
 
     /** 文件路径（最新版本）。 */

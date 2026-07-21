@@ -19,7 +19,10 @@ import java.time.LocalDateTime;
  * <p>Tracks the mandatory deliverables that must be uploaded before a project can
  * apply for final acceptance. Each project is initialised with 8 standard
  * deliverable records via {@code initChecklist}.</p>
+ *
+ * @deprecated 终验校验已改为直接查 pms_deliverable 表，本实体保留用于历史兼容，将在下版本删除。
  */
+@Deprecated
 @Data
 @Builder
 @NoArgsConstructor
