@@ -35,7 +35,7 @@ import {
   type TaskReviewResult,
   type TaskStatus
 } from '@/api/implementation'
-import { listProjects, type Project } from '@/api/project'
+import { getProject, listProjects, type Project } from '@/api/project'
 import { listPhasesByProjectId, type ProjectPhase } from '@/api/project-phase'
 import {
   createComment,
@@ -124,6 +124,50 @@ function phaseNameOf(phaseId?: number | null): string {
   const phase = phaseOptions.value.find((p) => p.id === phaseId)
   return phase?.phaseName ?? '-'
 }
+
+/**
+ * 解析项目名称：优先使用后端返回的 projectName，
+ * 缺失时回退到 projectInfo（通过 getProject 加载）。
+ */
+const projectNameText = computed(() => {
+  const name = task.value?.projectName
+  if (name && name.trim()) return name
+  return projectInfo.value?.projectName || '-'
+})
+
+/**
+ * 解析 taskPath 物化路径（格式如 "/1/2/3/"）为任务 ID 列表。
+ * 过滤掉空段和自身 ID。
+ */
+function parseTaskPathIds(path?: string): number[] {
+  if (!path) return []
+  return path
+    .split('/')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+    .map((s) => Number(s))
+    .filter((n) => !Number.isNaN(n) && n > 0)
+}
+
+/**
+ * 任务路径面包屑：祖先任务链 + 自身。
+ * 每项含 { id, name, isCurrent }，用于渲染可点击导航。
+ */
+const taskBreadcrumb = computed<Array<{ id: number; name: string; isCurrent: boolean }>>(() => {
+  const chain = ancestorChain.value.map((t) => ({
+    id: t.id!,
+    name: t.taskName || `任务#${t.id}`,
+    isCurrent: false
+  }))
+  if (task.value?.id) {
+    chain.push({
+      id: task.value.id,
+      name: task.value.taskName || `任务#${task.value.id}`,
+      isCurrent: true
+    })
+  }
+  return chain
+})
 function formatDateTime(s?: string): string {
   if (!s) return '-'
   return s.length > 16 ? s.slice(0, 16).replace('T', ' ') : s
@@ -140,6 +184,10 @@ const progressVO = ref<TaskProgressVO | null>(null)
 const parentTask = ref<ImplTask | null>(null)
 const subtree = ref<ImplTaskNode[]>([])
 const phaseOptions = ref<ProjectPhase[]>([])
+/** 当前任务关联的项目信息（用于补全 projectName 显示） */
+const projectInfo = ref<Project | null>(null)
+/** 任务路径上的祖先任务链（不含自身，按从根到父顺序） */
+const ancestorChain = ref<ImplTask[]>([])
 
 // ============ 子任务（直接子任务） ============
 const directChildren = computed<ImplTaskNode[]>(() =>
@@ -267,6 +315,44 @@ async function loadTask() {
             phaseOptions.value = []
           })
       )
+      // 加载项目信息，补全 projectName（后端任务详情可能未返回 projectName）
+      parallel.push(
+        getProject(task.value.projectId)
+          .then((proj) => {
+            projectInfo.value = proj
+            // 同步补全 task.projectName，避免后续显示 "-"
+            if (task.value && !task.value.projectName) {
+              task.value.projectName = proj.projectName
+            }
+            // 确保编辑表单下拉选项包含当前项目
+            ensureCurrentProjectInOptions()
+          })
+          .catch(() => {
+            projectInfo.value = null
+          })
+      )
+    }
+    // 加载任务路径上的祖先任务链（用于面包屑导航）
+    const ancestorIds = parseTaskPathIds(task.value.taskPath).filter(
+      (id) => id !== task.value!.id
+    )
+    if (ancestorIds.length > 0) {
+      parallel.push(
+        Promise.allSettled(ancestorIds.map((id) => getTaskDetail(id)))
+          .then((results) => {
+            ancestorChain.value = results
+              .filter(
+                (r): r is PromiseFulfilledResult<ImplTask> =>
+                  r.status === 'fulfilled' && !!r.value
+              )
+              .map((r) => r.value)
+          })
+          .catch(() => {
+            ancestorChain.value = []
+          })
+      )
+    } else {
+      ancestorChain.value = []
     }
     await Promise.allSettled(parallel)
     // 处理 ?action=add-child
@@ -622,9 +708,21 @@ const editRules: FormRules = {
 async function loadProjectOptions() {
   try {
     const res = await listProjects({ page: 1, size: 100 })
-    projectOptions.value = res.records
+    projectOptions.value = res.records ?? []
+    // 确保当前任务所属项目在选项中（避免分页遗漏导致下拉不显示项目名）
+    ensureCurrentProjectInOptions()
   } catch {
     /* handled by interceptor */
+  }
+}
+
+/** 若 projectOptions 缺失当前任务所属项目，则从 projectInfo 补入 */
+function ensureCurrentProjectInOptions() {
+  const pid = task.value?.projectId
+  if (!pid) return
+  const exists = projectOptions.value.some((p) => p.id === pid)
+  if (!exists && projectInfo.value) {
+    projectOptions.value = [projectInfo.value, ...projectOptions.value]
   }
 }
 
@@ -964,7 +1062,7 @@ onMounted(async () => {
             <template #header>
               <div class="card-header">
                 <span class="card-title">基本信息</span>
-                <el-tag size="small" effect="plain">{{ task.projectName || '未关联项目' }}</el-tag>
+                <el-tag size="small" effect="plain">{{ projectNameText }}</el-tag>
               </div>
             </template>
             <el-descriptions :column="2" border size="small">
@@ -972,13 +1070,41 @@ onMounted(async () => {
                 {{ task.taskName || '-' }}
               </el-descriptions-item>
               <el-descriptions-item label="所属项目">
-                {{ task.projectName || '-' }}
+                <el-link
+                  v-if="task.projectId"
+                  type="primary"
+                  :underline="false"
+                  @click="router.push(`/project/detail/${task.projectId}`)"
+                >
+                  {{ projectNameText }}
+                </el-link>
+                <span v-else>-</span>
               </el-descriptions-item>
               <el-descriptions-item label="所属阶段">
                 {{ phaseNameOf(task.phaseId) }}
               </el-descriptions-item>
               <el-descriptions-item label="任务路径">
-                {{ task.taskPath || '-' }}
+                <el-breadcrumb
+                  v-if="taskBreadcrumb.length > 0"
+                  separator="/"
+                  class="task-path-breadcrumb"
+                >
+                  <el-breadcrumb-item
+                    v-for="item in taskBreadcrumb"
+                    :key="item.id"
+                  >
+                    <el-link
+                      v-if="!item.isCurrent"
+                      type="primary"
+                      :underline="false"
+                      @click="handleNodeClick(item.id)"
+                    >
+                      {{ item.name }}
+                    </el-link>
+                    <span v-else class="path-current">{{ item.name }}</span>
+                  </el-breadcrumb-item>
+                </el-breadcrumb>
+                <span v-else>-</span>
               </el-descriptions-item>
               <el-descriptions-item label="计划开始">
                 {{ formatDate(task.planStartDate) }}
@@ -1744,6 +1870,24 @@ onMounted(async () => {
   font-size: 14px;
   font-weight: 600;
   color: var(--pms-color-text-regular);
+}
+
+/* 任务路径面包屑 */
+.task-path-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.task-path-breadcrumb :deep(.el-breadcrumb__item) {
+  display: inline-flex;
+  align-items: center;
+}
+.task-path-breadcrumb .path-current {
+  color: var(--pms-color-text-primary, #303133);
+  font-weight: 500;
 }
 .sub-title {
   font-size: 13px;
