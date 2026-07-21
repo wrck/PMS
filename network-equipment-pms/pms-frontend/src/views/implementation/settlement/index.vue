@@ -44,6 +44,12 @@ function money(v?: number): string {
   return v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+function projectNameOf(projectId?: number | null, projectName?: string): string {
+  if (projectName && projectName.trim()) return projectName
+  if (!projectId) return '-'
+  return projectOptions.value.find((p) => p.id === projectId)?.projectName ?? '-'
+}
+
 // Select data sources
 const agentOptions = ref<Agent[]>([])
 const projectOptions = ref<Project[]>([])
@@ -301,7 +307,9 @@ onMounted(async () => {
         <el-table-column type="index" label="#" width="50" />
         <el-table-column prop="settlementNo" label="结算单号" min-width="160" show-overflow-tooltip />
         <el-table-column prop="agentName" label="代理商" min-width="140" show-overflow-tooltip />
-        <el-table-column prop="projectName" label="关联项目" min-width="160" show-overflow-tooltip />
+        <el-table-column label="关联项目" min-width="160" show-overflow-tooltip>
+          <template #default="{ row }">{{ projectNameOf(row.projectId, row.projectName) }}</template>
+        </el-table-column>
         <el-table-column label="总金额" width="130" align="right">
           <template #default="{ row }">{{ money(row.totalAmount) }}</template>
         </el-table-column>
@@ -444,7 +452,7 @@ onMounted(async () => {
         <el-descriptions v-if="detailData" :column="3" border>
           <el-descriptions-item label="结算单号">{{ detailData.settlementNo }}</el-descriptions-item>
           <el-descriptions-item label="代理商">{{ detailData.agentName }}</el-descriptions-item>
-          <el-descriptions-item label="关联项目">{{ detailData.projectName }}</el-descriptions-item>
+          <el-descriptions-item label="关联项目">{{ projectNameOf(detailData.projectId, detailData.projectName) }}</el-descriptions-item>
           <el-descriptions-item label="税率">{{ detailData.taxRate }}%</el-descriptions-item>
           <el-descriptions-item label="总金额">{{ money(detailData.totalAmount) }}</el-descriptions-item>
           <el-descriptions-item label="税额">{{ money(detailData.taxAmount) }}</el-descriptions-item>

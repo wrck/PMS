@@ -40,6 +40,8 @@ import {
   type DeliverableVersion,
   type ReviseRequest
 } from '@/api/deliverable'
+import { getProject, type Project } from '@/api/project'
+import { listPhasesByProjectId, type ProjectPhase } from '@/api/project-phase'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -58,6 +60,8 @@ const deliverable = ref<Deliverable | null>(null)
 const versions = ref<DeliverableVersion[]>([])
 const signatures = ref<DeliverableSignature[]>([])
 const references = ref<DeliverableReference[]>([])
+const projectInfo = ref<Project | null>(null)
+const phaseOptions = ref<ProjectPhase[]>([])
 
 const versionListRef = ref<InstanceType<typeof DeliverableVersionList> | null>(null)
 
@@ -76,6 +80,19 @@ function typeLabel(t?: string): string {
 function formatDateTime(dt?: string): string {
   if (!dt) return '-'
   return dt.replace('T', ' ').slice(0, 19)
+}
+
+// ============ 项目 / 阶段名称解析（避免直接显示 ID）============
+const projectNameText = computed(() => {
+  const name = deliverable.value?.projectName
+  if (name && name.trim()) return name
+  return projectInfo.value?.projectName || '-'
+})
+
+function phaseNameOf(phaseId?: number | null): string {
+  if (!phaseId) return '-'
+  const phase = phaseOptions.value.find((p) => p.id === phaseId)
+  return phase?.phaseName ?? '-'
 }
 
 // ============ 当前状态 / 下一状态 ============
@@ -197,6 +214,25 @@ async function loadDetail() {
     deliverable.value = null
   } finally {
     loading.value = false
+  }
+  if (deliverable.value?.projectId) {
+    getProject(deliverable.value.projectId)
+      .then((proj) => {
+        projectInfo.value = proj
+        if (deliverable.value && !deliverable.value.projectName) {
+          deliverable.value.projectName = proj.projectName
+        }
+      })
+      .catch(() => {
+        projectInfo.value = null
+      })
+    listPhasesByProjectId(deliverable.value.projectId)
+      .then((list) => {
+        phaseOptions.value = list ?? []
+      })
+      .catch(() => {
+        phaseOptions.value = []
+      })
   }
 }
 
@@ -477,8 +513,8 @@ onMounted(loadAll)
               <el-descriptions-item label="状态">
                 <DeliverableStatusBadge :status="deliverable.status || 'DRAFT'" size="small" />
               </el-descriptions-item>
-              <el-descriptions-item label="所属项目">{{ deliverable.projectId }}</el-descriptions-item>
-              <el-descriptions-item label="所属阶段">{{ deliverable.phaseId ?? '-' }}</el-descriptions-item>
+              <el-descriptions-item label="所属项目">{{ projectNameText }}</el-descriptions-item>
+              <el-descriptions-item label="所属阶段">{{ phaseNameOf(deliverable.phaseId) }}</el-descriptions-item>
               <el-descriptions-item label="必需">
                 <el-tag v-if="deliverable.mandatory" type="danger" size="small">必需</el-tag>
                 <el-tag v-else type="info" size="small">可选</el-tag>

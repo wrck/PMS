@@ -346,6 +346,12 @@ function handleReject(row: ImplTask) {
     })
 }
 
+function projectNameOf(projectId?: number | null, projectName?: string): string {
+  if (projectName && projectName.trim()) return projectName
+  if (!projectId) return '-'
+  return projectOptions.value.find((p) => p.id === projectId)?.projectName ?? '-'
+}
+
 function assigneeText(row: ImplTask): string {
   if (row.taskType === 'AGENT') {
     return row.agentName || '-'
@@ -423,7 +429,9 @@ onMounted(async () => {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="projectName" label="关联项目" min-width="160" show-overflow-tooltip />
+        <el-table-column label="关联项目" min-width="160" show-overflow-tooltip>
+          <template #default="{ row }">{{ projectNameOf(row.projectId, row.projectName) }}</template>
+        </el-table-column>
         <el-table-column label="工程师/代理商" min-width="130">
           <template #default="{ row }">{{ assigneeText(row) }}</template>
         </el-table-column>

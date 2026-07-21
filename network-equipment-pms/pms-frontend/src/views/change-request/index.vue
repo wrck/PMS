@@ -13,6 +13,7 @@ import {
   type ChangeRequestPriority,
   type ChangeRequestStatus
 } from '@/api/change-request'
+import { listProjects, type Project } from '@/api/project'
 import type { EpTagType } from '@/types'
 
 defineOptions({ name: 'ChangeRequestManage' })
@@ -56,6 +57,23 @@ const baselineTypeMap: Record<string, string> = {
 
 function baselineTypeLabel(type?: string) {
   return baselineTypeMap[type ?? ''] ?? type ?? '-'
+}
+
+// ============== 项目选项 ==============
+const projectOptions = ref<Project[]>([])
+
+async function loadProjectOptions() {
+  try {
+    const res = await listProjects({ page: 1, size: 200 })
+    projectOptions.value = res.records ?? []
+  } catch {
+    /* ignored */
+  }
+}
+
+function projectNameOf(projectId?: number | null): string {
+  if (!projectId) return '-'
+  return projectOptions.value.find((p) => p.id === projectId)?.projectName ?? '-'
 }
 
 // ============== 列表查询 ==============
@@ -141,7 +159,7 @@ function createEmptyForm(): CrForm {
 const createForm = reactive<CrForm>(createEmptyForm())
 
 const createRules: FormRules = {
-  projectId: [{ required: true, message: '请输入项目 ID', trigger: 'blur' }],
+  projectId: [{ required: true, message: '请选择项目', trigger: 'change' }],
   title: [{ required: true, message: '请输入变更标题', trigger: 'blur' }],
   priority: [{ required: true, message: '请选择优先级', trigger: 'change' }]
 }
@@ -258,7 +276,10 @@ function baselineTagType(type?: string): EpTagType {
   }
 }
 
-onMounted(loadData)
+onMounted(() => {
+  loadProjectOptions()
+  loadData()
+})
 </script>
 
 <template>
@@ -269,14 +290,22 @@ onMounted(loadData)
       </template>
 
       <el-form :inline="true" @submit.prevent>
-        <el-form-item label="项目 ID">
-          <el-input
-            v-model.number="query.projectId"
-            placeholder="请输入项目 ID"
+        <el-form-item label="所属项目">
+          <el-select
+            v-model="query.projectId"
+            placeholder="选择项目"
             clearable
-            style="width: 160px"
-            @keyup.enter="handleSearch"
-          />
+            filterable
+            style="width: 200px"
+            @change="handleSearch"
+          >
+            <el-option
+              v-for="p in projectOptions"
+              :key="p.id"
+              :label="p.projectName"
+              :value="p.id!"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="query.status" placeholder="全部状态" clearable style="width: 160px">
@@ -301,7 +330,9 @@ onMounted(loadData)
       <el-table v-loading="loading" :data="tableData" border stripe>
         <el-table-column prop="crNo" label="CR 编号" width="140" />
         <el-table-column prop="title" label="变更标题" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="projectId" label="项目 ID" width="90" align="center" />
+        <el-table-column label="所属项目" width="140" align="center">
+          <template #default="{ row }">{{ projectNameOf(row.projectId) }}</template>
+        </el-table-column>
         <el-table-column label="优先级" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="getPriorityMeta(row.priority).tagType" size="small">
@@ -369,13 +400,20 @@ onMounted(loadData)
       >
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="项目 ID" prop="projectId">
-              <el-input-number
+            <el-form-item label="所属项目" prop="projectId">
+              <el-select
                 v-model="createForm.projectId"
-                :min="1"
-                controls-position="right"
+                placeholder="请选择项目"
+                filterable
                 style="width: 100%"
-              />
+              >
+                <el-option
+                  v-for="p in projectOptions"
+                  :key="p.id"
+                  :label="p.projectName"
+                  :value="p.id!"
+                />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
