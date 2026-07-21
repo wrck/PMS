@@ -26,9 +26,11 @@ import {
   type Milestone
 } from '@/api/project'
 import { getProjectConfigs, updateProjectConfigs } from '@/api/project-config'
+import type { MentionUser } from '@/api/system'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import UserSelect from '@/components/common/UserSelect.vue'
 
 defineOptions({ name: 'ProjectConfig' })
 
@@ -187,6 +189,16 @@ function addMember() {
     userName: '',
     role: ''
   })
+}
+
+function onMemberUserChange(row: Member, user: MentionUser | null) {
+  if (user) {
+    row.userId = user.id
+    row.userName = user.realName || user.username
+  } else {
+    row.userId = 0
+    row.userName = ''
+  }
 }
 
 function removeMember(idx: number) {
@@ -458,19 +470,13 @@ onMounted(async () => {
           </div>
         </template>
         <el-table :data="members" border stripe size="small">
-          <el-table-column label="用户 ID" min-width="140">
+          <el-table-column label="用户" min-width="220">
             <template #default="{ row }">
-              <el-input-number
-                v-model="row.userId"
-                :min="0"
-                size="small"
-                style="width: 100%"
+              <UserSelect
+                :model-value="row.userId || undefined"
+                placeholder="搜索选择用户"
+                @change="(u) => onMemberUserChange(row, u)"
               />
-            </template>
-          </el-table-column>
-          <el-table-column label="用户名" min-width="160">
-            <template #default="{ row }">
-              <el-input v-model="row.userName" size="small" placeholder="用户名" />
             </template>
           </el-table-column>
           <el-table-column label="角色" min-width="160">

@@ -24,6 +24,7 @@ import {
 import ExcelImportExport from '@/components/ExcelImportExport/index.vue'
 import MobileListCard from '@/components/MobileListCard/index.vue'
 import type { MobileColumn, MobileOperation } from '@/components/MobileListCard/index.vue'
+import { listProjects, type Project } from '@/api/project'
 import type { EpTagType } from '@/types'
 
 // 复用 MobileListCard 组件导出的列 / 操作配置类型（避免本地 any 复制）
@@ -57,6 +58,23 @@ function statusTagType(status?: string): EpTagType {
 
 function statusLabel(status?: string) {
   return statusOptions.find((o) => o.value === status)?.label ?? status ?? '-'
+}
+
+const projectOptions = ref<Project[]>([])
+
+function projectNameOf(projectId?: number | null, projectName?: string): string {
+  if (projectName && projectName.trim()) return projectName
+  if (!projectId) return '-'
+  return projectOptions.value.find((p) => p.id === projectId)?.projectName ?? '-'
+}
+
+async function loadProjectOptions() {
+  try {
+    const res = await listProjects({ page: 1, size: 100 })
+    projectOptions.value = res.records
+  } catch {
+    /* handled by interceptor */
+  }
 }
 
 async function loadAssets() {
@@ -533,7 +551,7 @@ function handleTabChange(name: string | number) {
 
 // ============ Init ============
 onMounted(() => {
-  loadAssets()
+  Promise.all([loadProjectOptions(), loadAssets()])
 })
 
 // ============ 移动端卡片视图配置：资产列表 ============
@@ -560,7 +578,7 @@ const assetMobileColumns: Col[] = [
   {
     prop: 'projectId',
     label: '关联项目',
-    formatter: (row) => (row.projectId ? `${row.projectName ?? row.projectId}` : '-')
+    formatter: (row) => projectNameOf(row.projectId, row.projectName)
   }
 ]
 
@@ -712,7 +730,7 @@ const transferMobileOperations: TransferOp[] = [
               <el-table-column prop="location" label="库位" min-width="120" show-overflow-tooltip />
               <el-table-column label="关联项目" min-width="120">
                 <template #default="{ row }">
-                  {{ row.projectId ? `${row.projectName ?? row.projectId}` : '-' }}
+                  {{ projectNameOf(row.projectId, row.projectName) }}
                 </template>
               </el-table-column>
               <el-table-column label="入库时间" width="160">

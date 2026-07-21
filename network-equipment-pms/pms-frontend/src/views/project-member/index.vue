@@ -150,7 +150,7 @@ async function handleSubmit() {
 function handleDelete(row: ProjectMember) {
   if (!row.id) return
   ElMessageBox.confirm(
-    `确定从项目中移除成员「${row.userName ?? row.userId}」吗？`,
+    `确定从项目中移除成员「${row.userName || '未命名成员'}」吗？`,
     '移除成员',
     { type: 'warning', confirmButtonText: '移除', cancelButtonText: '取消' }
   )
@@ -237,9 +237,9 @@ onMounted(() => {
           <template #default="{ row }">
             <div class="member-cell">
               <el-avatar :size="28" class="member-avatar">
-                {{ (row.userName || row.userId || '?').toString().charAt(0) }}
+                {{ (row.userName || '?').toString().charAt(0) }}
               </el-avatar>
-              <span class="member-name">{{ row.userName ?? `#${row.userId}` }}</span>
+              <span class="member-name">{{ row.userName || '未命名成员' }}</span>
             </div>
           </template>
         </el-table-column>

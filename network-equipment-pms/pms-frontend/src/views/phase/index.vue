@@ -545,7 +545,7 @@ onMounted(reload)
         <el-table-column label="业务对象" min-width="160">
           <template #default="{ row }">
             <span v-if="row.businessName">{{ row.businessName }}</span>
-            <span v-else-if="row.businessId">#{{ row.businessId }}</span>
+            <span v-else-if="row.businessId">业务对象 #{{ row.businessId }}</span>
             <span v-else>-</span>
           </template>
         </el-table-column>

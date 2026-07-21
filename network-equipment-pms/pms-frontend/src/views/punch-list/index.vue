@@ -14,6 +14,7 @@ import {
   type WalkdownStage
 } from '@/api/punch-list'
 import type { EpTagType } from '@/types'
+import { listMilestones, listProjects, type Milestone, type Project } from '@/api/project'
 
 const loading = ref(false)
 const tableData = ref<PunchList[]>([])
@@ -53,6 +54,35 @@ function getSeverityMeta(severity?: string) {
 
 function getStatusMeta(status?: string) {
   return statusOptions.find((s) => s.value === status) ?? { label: status ?? '-', tagType: 'info' }
+}
+
+// ============== 项目 / 里程碑选项 ==============
+const projectOptions = ref<Project[]>([])
+const milestoneOptions = ref<Milestone[]>([])
+
+async function loadProjectOptions() {
+  try {
+    const res = await listProjects({ page: 1, size: 200 })
+    projectOptions.value = res.records ?? []
+  } catch {
+    /* ignored */
+  }
+}
+
+async function loadMilestones(projectId: number) {
+  try {
+    milestoneOptions.value = await listMilestones(projectId)
+  } catch {
+    milestoneOptions.value = []
+  }
+}
+
+async function handleProjectChange(projectId: number | undefined) {
+  form.milestoneId = undefined
+  milestoneOptions.value = []
+  if (projectId) {
+    await loadMilestones(projectId)
+  }
 }
 
 // 时间格式化：去 T 并截取到秒
@@ -98,7 +128,7 @@ function createEmptyForm(): PunchListForm {
 const form = reactive<PunchListForm>(createEmptyForm())
 
 const rules: FormRules = {
-  projectId: [{ required: true, message: '请输入项目 ID', trigger: 'blur' }],
+  projectId: [{ required: true, message: '请选择项目', trigger: 'change' }],
   severity: [{ required: true, message: '请选择严重等级', trigger: 'change' }],
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   walkdownStage: [{ required: true, message: '请选择走场阶段', trigger: 'change' }]
@@ -160,6 +190,7 @@ function handleSizeChange(s: number) {
 // ============== 新建 ==============
 function handleAdd() {
   Object.assign(form, createEmptyForm())
+  milestoneOptions.value = []
   dialogVisible.value = true
 }
 
@@ -234,7 +265,10 @@ function handleDelete(row: PunchList) {
     })
 }
 
-onMounted(loadData)
+onMounted(() => {
+  loadProjectOptions()
+  loadData()
+})
 </script>
 
 <template>
@@ -245,14 +279,22 @@ onMounted(loadData)
       </template>
 
       <el-form :inline="true" @submit.prevent>
-        <el-form-item label="项目 ID">
-          <el-input-number
+        <el-form-item label="所属项目">
+          <el-select
             v-model="query.projectId"
-            :min="1"
-            :controls="false"
-            placeholder="请输入项目 ID"
-            style="width: 160px"
-          />
+            placeholder="选择项目"
+            clearable
+            filterable
+            style="width: 200px"
+            @change="handleSearch"
+          >
+            <el-option
+              v-for="p in projectOptions"
+              :key="p.id"
+              :label="p.projectName"
+              :value="p.id!"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="严重等级">
           <el-select v-model="query.severity" placeholder="全部等级" clearable style="width: 160px">
@@ -362,25 +404,40 @@ onMounted(loadData)
       >
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="项目 ID" prop="projectId">
-              <el-input-number
+            <el-form-item label="所属项目" prop="projectId">
+              <el-select
                 v-model="form.projectId"
-                :min="1"
-                :controls="false"
-                placeholder="请输入项目 ID"
+                placeholder="请选择项目"
+                filterable
                 style="width: 100%"
-              />
+                @change="handleProjectChange"
+              >
+                <el-option
+                  v-for="p in projectOptions"
+                  :key="p.id"
+                  :label="p.projectName"
+                  :value="p.id!"
+                />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="里程碑 ID">
-              <el-input-number
+            <el-form-item label="里程碑">
+              <el-select
                 v-model="form.milestoneId"
-                :min="1"
-                :controls="false"
-                placeholder="可选"
+                placeholder="请先选择项目"
+                clearable
+                filterable
+                :disabled="!form.projectId"
                 style="width: 100%"
-              />
+              >
+                <el-option
+                  v-for="m in milestoneOptions"
+                  :key="m.id"
+                  :label="m.name"
+                  :value="m.id!"
+                />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">

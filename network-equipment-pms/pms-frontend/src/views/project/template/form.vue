@@ -679,6 +679,7 @@ onMounted(() => {
               <div class="criteria-body">
                 <PhaseExitGateEditor
                   :model-value="phase.exitCriteria"
+                  :deliverable-options="deliverables.map((d) => ({ id: d.id, name: d.name }))"
                   @update:model-value="(v: PhaseExitGate) => updateExitCriteria(phase, v)"
                 />
               </div>

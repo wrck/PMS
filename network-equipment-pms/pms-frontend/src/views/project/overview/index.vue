@@ -353,8 +353,9 @@ watch(
           :label="`项目成员 (${members.length})`"
         >
           <el-table :data="members" border stripe size="small">
-            <el-table-column prop="userId" label="用户 ID" width="100" align="center" />
-            <el-table-column prop="userName" label="姓名" min-width="120" />
+            <el-table-column prop="userName" label="姓名" min-width="120">
+              <template #default="{ row }">{{ row.userName || '未命名成员' }}</template>
+            </el-table-column>
             <el-table-column label="角色" width="120" align="center">
               <template #default="{ row }">
                 <el-tag size="small">{{ memberRoleLabel(row.role) }}</el-tag>

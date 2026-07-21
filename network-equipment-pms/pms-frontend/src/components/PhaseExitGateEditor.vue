@@ -55,6 +55,8 @@ const props = defineProps<{
   modelValue?: PhaseExitGate | null
   /** 是否禁用（查看态） */
   disabled?: boolean
+  /** 可选的交付件列表（来自模板第 3 步配置），用于必需交付件下拉选择 */
+  deliverableOptions?: Array<{ id?: string | number; name: string }>
 }>()
 
 const emit = defineEmits<{
@@ -111,6 +113,18 @@ function removeDeliverable(idx: number) {
 function onDeliverableChange(idx: number, patch: Partial<RequiredDeliverable>) {
   const list = deliverables.value.map((d, i) => (i === idx ? { ...d, ...patch } : d))
   emitChange({ ...gate.value, requiredDeliverables: list })
+}
+
+/** 从模板已配置的交付件列表中选择，自动填充名称 */
+function onDeliverableSelect(idx: number, deliverableName: string) {
+  const opt = props.deliverableOptions?.find((o) => o.name === deliverableName)
+  const id = opt?.id
+  const patch: Partial<RequiredDeliverable> = { deliverableName }
+  // 若选项 id 为数字则同步到 deliverableId，否则保留空（模板阶段无持久化 ID）
+  if (typeof id === 'number') {
+    patch.deliverableId = id
+  }
+  onDeliverableChange(idx, patch)
 }
 
 // ===================== 必需任务 =====================
@@ -179,8 +193,8 @@ const totalCount = computed(
 /** 校验必填字段，返回是否合法；不合法时弹出提示 */
 function validate(): boolean {
   for (const d of deliverables.value) {
-    if (!d.deliverableId) {
-      ElMessage.warning('存在未填写交付件 ID 的必需交付件条目')
+    if (!d.deliverableName) {
+      ElMessage.warning('存在未选择交付件的必需交付件条目')
       return false
     }
     if (!d.requiredStatus) {
@@ -233,25 +247,29 @@ defineExpose({ validate })
         </template>
         <el-table :data="deliverables" border stripe size="small" empty-text="暂无必需交付件">
           <el-table-column type="index" label="#" width="50" align="center" />
-          <el-table-column label="交付件 ID" width="140">
+          <el-table-column label="必需交付件" min-width="220">
             <template #default="{ row, $index }">
-              <el-input-number
-                :model-value="row.deliverableId"
-                :disabled="disabled"
-                :controls="false"
-                :min="1"
-                style="width: 100%"
-                placeholder="交付件 ID"
-                @update:model-value="(v: number | undefined) => onDeliverableChange($index, { deliverableId: v ?? undefined })"
-              />
-            </template>
-          </el-table-column>
-          <el-table-column label="交付件名称" min-width="180">
-            <template #default="{ row, $index }">
-              <el-input
+              <el-select
+                v-if="deliverableOptions && deliverableOptions.length > 0"
                 :model-value="row.deliverableName"
                 :disabled="disabled"
-                placeholder="交付件名称（可选）"
+                placeholder="选择交付件"
+                filterable
+                style="width: 100%"
+                @update:model-value="(v: string) => onDeliverableSelect($index, v)"
+              >
+                <el-option
+                  v-for="opt in deliverableOptions"
+                  :key="opt.id ?? opt.name"
+                  :label="opt.name"
+                  :value="opt.name"
+                />
+              </el-select>
+              <el-input
+                v-else
+                :model-value="row.deliverableName"
+                :disabled="disabled"
+                placeholder="请先在交付件配置中添加交付件"
                 @update:model-value="(v: string) => onDeliverableChange($index, { deliverableName: v })"
               />
             </template>
