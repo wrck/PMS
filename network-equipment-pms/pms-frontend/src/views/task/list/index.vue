@@ -136,6 +136,23 @@ function assigneeId(row: ImplTaskNode): number | undefined {
   return row.engineerId
 }
 
+/** 根据 phaseId 查找阶段名称（避免直接显示 ID） */
+function phaseNameOf(phaseId?: number | null): string {
+  if (!phaseId) return '-'
+  const phase = phaseOptions.value.find((p) => p.id === phaseId)
+  return phase?.phaseName ?? `阶段#${phaseId}`
+}
+
+/** 根据 projectId 查找项目名称（避免直接显示 ID） */
+function projectNameOf(projectId?: number | null): string {
+  if (!projectId) return '-'
+  // 项目模式下 projectInfo 已加载
+  if (projectInfo.value?.id === projectId) return projectInfo.value.projectName
+  // 全局模式下从 projectOptions 查找
+  const proj = projectOptions.value.find((p) => p.id === projectId)
+  return proj?.projectName ?? '-'
+}
+
 // ============ 当前 projectId：prop 优先，否则从 route.params ============
 const currentProjectId = computed<number | undefined>(() => {
   if (props.projectId !== undefined && props.projectId !== null && props.projectId !== '') {
@@ -678,7 +695,7 @@ onMounted(async () => {
         <el-option
           v-for="m in memberOptions"
           :key="m.id"
-          :label="m.userName || `用户#${m.userId}`"
+          :label="m.userName || `成员（角色：${m.role}）`"
           :value="m.userId"
         />
       </el-select>
@@ -742,9 +759,14 @@ onMounted(async () => {
             min-width="220"
             show-overflow-tooltip
           />
-          <el-table-column label="任务编号" width="120" align="center">
+          <el-table-column label="所属项目" width="160" show-overflow-tooltip>
             <template #default="{ row }">
-              <span class="task-code">#{{ row.id }}</span>
+              <span class="task-project">{{ projectNameOf(row.projectId) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="所属阶段" width="140" show-overflow-tooltip>
+            <template #default="{ row }">
+              <span class="task-phase">{{ phaseNameOf(row.phaseId) }}</span>
             </template>
           </el-table-column>
           <el-table-column label="优先级" width="100" align="center">
@@ -863,7 +885,10 @@ onMounted(async () => {
               @click="handleViewDetail(task)"
             >
               <div class="card-title">{{ task.taskName }}</div>
-              <div class="card-code">#{{ task.id }}</div>
+              <div class="card-code">
+                <span class="card-project">{{ projectNameOf(task.projectId) }}</span>
+                <span v-if="task.phaseId" class="card-phase">· {{ phaseNameOf(task.phaseId) }}</span>
+              </div>
               <div class="card-meta">
                 <TaskPriorityTag
                   v-if="task.priority"
@@ -986,6 +1011,18 @@ onMounted(async () => {
 .task-code {
   font-family: 'Courier New', monospace;
   font-size: 12px;
+  color: var(--pms-color-text-secondary, #909399);
+}
+
+.task-project,
+.task-phase {
+  font-size: 12px;
+  color: var(--pms-color-text-regular, #606266);
+}
+
+.card-project,
+.card-phase {
+  font-size: 11px;
   color: var(--pms-color-text-secondary, #909399);
 }
 

@@ -36,6 +36,7 @@ import {
   type TaskStatus
 } from '@/api/implementation'
 import { listProjects, type Project } from '@/api/project'
+import { listPhasesByProjectId, type ProjectPhase } from '@/api/project-phase'
 import {
   createComment,
   deleteComment,
@@ -117,6 +118,12 @@ function assigneeText(t: ImplTask | null): string {
   if (t.taskType === 'AGENT') return t.agentName || '-'
   return t.engineerName || '-'
 }
+/** 根据 phaseId 查找阶段名称（避免直接显示 ID） */
+function phaseNameOf(phaseId?: number | null): string {
+  if (!phaseId) return '-'
+  const phase = phaseOptions.value.find((p) => p.id === phaseId)
+  return phase?.phaseName ?? '-'
+}
 function formatDateTime(s?: string): string {
   if (!s) return '-'
   return s.length > 16 ? s.slice(0, 16).replace('T', ' ') : s
@@ -132,6 +139,7 @@ const task = ref<ImplTask | null>(null)
 const progressVO = ref<TaskProgressVO | null>(null)
 const parentTask = ref<ImplTask | null>(null)
 const subtree = ref<ImplTaskNode[]>([])
+const phaseOptions = ref<ProjectPhase[]>([])
 
 // ============ 子任务（直接子任务） ============
 const directChildren = computed<ImplTaskNode[]>(() =>
@@ -249,6 +257,16 @@ async function loadTask() {
     }
     if (task.value.projectId) {
       parallel.push(loadDependencies(task.value.projectId))
+      // 加载项目阶段列表，用于根据 phaseId 显示阶段名称
+      parallel.push(
+        listPhasesByProjectId(task.value.projectId)
+          .then((list) => {
+            phaseOptions.value = list ?? []
+          })
+          .catch(() => {
+            phaseOptions.value = []
+          })
+      )
     }
     await Promise.allSettled(parallel)
     // 处理 ?action=add-child
@@ -946,18 +964,18 @@ onMounted(async () => {
             <template #header>
               <div class="card-header">
                 <span class="card-title">基本信息</span>
-                <el-tag size="small" effect="plain">ID: {{ task.id }}</el-tag>
+                <el-tag size="small" effect="plain">{{ task.projectName || '未关联项目' }}</el-tag>
               </div>
             </template>
             <el-descriptions :column="2" border size="small">
-              <el-descriptions-item label="任务编号">
-                {{ task.id }}
+              <el-descriptions-item label="任务名称">
+                {{ task.taskName || '-' }}
               </el-descriptions-item>
               <el-descriptions-item label="所属项目">
                 {{ task.projectName || '-' }}
               </el-descriptions-item>
               <el-descriptions-item label="所属阶段">
-                {{ task.phaseId ? `#${task.phaseId}` : '-' }}
+                {{ phaseNameOf(task.phaseId) }}
               </el-descriptions-item>
               <el-descriptions-item label="任务路径">
                 {{ task.taskPath || '-' }}
