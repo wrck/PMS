@@ -23,7 +23,14 @@ import {
   type ProjectPhase
 } from '@/api/project-phase'
 import { getProject, listMilestones, type Milestone, type Project } from '@/api/project'
-import { listFullDeliverables, uploadDeliverableInitialVersion, type Deliverable } from '@/api/deliverable'
+import {
+  listDeliverables,
+  listFullDeliverables,
+  uploadDeliverableInitialVersion,
+  type Deliverable,
+  type DeliverableChecklist,
+  type DeliverableType
+} from '@/api/deliverable'
 import { getTasksByProject, type ImplTask } from '@/api/implementation'
 import type { PhaseCriteria } from '@/api/project-template'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -70,6 +77,8 @@ const phaseTasks = ref<ImplTask[]>([])
 const phaseMilestones = ref<Milestone[]>([])
 const projectDeliverables = ref<Deliverable[]>([])
 const projectMilestones = ref<Milestone[]>([])
+/** 项目交付件清单（DeliverableChecklist，8 类标准交付件，退出条件必需交付件数据源） */
+const projectChecklist = ref<DeliverableChecklist[]>([])
 const uploadVisible = ref(false)
 const uploadDeliverable = ref<Deliverable | null>(null)
 const uploadFile = ref<File | null>(null)
@@ -100,9 +109,26 @@ const currentPhase = computed<ProjectPhase | null>(
 
 const inProgressCount = computed(() => phases.value.filter((p) => p.status === 'IN_PROGRESS').length)
 const completedCount = computed(() => phases.value.filter((p) => p.status === 'COMPLETED').length)
-const deliverableOptions = computed(() => projectDeliverables.value
-  .filter((item): item is Deliverable & { id: number } => item.id != null)
-  .map((item) => ({ id: item.id, label: item.deliverableName || '未命名交付件' })))
+
+/** 交付件清单类型中文映射（与交付件管理页 deliverable/index.vue 一致） */
+const checklistTypeLabels: Record<DeliverableType, string> = {
+  AS_BUILT: '竣工图',
+  TEST_REPORT: '测试报告',
+  ACCEPTANCE_CERT: '验收证书',
+  TRAINING_RECORD: '培训记录',
+  OPERATION_MANUAL: '操作手册',
+  ASSET_REGISTER: '资产清单',
+  WARRANTY_CERT: '质保证书',
+  SPARE_PARTS_LIST: '备件清单'
+}
+function checklistTypeLabel(type?: string): string {
+  return (checklistTypeLabels as Record<string, string>)[type ?? ''] ?? type ?? '-'
+}
+
+/** 必需交付件下拉数据源：项目交付件清单（DeliverableChecklist） */
+const deliverableOptions = computed(() => projectChecklist.value
+  .filter((item): item is DeliverableChecklist & { id: number } => item.id != null)
+  .map((item) => ({ id: item.id, label: checklistTypeLabel(item.deliverableType) })))
 const phaseOptions = computed(() => phases.value
   .filter((item): item is ProjectPhase & { id: number } => item.id != null)
   .map((item) => ({ id: item.id, label: item.phaseName })))
@@ -194,14 +220,17 @@ async function loadProjectResources() {
   if (!projectId.value || Number.isNaN(projectId.value)) {
     projectDeliverables.value = []
     projectMilestones.value = []
+    projectChecklist.value = []
     return
   }
-  const [deliverables, milestones] = await Promise.all([
+  const [deliverables, milestones, checklist] = await Promise.all([
     listFullDeliverables({ projectId: projectId.value }).catch(() => [] as Deliverable[]),
-    listMilestones(projectId.value).catch(() => [] as Milestone[])
+    listMilestones(projectId.value).catch(() => [] as Milestone[]),
+    listDeliverables(projectId.value).catch(() => [] as DeliverableChecklist[])
   ])
   projectDeliverables.value = deliverables ?? []
   projectMilestones.value = milestones ?? []
+  projectChecklist.value = checklist ?? []
 }
 
 async function reload() {
