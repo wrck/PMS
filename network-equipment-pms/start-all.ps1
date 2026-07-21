@@ -129,7 +129,10 @@ mvn spring-boot:run -pl pms-admin '-Dmaven.test.skip=true' '-Dspring-boot.run.jv
 pause
 "@
 
-    Start-Process powershell -ArgumentList @("-NoExit", "-Command", $backendCmd)
+    # -Command reparses and can strip nested quotes from the generated script.
+    # EncodedCommand preserves the script text exactly across the process boundary.
+    $encodedBackendCmd = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($backendCmd))
+    Start-Process powershell -ArgumentList @("-NoExit", "-EncodedCommand", $encodedBackendCmd)
     Write-Warn2 "Backend starting (new window), waiting up to 180s for port ready..."
     if (-not (Wait-PortReady -Port $BackendPort -TimeoutSec 180 -ServiceName "Backend")) {
         Write-Err "Backend startup timeout, check the backend window logs"
