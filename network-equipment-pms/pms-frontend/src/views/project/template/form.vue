@@ -42,14 +42,16 @@ const publishing = ref(false)
 const isEdit = computed(() => !!route.params.id)
 
 // 7 个步骤
+// 顺序说明：阶段配置含进入/退出条件，退出条件需引用已配置的
+// 交付件/任务/里程碑/审批，因此阶段配置放在最后。
 const steps = [
   { title: '基本信息', description: '模板名称与分类' },
-  { title: '阶段配置', description: '阶段定义与退出条件' },
   { title: '任务配置', description: '任务树与属性' },
   { title: '交付件配置', description: '交付件类型与签核' },
   { title: '依赖配置', description: '任务依赖关系' },
   { title: '审批配置', description: '审批计划列表' },
-  { title: '里程碑配置', description: '关键里程碑' }
+  { title: '里程碑配置', description: '关键里程碑' },
+  { title: '阶段配置', description: '阶段定义与进入/退出条件' }
 ]
 
 const activeStep = ref(0)
@@ -512,7 +514,7 @@ async function handlePublish() {
   }
   if (phases.value.length === 0) {
     ElMessage.warning('请至少配置一个阶段')
-    activeStep.value = 1
+    activeStep.value = 6
     return
   }
   if (!publishForm.version.trim()) {
@@ -628,68 +630,8 @@ onMounted(() => {
         </el-form>
       </div>
 
-      <!-- Step 2: 阶段配置 -->
+      <!-- Step 2: 任务配置 -->
       <div v-else-if="activeStep === 1" class="step-panel">
-        <div class="panel-toolbar">
-          <span class="panel-tip">共 {{ phases.length }} 个阶段 · 使用上下箭头调整顺序</span>
-          <el-button type="primary" :icon="Plus" @click="addPhase">添加阶段</el-button>
-        </div>
-        <el-empty v-if="phases.length === 0" description="暂无阶段，点击「添加阶段」开始配置" />
-        <div v-for="(phase, idx) in phases" :key="idx" class="phase-row">
-          <div class="phase-order">{{ idx + 1 }}</div>
-          <div class="phase-fields">
-            <el-input v-model="phase.phaseCode" placeholder="阶段编码 PREPARE" style="width: 180px" />
-            <el-input v-model="phase.phaseName" placeholder="阶段名称" style="width: 200px" />
-          </div>
-          <div class="phase-actions">
-            <el-button
-              link
-              :icon="ArrowUp"
-              :disabled="idx === 0"
-              @click="movePhase(idx, 'up')"
-            />
-            <el-button
-              link
-              :icon="ArrowDown"
-              :disabled="idx === phases.length - 1"
-              @click="movePhase(idx, 'down')"
-            />
-            <el-button link type="danger" :icon="Delete" @click="removePhase(idx)" />
-          </div>
-          <div class="phase-criteria-block">
-            <div class="criteria-group">
-              <div class="criteria-title">进入条件</div>
-              <div class="criteria-body">
-                <el-checkbox
-                  :model-value="phase.entryCriteria?.requirePreviousPhaseComplete ?? false"
-                  @update:model-value="(v: boolean | string | number | undefined) => updateEntryCriteria(phase, 'requirePreviousPhaseComplete', Boolean(v))"
-                >
-                  需要前置阶段完成
-                </el-checkbox>
-                <el-checkbox
-                  :model-value="phase.entryCriteria?.requireApproval ?? false"
-                  @update:model-value="(v: boolean | string | number | undefined) => updateEntryCriteria(phase, 'requireApproval', Boolean(v))"
-                >
-                  需要审批通过
-                </el-checkbox>
-              </div>
-            </div>
-            <div class="criteria-group">
-              <div class="criteria-title">退出条件</div>
-              <div class="criteria-body">
-                <PhaseExitGateEditor
-                  :model-value="phase.exitCriteria"
-                  :deliverable-options="deliverables.map((d) => ({ id: d.id, name: d.name }))"
-                  @update:model-value="(v: PhaseExitGate) => updateExitCriteria(phase, v)"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 3: 任务配置 -->
-      <div v-else-if="activeStep === 2" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">支持拖拽调整层级与顺序</span>
           <el-button type="primary" :icon="Plus" @click="addTask()">添加任务</el-button>
@@ -748,8 +690,8 @@ onMounted(() => {
         </el-tree>
       </div>
 
-      <!-- Step 4: 交付件配置 -->
-      <div v-else-if="activeStep === 3" class="step-panel">
+      <!-- Step 3: 交付件配置 -->
+      <div v-else-if="activeStep === 2" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ deliverables.length }} 个交付件</span>
           <el-button type="primary" :icon="Plus" @click="addDeliverable">添加交付件</el-button>
@@ -799,8 +741,8 @@ onMounted(() => {
         </el-table>
       </div>
 
-      <!-- Step 5: 依赖配置 -->
-      <div v-else-if="activeStep === 4" class="step-panel">
+      <!-- Step 4: 依赖配置 -->
+      <div v-else-if="activeStep === 3" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ dependencies.length }} 条依赖关系</span>
           <el-button type="primary" :icon="Plus" @click="addDependency">添加依赖</el-button>
@@ -835,8 +777,8 @@ onMounted(() => {
         </el-table>
       </div>
 
-      <!-- Step 6: 审批配置 -->
-      <div v-else-if="activeStep === 5" class="step-panel">
+      <!-- Step 5: 审批配置 -->
+      <div v-else-if="activeStep === 4" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ approvalPlans.length }} 个审批计划</span>
           <el-button type="primary" :icon="Plus" @click="addApprovalPlan">添加审批计划</el-button>
@@ -879,8 +821,8 @@ onMounted(() => {
         </el-table>
       </div>
 
-      <!-- Step 7: 里程碑配置 -->
-      <div v-else-if="activeStep === 6" class="step-panel">
+      <!-- Step 6: 里程碑配置 -->
+      <div v-else-if="activeStep === 5" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ milestones.length }} 个里程碑</span>
           <el-button type="primary" :icon="Plus" @click="addMilestone">添加里程碑</el-button>
@@ -921,6 +863,66 @@ onMounted(() => {
             </template>
           </el-table-column>
         </el-table>
+      </div>
+
+      <!-- Step 7: 阶段配置（放最后，退出条件可引用前面已配置的交付件/任务/里程碑/审批） -->
+      <div v-else-if="activeStep === 6" class="step-panel">
+        <div class="panel-toolbar">
+          <span class="panel-tip">共 {{ phases.length }} 个阶段 · 使用上下箭头调整顺序</span>
+          <el-button type="primary" :icon="Plus" @click="addPhase">添加阶段</el-button>
+        </div>
+        <el-empty v-if="phases.length === 0" description="暂无阶段，点击「添加阶段」开始配置" />
+        <div v-for="(phase, idx) in phases" :key="idx" class="phase-row">
+          <div class="phase-order">{{ idx + 1 }}</div>
+          <div class="phase-fields">
+            <el-input v-model="phase.phaseCode" placeholder="阶段编码 PREPARE" style="width: 180px" />
+            <el-input v-model="phase.phaseName" placeholder="阶段名称" style="width: 200px" />
+          </div>
+          <div class="phase-actions">
+            <el-button
+              link
+              :icon="ArrowUp"
+              :disabled="idx === 0"
+              @click="movePhase(idx, 'up')"
+            />
+            <el-button
+              link
+              :icon="ArrowDown"
+              :disabled="idx === phases.length - 1"
+              @click="movePhase(idx, 'down')"
+            />
+            <el-button link type="danger" :icon="Delete" @click="removePhase(idx)" />
+          </div>
+          <div class="phase-criteria-block">
+            <div class="criteria-group">
+              <div class="criteria-title">进入条件</div>
+              <div class="criteria-body">
+                <el-checkbox
+                  :model-value="phase.entryCriteria?.requirePreviousPhaseComplete ?? false"
+                  @update:model-value="(v: boolean | string | number | undefined) => updateEntryCriteria(phase, 'requirePreviousPhaseComplete', Boolean(v))"
+                >
+                  需要前置阶段完成
+                </el-checkbox>
+                <el-checkbox
+                  :model-value="phase.entryCriteria?.requireApproval ?? false"
+                  @update:model-value="(v: boolean | string | number | undefined) => updateEntryCriteria(phase, 'requireApproval', Boolean(v))"
+                >
+                  需要审批通过
+                </el-checkbox>
+              </div>
+            </div>
+            <div class="criteria-group">
+              <div class="criteria-title">退出条件</div>
+              <div class="criteria-body">
+                <PhaseExitGateEditor
+                  :model-value="phase.exitCriteria"
+                  :deliverable-options="deliverables.map((d) => ({ id: d.id, name: d.name }))"
+                  @update:model-value="(v: PhaseExitGate) => updateExitCriteria(phase, v)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 步骤导航 -->
