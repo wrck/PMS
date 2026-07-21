@@ -188,7 +188,7 @@
 | 6 | 里程碑 | `MilestoneController` `/api/project/milestone` ✅ | `project.ts` ✅（4 端点） | ✅ | 里程碑 CRUD + 进度 |
 | 7 | 终验 | `FinalAcceptanceController` `/api/project/acceptance` ✅ | `project.ts` ✅（4 端点） | ✅ | 终验申请/审批 |
 | 8 | 遗留问题 | `PunchListController` `/api/project/punch-list` ✅ | `punch-list.ts` ✅（6 端点） | ✅ | 遗留问题清单 |
-| 9 | 交付件清单 | `DeliverableChecklistController` `/api/project/deliverable-checklist` ✅ | `deliverable.ts` ✅（4 端点） | ✅ | 交付件检查清单 |
+| 9 | ~~交付件清单~~ | `DeliverableChecklistController` `/api/project/deliverable-checklist` ⚠️ @Deprecated | `deliverable.ts` ✅（4 端点，均 @deprecated） | ✅ | 已废弃，终验改为查 `pms_deliverable` 表 |
 
 **辅助端点连通性：16/16 = 100% ✅**
 
@@ -269,7 +269,7 @@
 | pms-project | MilestoneController | `/api/project/milestone` |
 | pms-project | FinalAcceptanceController | `/api/project/acceptance` |
 | pms-project | PunchListController | `/api/project/punch-list` |
-| pms-project | DeliverableChecklistController | `/api/project/deliverable-checklist` |
+| pms-project | DeliverableChecklistController | `/api/project/deliverable-checklist` ⚠️ @Deprecated |
 | pms-implementation | ImplTaskController | `/api/implementation/task` |
 | pms-implementation | TaskChecklistController | `/api/implementation/task/checklist` |
 | pms-implementation | TaskCommentController | `/api/implementation/task/comment` |

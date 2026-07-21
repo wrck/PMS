@@ -40,7 +40,11 @@ import static org.mockito.Mockito.when;
  * <p>由于 MyBatis-Plus 的 {@code saveBatch} 依赖 SqlSessionFactory（不能仅靠 mock 的 Mapper 运行），
  * 测试中通过 {@link Mockito#spy} 包装真实 service 实例并 stub {@code saveBatch} 返回 true，
  * 其余方法（save/getById/updateById/removeById/list 等）走 baseMapper 直接调用，可正常 mock。</p>
+ *
+ * @deprecated {@link DeliverableChecklistServiceImpl} 已废弃，终验校验改为直接查 pms_deliverable 表。
+ * 本测试保留用于历史兼容，将在下版本删除。
  */
+@Deprecated
 @ExtendWith(MockitoExtension.class)
 class DeliverableChecklistServiceImplTest {
 

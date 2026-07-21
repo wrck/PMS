@@ -3,13 +3,12 @@ package com.dp.plat.project.service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.dp.plat.common.exception.BusinessException;
 import com.dp.plat.common.result.Result;
-import com.dp.plat.project.deliverable.entity.DeliverableChecklist;
-import com.dp.plat.project.deliverable.enums.DeliverableType;
-import com.dp.plat.project.deliverable.service.IDeliverableChecklistService;
+import com.dp.plat.project.entity.Deliverable;
 import com.dp.plat.project.entity.FinalAcceptance;
 import com.dp.plat.project.entity.Milestone;
 import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.mapper.FinalAcceptanceMapper;
+import com.dp.plat.project.mapper.ProjectDeliverableMapper;
 import com.dp.plat.project.mapper.ProjectMapper;
 import com.dp.plat.project.punchlist.service.IPunchListService;
 import com.dp.plat.project.service.impl.FinalAcceptanceServiceImpl;
@@ -43,6 +42,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link FinalAcceptanceServiceImpl}.
+ *
+ * <p>终验交付物校验已从 pms_deliverable_checklist 表改为直接查 pms_deliverable 表，
+ * 本测试使用 {@link Deliverable} 实体和 {@link ProjectDeliverableMapper} mock。</p>
  */
 @ExtendWith(MockitoExtension.class)
 class FinalAcceptanceServiceImplTest {
@@ -52,6 +54,17 @@ class FinalAcceptanceServiceImplTest {
     private static final String STATUS_REJECTED = "REJECTED";
     private static final String STATUS_COMPLETED = "COMPLETED";
     private static final String PROJECT_COMPLETED = "COMPLETED";
+
+    /** 8 类标准终验交付件类型。 */
+    private static final String[] STANDARD_TYPES = {
+            "AS_BUILT", "TEST_REPORT", "ACCEPTANCE_CERT", "TRAINING_RECORD",
+            "OPERATION_MANUAL", "ASSET_REGISTER", "WARRANTY_CERT", "SPARE_PARTS_LIST"
+    };
+    /** 8 类标准终验交付件中文名称。 */
+    private static final String[] STANDARD_NAMES = {
+            "竣工资料", "测试报告", "验收证书", "培训记录",
+            "操作手册", "资产清单", "质保证书", "备件清单"
+    };
 
     @Mock
     private FinalAcceptanceMapper finalAcceptanceMapper;
@@ -69,7 +82,7 @@ class FinalAcceptanceServiceImplTest {
     private IPunchListService punchListService;
 
     @Mock
-    private IDeliverableChecklistService deliverableChecklistService;
+    private ProjectDeliverableMapper deliverableMapper;
 
     @InjectMocks
     private FinalAcceptanceServiceImpl finalAcceptanceService;
@@ -94,25 +107,47 @@ class FinalAcceptanceServiceImplTest {
     }
 
     /**
-     * 构造一份全部已上传的交付物清单，使终验申请能通过交付物校验。
+     * 构造一份全部就绪（status=PUBLISHED, mandatory=true）的交付件列表，使终验申请能通过交付件校验。
      */
-    private List<DeliverableChecklist> fullyUploadedChecklist() {
-        List<DeliverableChecklist> list = new ArrayList<>();
-        for (DeliverableType type : DeliverableType.values()) {
-            DeliverableChecklist item = DeliverableChecklist.builder()
+    private List<Deliverable> readyDeliverables() {
+        List<Deliverable> list = new ArrayList<>();
+        for (int i = 0; i < STANDARD_TYPES.length; i++) {
+            Deliverable item = Deliverable.builder()
                     .projectId(10L)
-                    .deliverableType(type.name())
-                    .required(true)
-                    .uploaded(true)
+                    .deliverableName(STANDARD_NAMES[i])
+                    .deliverableType(STANDARD_TYPES[i])
+                    .status("PUBLISHED")
+                    .mandatory(true)
+                    .currentVersion(1)
                     .build();
-            item.setId((long) (type.ordinal() + 1));
+            item.setId((long) (i + 1));
+            list.add(item);
+        }
+        return list;
+    }
+
+    /**
+     * 构造一份全部未就绪（status=DRAFT, mandatory=true）的交付件列表。
+     */
+    private List<Deliverable> draftDeliverables() {
+        List<Deliverable> list = new ArrayList<>();
+        for (int i = 0; i < STANDARD_TYPES.length; i++) {
+            Deliverable item = Deliverable.builder()
+                    .projectId(10L)
+                    .deliverableName(STANDARD_NAMES[i])
+                    .deliverableType(STANDARD_TYPES[i])
+                    .status("DRAFT")
+                    .mandatory(true)
+                    .currentVersion(1)
+                    .build();
+            item.setId((long) (i + 1));
             list.add(item);
         }
         return list;
     }
 
     @Test
-    @DisplayName("apply: 所有里程碑完成时成功创建终验申请")
+    @DisplayName("apply: 所有里程碑完成且交付件就绪时成功创建终验申请")
     void apply_allMilestonesCompleted_success() {
         Project project = Project.builder().status(STATUS_APPROVED).build();
         project.setId(10L);
@@ -123,8 +158,8 @@ class FinalAcceptanceServiceImplTest {
         when(milestoneService.list(any(Wrapper.class))).thenReturn(milestones);
         // 所有 Punch List 项已验证
         when(punchListService.isAllVerified(10L)).thenReturn(true);
-        // 交付物清单已全部上传
-        when(deliverableChecklistService.list(any(Wrapper.class))).thenReturn(fullyUploadedChecklist());
+        // 交付件全部就绪（mandatory=true, status=PUBLISHED）
+        when(deliverableMapper.selectList(any(Wrapper.class))).thenReturn(readyDeliverables());
         // 无重复申请
         when(finalAcceptanceMapper.selectOne(any(Wrapper.class), anyBoolean())).thenReturn(null);
         when(finalAcceptanceMapper.insert(any(FinalAcceptance.class))).thenReturn(1);
@@ -197,7 +232,7 @@ class FinalAcceptanceServiceImplTest {
         when(milestoneService.list(any(Wrapper.class)))
                 .thenReturn(Collections.singletonList(milestone("M1", STATUS_COMPLETED)));
         when(punchListService.isAllVerified(10L)).thenReturn(true);
-        when(deliverableChecklistService.list(any(Wrapper.class))).thenReturn(fullyUploadedChecklist());
+        when(deliverableMapper.selectList(any(Wrapper.class))).thenReturn(readyDeliverables());
         FinalAcceptance existing = FinalAcceptance.builder()
                 .projectId(10L).status(STATUS_PENDING).build();
         existing.setId(5L);
@@ -226,7 +261,7 @@ class FinalAcceptanceServiceImplTest {
     }
 
     @Test
-    @DisplayName("apply: 交付物未齐全时拒绝申请")
+    @DisplayName("apply: 交付件未就绪时拒绝申请")
     void apply_deliverablesMissing_throws() {
         Project project = Project.builder().status(STATUS_APPROVED).build();
         project.setId(10L);
@@ -234,55 +269,50 @@ class FinalAcceptanceServiceImplTest {
         when(milestoneService.list(any(Wrapper.class)))
                 .thenReturn(Collections.singletonList(milestone("M1", STATUS_COMPLETED)));
         when(punchListService.isAllVerified(10L)).thenReturn(true);
-        // 构造一份缺失 AS_BUILT 的交付物清单
-        List<DeliverableChecklist> incomplete = new ArrayList<>();
-        for (DeliverableType type : DeliverableType.values()) {
-            DeliverableChecklist item = DeliverableChecklist.builder()
+        // 构造一份 AS_BUILT 未就绪（status=DRAFT）的交付件列表
+        List<Deliverable> incomplete = new ArrayList<>();
+        for (int i = 0; i < STANDARD_TYPES.length; i++) {
+            Deliverable item = Deliverable.builder()
                     .projectId(10L)
-                    .deliverableType(type.name())
-                    .required(true)
-                    .uploaded(type != DeliverableType.AS_BUILT)
+                    .deliverableName(STANDARD_NAMES[i])
+                    .deliverableType(STANDARD_TYPES[i])
+                    .status(STANDARD_TYPES[i].equals("AS_BUILT") ? "DRAFT" : "PUBLISHED")
+                    .mandatory(true)
+                    .currentVersion(1)
                     .build();
+            item.setId((long) (i + 1));
             incomplete.add(item);
         }
-        when(deliverableChecklistService.list(any(Wrapper.class))).thenReturn(incomplete);
+        when(deliverableMapper.selectList(any(Wrapper.class))).thenReturn(incomplete);
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> finalAcceptanceService.apply(10L, "report"));
-        assertTrue(ex.getMessage().contains("交付物未齐全"));
-        assertTrue(ex.getMessage().contains(DeliverableType.AS_BUILT.getDisplayName()));
+        assertTrue(ex.getMessage().contains("终验交付物未就绪"));
+        assertTrue(ex.getMessage().contains("竣工资料"));
         verify(finalAcceptanceMapper, never()).insert(any(FinalAcceptance.class));
     }
 
     @Test
-    @DisplayName("apply: 无交付物清单记录时自动初始化并校验")
-    void apply_emptyChecklist_autoInit_throws() {
+    @DisplayName("apply: 无交付件记录时自动初始化并校验")
+    void apply_emptyDeliverables_autoInit_throws() {
         Project project = Project.builder().status(STATUS_APPROVED).build();
         project.setId(10L);
         when(projectMapper.selectById(10L)).thenReturn(project);
         when(milestoneService.list(any(Wrapper.class)))
                 .thenReturn(Collections.singletonList(milestone("M1", STATUS_COMPLETED)));
         when(punchListService.isAllVerified(10L)).thenReturn(true);
-        // 首次查询返回空，触发自动初始化
-        when(deliverableChecklistService.list(any(Wrapper.class))).thenReturn(Collections.emptyList());
-        // 初始化后返回的清单仍未上传（缺省 uploaded=false），应抛异常
-        List<DeliverableChecklist> initialized = new ArrayList<>();
-        for (DeliverableType type : DeliverableType.values()) {
-            DeliverableChecklist item = DeliverableChecklist.builder()
-                    .projectId(10L)
-                    .deliverableType(type.name())
-                    .required(true)
-                    .uploaded(false)
-                    .build();
-            initialized.add(item);
-        }
-        Result<List<DeliverableChecklist>> initResult = Result.ok(initialized);
-        when(deliverableChecklistService.initChecklist(10L)).thenReturn(initResult);
+        // 首次查询返回空（无 mandatory 交付件），触发自动初始化
+        // 初始化后第二次查询返回 DRAFT 状态的交付件（缺省未就绪），应抛异常
+        when(deliverableMapper.selectList(any(Wrapper.class)))
+                .thenReturn(Collections.emptyList())
+                .thenReturn(draftDeliverables());
+        // 初始化时插入 8 条标准交付件记录
+        when(deliverableMapper.insert(any(Deliverable.class))).thenReturn(1);
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> finalAcceptanceService.apply(10L, "report"));
-        assertTrue(ex.getMessage().contains("交付物未齐全"));
-        verify(deliverableChecklistService, times(1)).initChecklist(10L);
+        assertTrue(ex.getMessage().contains("终验交付物未就绪"));
+        verify(deliverableMapper, times(8)).insert(any(Deliverable.class));
         verify(finalAcceptanceMapper, never()).insert(any(FinalAcceptance.class));
     }
 
