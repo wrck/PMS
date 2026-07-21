@@ -11,6 +11,11 @@
 // - 分页：10 / 20 / 50
 // - 加载中：SkeletonCard；空状态：EmptyState
 // - 新建基线对话框：基线名 + 描述 + 选择项目 + 是否触发审批（双阈值超限时）
+//
+// 嵌入工作区（projectId 传入）时数据范围约束：
+//   - 仅查询当前项目 + 其子项目的基线，禁止跨项目查看/编辑/新增
+//   - 项目下拉框只允许在「当前项目 / 子项目」范围内切换
+//   - 新建基线时只能选当前项目或子项目
 // =============================================================================
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -21,13 +26,24 @@ import {
   type BaselineSnapshot,
   type BaselineStatus
 } from '@/api/baseline'
-import { listProjects, type Project } from '@/api/project'
+import {
+  getProject,
+  getProjectTree,
+  listProjects,
+  type Project,
+  type ProjectTreeNode
+} from '@/api/project'
 import type { EpTagType } from '@/types'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 
 defineOptions({ name: 'BaselineList' })
+
+const props = defineProps<{
+  /** 嵌入项目工作区时传入；独立路由（/baseline）时为 undefined */
+  projectId?: number
+}>()
 
 const router = useRouter()
 
@@ -39,6 +55,9 @@ const loading = ref(false)
 const baselines = ref<BaselineSnapshot[]>([])
 const projectOptions = ref<Project[]>([])
 const page = reactive({ current: 1, size: 10 })
+
+/** 嵌入工作区时的可用项目 ID 白名单（当前项目 + 子项目） */
+const allowedProjectIds = ref<Set<number>>(new Set())
 
 // ============ 筛选 ============
 const query = reactive({
@@ -124,8 +143,27 @@ function projectName(id?: number): string {
   return projectOptions.value.find((p) => p.id === id)?.projectName ?? `#${id}`
 }
 
+/** 递归收集项目树所有 id */
+function collectIds(node: ProjectTreeNode, ids: Set<number>) {
+  if (node?.id) ids.add(node.id)
+  ;(node?.children ?? []).forEach((c) => collectIds(c, ids))
+}
+
 // ============ 数据加载 ============
+/**
+ * 加载项目下拉数据：
+ * - 独立模式：loadProjectOptionsStandalone（全部项目）
+ * - 嵌入模式：loadProjectOptionsScoped（当前项目 + 子项目）
+ */
 async function loadProjectOptions() {
+  if (props.projectId && props.projectId > 0) {
+    await loadProjectOptionsScoped()
+  } else {
+    await loadProjectOptionsStandalone()
+  }
+}
+
+async function loadProjectOptionsStandalone() {
   try {
     const res = await listProjects({ page: 1, size: 200 })
     projectOptions.value = res.records ?? []
@@ -138,9 +176,60 @@ async function loadProjectOptions() {
   }
 }
 
+/** 嵌入模式：加载当前项目 + 子项目，作为可选项白名单 */
+async function loadProjectOptionsScoped() {
+  const pid = props.projectId!
+  try {
+    const [current, tree] = await Promise.all([getProject(pid), getProjectTree(pid)])
+    const ids = new Set<number>()
+    collectIds(tree, ids)
+    // 当前项目自身
+    ids.add(pid)
+    allowedProjectIds.value = ids
+
+    // 用 tree 节点直接构造 projectOptions（包含当前项目 + 所有子项目）
+    const opts: Project[] = []
+    if (current?.id) opts.push(current)
+    function pushChildren(node: ProjectTreeNode) {
+      ;(node?.children ?? []).forEach((c) => {
+        const p: Project = {
+          id: c.id,
+          projectCode: c.projectCode,
+          projectName: c.projectName,
+          status: c.status as Project['status'] | undefined,
+          parentProjectId: c.parentProjectId,
+          projectPath: c.projectPath,
+          depth: c.depth,
+          progress: c.progress,
+          currentPhaseId: c.currentPhaseId
+        } as Project
+        opts.push(p)
+        pushChildren(c)
+      })
+    }
+    pushChildren(tree)
+    projectOptions.value = opts
+
+    // 默认查询当前项目
+    if (query.projectId === undefined) {
+      query.projectId = pid
+      await loadBaselines()
+    }
+  } catch {
+    projectOptions.value = []
+    allowedProjectIds.value = new Set([pid])
+  }
+}
+
 async function loadBaselines() {
   if (!query.projectId) {
     baselines.value = []
+    return
+  }
+  // 嵌入模式：严格校验 projectId 必须在白名单内
+  if (props.projectId && !allowedProjectIds.value.has(query.projectId)) {
+    ElMessage.warning('基线仅支持查看当前项目或下级项目的数据')
+    query.projectId = props.projectId
     return
   }
   loading.value = true
@@ -196,7 +285,7 @@ function openCreate() {
   createForm.value = {
     baselineName: `基线 ${new Date().toLocaleString()}`,
     description: '',
-    projectId: query.projectId,
+    projectId: query.projectId ?? props.projectId,
     triggerApproval: false
   }
   createVisible.value = true
@@ -205,6 +294,11 @@ function openCreate() {
 async function handleCreate() {
   if (!createForm.value.projectId) {
     ElMessage.warning('请选择项目')
+    return
+  }
+  // 嵌入模式：禁止跨项目新建
+  if (props.projectId && !allowedProjectIds.value.has(createForm.value.projectId)) {
+    ElMessage.warning('仅可为当前项目或下级项目新建基线')
     return
   }
   if (!createForm.value.baselineName.trim()) {
@@ -226,11 +320,20 @@ async function handleCreate() {
 
 // ============ 编辑（占位：当前 API 不支持更新基线元数据） ============
 function handleEdit(row: BaselineSnapshot) {
+  // 嵌入模式：禁止跨项目编辑
+  if (props.projectId && !allowedProjectIds.value.has(row.projectId)) {
+    ElMessage.warning('仅可编辑当前项目或下级项目的基线')
+    return
+  }
   ElMessage.info(`编辑基线「${row.baselineName}」：当前 API 暂不支持，待后端补全`)
 }
 
 // ============ 归档（占位：当前 API 不支持直接归档） ============
 async function handleArchive(row: BaselineSnapshot) {
+  if (props.projectId && !allowedProjectIds.value.has(row.projectId)) {
+    ElMessage.warning('仅可归档当前项目或下级项目的基线')
+    return
+  }
   try {
     await ElMessageBox.confirm(
       `确认归档基线「${row.baselineName}」？归档后将变为「已取代」状态。`,
@@ -246,6 +349,10 @@ async function handleArchive(row: BaselineSnapshot) {
 // ============ 删除（占位：当前 API 不支持删除基线） ============
 async function handleDelete(row: BaselineSnapshot) {
   if (!row.id) return
+  if (props.projectId && !allowedProjectIds.value.has(row.projectId)) {
+    ElMessage.warning('仅可删除当前项目或下级项目的基线')
+    return
+  }
   try {
     await ElMessageBox.confirm(
       `确认删除草稿基线「${row.baselineName}」？此操作不可恢复。`,
@@ -264,6 +371,14 @@ watch(
   () => {
     page.current = 1
     loadBaselines()
+  }
+)
+
+// 嵌入模式下，projectId 变化时重新加载范围
+watch(
+  () => props.projectId,
+  () => {
+    loadProjectOptions()
   }
 )
 

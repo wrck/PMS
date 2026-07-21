@@ -202,6 +202,7 @@ onBeforeUnmount(() => {
         <BaselineList v-if="project" :project-id="projectId" />
         <el-empty v-else description="暂无项目数据" />
       </el-tab-pane>
+      <!-- 注：BaselineList 嵌入工作区时仅显示当前项目 + 子项目基线，禁止跨项目 -->
       <el-tab-pane label="审批" name="approval">
         <ApprovalCenter v-if="project" :project-id="projectId" />
         <el-empty v-else description="暂无项目数据" />
