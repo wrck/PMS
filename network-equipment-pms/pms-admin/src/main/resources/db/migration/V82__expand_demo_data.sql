@@ -258,7 +258,7 @@ VALUES
      '2026-02-01', '2026-04-30', '2026-02-05', NULL, 1, NOW(), 1, NOW(), 0, 0),
 (5012, 2001, NULL, '设计阶段', 'DESIGN',      3, NULL, NULL, 'NOT_STARTED',
      '2026-05-01', '2026-07-31', NULL, NULL, 1, NOW(), 1, NOW(), 0, 0),
-(5013, 2001, NULL, '可选调研', 'SURVEY',      4, NULL, NULL, 'SKIPPED',
+(5013, 2001, NULL, '可选调研', 'PREPARE',      4, NULL, NULL, 'SKIPPED',
      '2026-08-01', '2026-08-15', NULL, NULL, 1, NOW(), 1, NOW(), 0, 0),
 -- 项目 2002 补充阶段
 (5014, 2002, NULL, '准备阶段', 'PREPARE',     1, NULL, NULL, 'COMPLETED',
@@ -282,7 +282,7 @@ VALUES
      '2026-02-01', '2026-03-15', '2026-02-05', '2026-03-10', 1, NOW(), 1, NOW(), 0, 0),
 (5022, 2012, NULL, '实施阶段', 'IMPLEMENT',   2, NULL, NULL, 'COMPLETED',
      '2026-03-16', '2026-07-31', '2026-03-20', '2026-07-25', 1, NOW(), 1, NOW(), 0, 0),
-(5023, 2012, NULL, '跳过阶段', 'SURVEY',      3, NULL, NULL, 'SKIPPED',
+(5023, 2012, NULL, '跳过阶段', 'PREPARE',      3, NULL, NULL, 'SKIPPED',
      '2026-08-01', '2026-08-10', NULL, NULL, 1, NOW(), 1, NOW(), 0, 0),
 (5024, 2012, NULL, '验收阶段', 'OPERATE',     4, NULL, NULL, 'COMPLETED',
      '2026-08-11', '2026-08-31', '2026-08-11', '2026-08-25', 1, NOW(), 1, NOW(), 0, 0),
@@ -291,7 +291,7 @@ VALUES
      '2026-08-01', '2026-08-31', NULL, NULL, 1, NOW(), 1, NOW(), 0, 0),
 (5026, 2016, NULL, '实施阶段', 'IMPLEMENT',   2, NULL, NULL, 'NOT_STARTED',
      '2026-09-01', '2026-11-30', NULL, NULL, 1, NOW(), 1, NOW(), 0, 0),
-(5027, 2016, NULL, '跳过阶段', 'SURVEY',      3, NULL, NULL, 'SKIPPED',
+(5027, 2016, NULL, '跳过阶段', 'PREPARE',      3, NULL, NULL, 'SKIPPED',
      '2026-12-01', '2026-12-10', NULL, NULL, 1, NOW(), 1, NOW(), 0, 0),
 -- 项目 2013 阶段
 (5028, 2013, NULL, '准备阶段', 'PREPARE',     1, NULL, NULL, 'COMPLETED',
@@ -308,33 +308,34 @@ INSERT IGNORE INTO `pms_project_member`
     (`id`, `project_id`, `user_id`, `user_name`, `role`, `join_date`, `leave_date`,
      `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
 VALUES
-(7010, 2001, 1,   'Administrator', 'PROJECT_MANAGER', '2026-01-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7011, 2001, 2,   '张明',           'PROJECT_MEMBER',  '2026-01-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7012, 2001, 200, '审批员A',        'APPROVER',        '2026-01-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7013, 2002, 2,   '张明',           'PROJECT_MANAGER', '2026-01-15', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7014, 2002, 3,   '刘伟',           'PROJECT_MEMBER',  '2026-01-15', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7015, 2003, 3,   '刘伟',           'PROJECT_MANAGER', '2026-03-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7016, 2003, 4,   '赵琳',           'PROJECT_MEMBER',  '2026-03-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7017, 2004, 1,   'Administrator', 'PROJECT_MANAGER', '2026-02-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7018, 2004, 4,   '赵琳',           'PROJECT_MEMBER',  '2026-02-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7019, 2005, 4,   '赵琳',           'PROJECT_MANAGER', '2026-02-15', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7020, 2006, 5,   '孙磊',           'PROJECT_MANAGER', '2026-04-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7021, 2007, 2,   '张明',           'PROJECT_MANAGER', '2026-05-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7022, 2008, 3,   '刘伟',           'PROJECT_MANAGER', '2026-06-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7023, 2009, 1,   'Administrator', 'PROJECT_MANAGER', '2026-01-15', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7024, 2010, 4,   '赵琳',           'PROJECT_MANAGER', '2026-02-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7025, 2011, 5,   '孙磊',           'PROJECT_MANAGER', '2026-02-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7026, 2012, 6,   '吴婷',           'PROJECT_MANAGER', '2026-02-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7027, 2013, 1,   'Administrator', 'PROJECT_MANAGER', '2026-01-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7028, 2014, 2,   '张明',           'PROJECT_MANAGER', '2026-02-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7029, 2015, 3,   '刘伟',           'PROJECT_MANAGER', '2026-03-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7030, 2016, 4,   '赵琳',           'PROJECT_MANAGER', '2026-08-01', NULL, 1, NOW(), 1, NOW(), 0, 0),
+-- 注：pms_project_member 由 V2 建表，create_by/update_by 为 VARCHAR(64)，统一使用 'admin'
+(7010, 2001, 1,   'Administrator', 'PROJECT_MANAGER', '2026-01-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7011, 2001, 2,   '张明',           'PROJECT_MEMBER',  '2026-01-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7012, 2001, 200, '审批员A',        'APPROVER',        '2026-01-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7013, 2002, 2,   '张明',           'PROJECT_MANAGER', '2026-01-15', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7014, 2002, 3,   '刘伟',           'PROJECT_MEMBER',  '2026-01-15', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7015, 2003, 3,   '刘伟',           'PROJECT_MANAGER', '2026-03-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7016, 2003, 4,   '赵琳',           'PROJECT_MEMBER',  '2026-03-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7017, 2004, 1,   'Administrator', 'PROJECT_MANAGER', '2026-02-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7018, 2004, 4,   '赵琳',           'PROJECT_MEMBER',  '2026-02-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7019, 2005, 4,   '赵琳',           'PROJECT_MANAGER', '2026-02-15', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7020, 2006, 5,   '孙磊',           'PROJECT_MANAGER', '2026-04-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7021, 2007, 2,   '张明',           'PROJECT_MANAGER', '2026-05-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7022, 2008, 3,   '刘伟',           'PROJECT_MANAGER', '2026-06-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7023, 2009, 1,   'Administrator', 'PROJECT_MANAGER', '2026-01-15', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7024, 2010, 4,   '赵琳',           'PROJECT_MANAGER', '2026-02-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7025, 2011, 5,   '孙磊',           'PROJECT_MANAGER', '2026-02-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7026, 2012, 6,   '吴婷',           'PROJECT_MANAGER', '2026-02-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7027, 2013, 1,   'Administrator', 'PROJECT_MANAGER', '2026-01-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7028, 2014, 2,   '张明',           'PROJECT_MANAGER', '2026-02-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7029, 2015, 3,   '刘伟',           'PROJECT_MANAGER', '2026-03-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7030, 2016, 4,   '赵琳',           'PROJECT_MANAGER', '2026-08-01', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
 -- V77 项目 1001 的项目成员扩展
-(7031, 1001, 3,   '刘伟',           'PROJECT_MEMBER',  '2026-07-05', NULL, 1, NOW(), 1, NOW(), 0, 0),
-(7032, 1001, 4,   '赵琳',           'VIEWER',          '2026-07-10', NULL, 1, NOW(), 1, NOW(), 0, 0),
+(7031, 1001, 3,   '刘伟',           'PROJECT_MEMBER',  '2026-07-05', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7032, 1001, 4,   '赵琳',           'VIEWER',          '2026-07-10', NULL, 'admin', NOW(), 'admin', NOW(), 0, 0),
 -- 已 leave 的成员示例
-(7033, 2002, 5,   '孙磊',           'PROJECT_MEMBER',  '2026-01-15', '2026-05-31', 1, NOW(), 1, NOW(), 0, 0),
-(7034, 2009, 2,   '张明',           'PROJECT_MEMBER',  '2026-01-15', '2026-06-30', 1, NOW(), 1, NOW(), 0, 0);
+(7033, 2002, 5,   '孙磊',           'PROJECT_MEMBER',  '2026-01-15', '2026-05-31', 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7034, 2009, 2,   '张明',           'PROJECT_MEMBER',  '2026-01-15', '2026-06-30', 'admin', NOW(), 'admin', NOW(), 0, 0);
 
 -- =============================================================
 -- 5. 任务补齐（覆盖 PENDING/ACCEPTED/IN_PROGRESS/COMPLETED/CONFIRMED/REJECTED 全 6 态）
@@ -373,7 +374,7 @@ VALUES
 (8013, 2001, NULL, '子项目启动会',         'OEM',
      NULL, 2, '张明',
      '2026-02-01', '2026-02-05', '2026-02-01', '2026-02-05',
-     'CONFIRMED', 100, '子项目启动会已确认完成',
+     'COMPLETED', 100, '子项目启动会已确认完成',
      8010, '/8010/8013/', 1, 'HIGH',
      4.00, 0.00, 5010, 0.50,
      'admin', NOW(), 'admin', NOW(), 0),
@@ -424,7 +425,7 @@ VALUES
 (8020, 2006, NULL, '机架安装',             'AGENT',
      NULL, 5, '孙磊',
      '2026-04-21', '2026-05-31', '2026-04-21', '2026-05-28',
-     'CONFIRMED', 100, '12 个机架安装完成并确认',
+     'COMPLETED', 100, '12 个机架安装完成并确认',
      8019, '/8019/8020/', 1, 'HIGH',
      80.00, 0.00, 5016, 1.00,
      'admin', NOW(), 'admin', NOW(), 0),
@@ -661,7 +662,7 @@ VALUES
 (30016, 2022, 1, 200, '审批员A', 'TECH_LEAD',        'DIGITAL',    'pki-sig:PKI-2022-001', NOW() - INTERVAL 130 DAY, 'admin', NOW(), 'admin', NOW(), 0),
 (30017, 2024, 2, 200, '审批员A', 'TECH_LEAD',        'ELECTRONIC', 'cert-fp:7E2A9F0024', NOW() - INTERVAL 170 DAY, 'admin', NOW(), 'admin', NOW(), 0),
 (30018, 2024, 2, 1,   'Administrator', 'PROJECT_MANAGER', 'STAMP',      'stamp-id:STAMP-0024', NOW() - INTERVAL 170 DAY, 'admin', NOW(), 'admin', NOW(), 0),
-(30019, 2021, 1, NULL, '系统自动', 'SYSTEM',           'ELECTRONIC', 'auto-signed:AUTO-21', NOW() - INTERVAL 100 DAY, 'admin', NOW(), 'admin', NOW(), 0);
+(30019, 2021, 1, 0,    '系统自动', 'SYSTEM',           'ELECTRONIC', 'auto-signed:AUTO-21', NOW() - INTERVAL 100 DAY, 'admin', NOW(), 'admin', NOW(), 0);
 
 -- =============================================================
 -- 11. 交付件引用关系（≥10 条，演示交付件被引用的场景）
@@ -905,7 +906,7 @@ VALUES
 (21, 9019, '项目经理审核', 1, NULL, 'PROJECT_MANAGER', 'APPROVED', 1, '通过',         NOW() - INTERVAL 5 DAY, NULL),
 (22, 9020, 'CCB 评审',     1, NULL, 'APPROVER',        'APPROVED', 200, '同意立项',   NOW() - INTERVAL 180 DAY, NULL),
 (23, 9021, 'CCB 评审',     1, NULL, 'APPROVER',        'REJECTED', 200, '预算超标驳回', NOW() - INTERVAL 45 DAY, NULL),
-(24, 9022, '高管评审',     1, NULL, 'EXECUTIVE',       'APPROVED', 1, '5G 战略项目同意', NOW() - INTERVAL 195 DAY, NULL),
+(24, 9022, '高管评审',     1, NULL, 'PROJECT_MANAGER', 'APPROVED', 1, '5G 战略项目同意', NOW() - INTERVAL 195 DAY, NULL),
 (25, 9023, 'CCB 评审',     1, NULL, 'APPROVER',        'APPROVED', 200, '同意基线',   NOW() - INTERVAL 170 DAY, NULL),
 (26, 9024, 'CCB 评审',     1, NULL, 'APPROVER',        'APPROVED', 200, '同意修订',   NOW() - INTERVAL 100 DAY, NULL),
 (27, 9025, 'CCB 评审',     1, NULL, 'APPROVER',        'APPROVED', 200, '同意当前基线', NOW() - INTERVAL 30 DAY, NULL),
@@ -913,7 +914,7 @@ VALUES
 (29, 9027, 'CCB 评审',     1, NULL, 'APPROVER',        'PENDING',  NULL, NULL, NULL, NOW() + INTERVAL 5 DAY),
 (30, 9028, '项目经理审核', 1, NULL, 'PROJECT_MANAGER', 'PENDING',  NULL, NULL, NULL, NOW() + INTERVAL 10 DAY),
 -- 多节点流程演示（9010）
-(31, 9010, '财务审核',     3, NULL, 'FINANCE',         'APPROVED', 1, '预算合理',   NOW() - INTERVAL 196 DAY, NULL);
+(31, 9010, '财务审核',     3, NULL, 'APPROVER',        'APPROVED', 1, '预算合理',   NOW() - INTERVAL 196 DAY, NULL);
 
 -- =============================================================
 -- 15. 审批历史补齐（≥30 条，覆盖 SUBMIT/APPROVE/REJECT/WITHDRAW/RESUBMIT/ESCALATE/TIMEOUT）
@@ -972,7 +973,7 @@ VALUES
 (12, 12, 'Deliverable', 'filePath',          'HIDDEN',  NULL,           NULL, 1, NOW(), 1, NOW(), 0, 0),
 (13, 12, 'Deliverable', 'deliverableName',   'VISIBLE', NULL,           NULL, 1, NOW(), 1, NOW(), 0, 0),
 (14, 13, 'BaselineSnapshot', 'changeReason', 'VISIBLE', NULL,           NULL, 1, NOW(), 1, NOW(), 0, 0),
-(15, 13, 'BaselineSnapshot', 'snapshotJson', 'MASKED',  NULL,           'json-summary', 1, NOW(), 1, NOW(), 0, 0),
+(15, 13, 'BaselineSnapshot', 'snapshotJson', 'MASKED',  'custom',        NULL, 1, NOW(), 1, NOW(), 0, 0),
 (16, 14, 'ChangeRequest', 'changeReason',    'VISIBLE', NULL,           NULL, 1, NOW(), 1, NOW(), 0, 0),
 (17, 14, 'ChangeRequest', 'estimatedCost',   'MASKED',  'amount-mask',  NULL, 1, NOW(), 1, NOW(), 0, 0),
 (18, 14, 'ChangeRequest', 'internalNote',    'HIDDEN',  NULL,           NULL, 1, NOW(), 1, NOW(), 0, 0),
@@ -1016,49 +1017,52 @@ VALUES
 
 -- =============================================================
 -- 18. 里程碑补齐（覆盖 PENDING/IN_PROGRESS/COMPLETED/OVERDUE/BLOCKED 5 态）
+--     milestone_type 必须为 PpdiooPhase 12 节点枚举之一：
+--       SITE_SURVEY/NETWORK_DESIGN/PROCUREMENT/STAGING/FAT/ARRIVAL/
+--       INSTALLATION/TESTING/COMMISSIONING/SAT/UAT/FINAL_ACCEPTANCE
 -- =============================================================
 INSERT IGNORE INTO `pms_milestone`
     (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
      `plan_date`, `planned_date`, `actual_date`, `description`,
      `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
 VALUES
-(1010, 2001, 5010, '总集项目启动',           'PLAN',    'COMPLETED',
+(1010, 2001, 5010, '总集项目启动',           'NETWORK_DESIGN', 'COMPLETED',
      '2026-01-10', '2026-01-10', '2026-01-08', '总集项目启动会完成',
      'admin', NOW() - INTERVAL 200 DAY, 'admin', NOW() - INTERVAL 200 DAY, 0),
-(1011, 2001, 5011, '总体方案评审',           'PLAN',    'IN_PROGRESS',
+(1011, 2001, 5011, '总体方案评审',           'NETWORK_DESIGN', 'IN_PROGRESS',
      '2026-02-28', '2026-02-28', NULL, '总体方案设计评审进行中',
      'admin', NOW() - INTERVAL 100 DAY, 'admin', NOW() - INTERVAL 5 DAY, 0),
-(1012, 2001, 5012, '设计阶段启动',           'PLAN',    'PENDING',
+(1012, 2001, 5012, '设计阶段启动',           'NETWORK_DESIGN', 'PENDING',
      '2026-05-01', '2026-05-01', NULL, '设计阶段开始',
      'admin', NOW() - INTERVAL 30 DAY, 'admin', NOW() - INTERVAL 30 DAY, 0),
-(1013, 2001, NULL, '历史延期里程碑',         'CHECKPOINT', 'OVERDUE',
+(1013, 2001, NULL, '历史延期里程碑',         'FAT',            'OVERDUE',
      '2026-06-30', '2026-06-30', NULL, '客户需求确认里程碑已延期',
      'admin', NOW() - INTERVAL 90 DAY, 'admin', NOW() - INTERVAL 10 DAY, 0),
-(1014, 2001, NULL, '受阻里程碑',             'CHECKPOINT', 'BLOCKED',
+(1014, 2001, NULL, '受阻里程碑',             'FAT',            'BLOCKED',
      '2026-07-15', '2026-07-15', NULL, '客户审批受阻，待客户决策',
      'admin', NOW() - INTERVAL 60 DAY, 'admin', NOW() - INTERVAL 5 DAY, 0),
-(1015, 2002, 5014, '省行项目启动',           'PLAN',    'COMPLETED',
+(1015, 2002, 5014, '省行项目启动',           'NETWORK_DESIGN', 'COMPLETED',
      '2026-02-05', '2026-02-05', '2026-02-05', '省行项目启动会完成',
      'admin', NOW() - INTERVAL 180 DAY, 'admin', NOW() - INTERVAL 180 DAY, 0),
-(1016, 2002, 5015, '省行核心交换机部署完成', 'IMPLEMENT', 'IN_PROGRESS',
+(1016, 2002, 5015, '省行核心交换机部署完成', 'INSTALLATION',   'IN_PROGRESS',
      '2026-05-31', '2026-05-31', NULL, '5 台核心交换机部署完成',
      'admin', NOW() - INTERVAL 120 DAY, 'admin', NOW() - INTERVAL 2 DAY, 0),
-(1017, 2006, 5016, '一期机房部署完成',       'IMPLEMENT', 'COMPLETED',
+(1017, 2006, 5016, '一期机房部署完成',       'INSTALLATION',   'COMPLETED',
      '2026-07-31', '2026-07-31', '2026-07-25', '一期机房部署提前完成',
      'admin', NOW() - INTERVAL 130 DAY, 'admin', NOW() - INTERVAL 25 DAY, 0),
-(1018, 2006, 5017, '一期机房初验',           'ACCEPTANCE', 'COMPLETED',
+(1018, 2006, 5017, '一期机房初验',           'SAT',            'COMPLETED',
      '2026-08-25', '2026-08-25', '2026-08-25', '一期机房初验通过',
      'admin', NOW() - INTERVAL 30 DAY, 'admin', NOW() - INTERVAL 5 DAY, 0),
-(1019, 2009, 5010, '广域网方案设计完成',     'PLAN',    'COMPLETED',
+(1019, 2009, 5010, '广域网方案设计完成',     'NETWORK_DESIGN', 'COMPLETED',
      '2026-03-15', '2026-03-15', '2026-03-10', '广域网方案设计提前完成',
      'admin', NOW() - INTERVAL 160 DAY, 'admin', NOW() - INTERVAL 160 DAY, 0),
-(1020, 2013, 5028, '5G 核心网总体设计完成',  'PLAN',    'COMPLETED',
+(1020, 2013, 5028, '5G 核心网总体设计完成',  'NETWORK_DESIGN', 'COMPLETED',
      '2026-02-28', '2026-02-28', '2026-02-25', '5G 核心网总体设计完成',
      'admin', NOW() - INTERVAL 170 DAY, 'admin', NOW() - INTERVAL 170 DAY, 0),
-(1021, 2013, 5029, '一期核心网硬件就绪',     'IMPLEMENT', 'IN_PROGRESS',
+(1021, 2013, 5029, '一期核心网硬件就绪',     'INSTALLATION',   'IN_PROGRESS',
      '2026-12-31', '2026-12-31', NULL, '一期核心网硬件部署完成',
      'admin', NOW() - INTERVAL 90 DAY, 'admin', NOW() - INTERVAL 3 DAY, 0),
-(1022, 2016, 5025, '端到端测试启动',         'PLAN',    'PENDING',
+(1022, 2016, 5025, '端到端测试启动',         'NETWORK_DESIGN', 'PENDING',
      '2026-08-01', '2026-08-01', NULL, '端到端测试项目启动',
      'admin', NOW() - INTERVAL 30 DAY, 'admin', NOW() - INTERVAL 30 DAY, 0);
 
