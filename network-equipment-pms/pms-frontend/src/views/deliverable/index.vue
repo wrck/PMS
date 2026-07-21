@@ -1,24 +1,26 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import FileUploader from '@/components/FileUploader/index.vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import {
-  cancelUploaded,
-  downloadAttachment,
-  initChecklist,
-  listDeliverables,
-  markUploaded,
-  type DeliverableChecklist,
-  type DeliverableType
+  DELIVERABLE_STATUS_LABELS,
+  DELIVERABLE_TYPE_LABELS,
+  listFullDeliverables,
+  type Deliverable,
+  type DeliverableStatus
 } from '@/api/deliverable'
+import PageHeader from '@/components/common/PageHeader.vue'
 import type { EpTagType } from '@/types'
 
 // 工作区以 props 传入项目 ID 时，自动加载该项目的交付件并隐藏手动输入区。
 // 独立路由进入时（无 props.projectId）保留手动输入项目 ID 的查询方式。
+// 本页面仅查看项目模板预定义的交付件配置，文件上传与补充完善在阶段/任务过程中完成。
 const props = defineProps<{ projectId?: number }>()
 
+const router = useRouter()
+
 const loading = ref(false)
-const tableData = ref<DeliverableChecklist[]>([])
+const tableData = ref<Deliverable[]>([])
 const localProjectId = ref<number | undefined>(undefined)
 
 // 实际生效的项目 ID：优先用 props 传入，其次用手动输入
@@ -27,49 +29,55 @@ const effectiveProjectId = computed(() => props.projectId ?? localProjectId.valu
 // 是否嵌入工作区（隐藏项目 ID 输入框）
 const embedded = computed(() => typeof props.projectId === 'number')
 
-// 8 种交付物类型中文映射
-const typeLabels: Record<DeliverableType, string> = {
-  AS_BUILT: '竣工图',
-  TEST_REPORT: '测试报告',
-  ACCEPTANCE_CERT: '验收证书',
-  TRAINING_RECORD: '培训记录',
-  OPERATION_MANUAL: '操作手册',
-  ASSET_REGISTER: '资产清单',
-  WARRANTY_CERT: '质保证书',
-  SPARE_PARTS_LIST: '备件清单'
+const headerDesc = computed(() =>
+  embedded.value
+    ? `项目 ${effectiveProjectId.value} 的交付件配置清单`
+    : '查看项目模板预定义的交付件配置，文件上传与完善请在阶段/任务过程中进行'
+)
+
+// 已就绪状态：PUBLISHED 及之后（PUBLISHED / REFERENCED / ARCHIVED）
+const READY_STATUSES: ReadonlySet<DeliverableStatus> = new Set([
+  'PUBLISHED',
+  'REFERENCED',
+  'ARCHIVED'
+])
+
+function isReady(status?: string): boolean {
+  return !!status && (READY_STATUSES as ReadonlySet<string>).has(status)
 }
 
-function typeLabel(type?: string): string {
-  return (typeLabels as Record<string, string>)[type ?? ''] ?? type ?? '-'
+// 状态标签 + 颜色
+function statusMeta(status?: string): { tagType: EpTagType; label: string } {
+  if (!status) return { tagType: 'info', label: '-' }
+  const label = (DELIVERABLE_STATUS_LABELS as Record<string, string>)[status] ?? status
+  let tagType: EpTagType = 'info'
+  switch (status) {
+    case 'SUBMITTED':
+      tagType = 'warning'
+      break
+    case 'REVIEWED':
+    case 'SIGNED':
+      tagType = 'primary'
+      break
+    case 'PUBLISHED':
+    case 'REFERENCED':
+      tagType = 'success'
+      break
+    default:
+      tagType = 'info'
+  }
+  return { tagType, label }
 }
 
-// 时间格式化：去 T 并截取到秒
-function formatDateTime(val?: string): string {
-  return val?.replace('T', ' ').slice(0, 19) ?? '-'
-}
-
-// 已上传状态标签
-function uploadedMeta(row: DeliverableChecklist): { tagType: EpTagType; label: string } {
-  if (row.uploaded) return { tagType: 'success', label: '已上传' }
-  if (row.required) return { tagType: 'danger', label: '未上传' }
-  return { tagType: 'info', label: '无需上传' }
-}
-
-// 是否必需标签
-function requiredMeta(row: DeliverableChecklist): { tagType: EpTagType; label: string } {
-  return row.required
-    ? { tagType: 'warning', label: '必需' }
-    : { tagType: 'info', label: '可选' }
-}
-
-// 未上传的必需项数量
-const pendingCount = computed(() => {
-  return tableData.value.filter((r) => r.required && !r.uploaded).length
+// 顶部统计：总数 / 必需 / 已就绪
+const stats = computed(() => {
+  const list = tableData.value
+  return {
+    total: list.length,
+    mandatory: list.filter((d) => d.mandatory).length,
+    ready: list.filter((d) => isReady(d.status)).length
+  }
 })
-
-// ============== 上传弹窗 ==============
-const uploadVisible = ref(false)
-const currentRow = ref<DeliverableChecklist | null>(null)
 
 // ============== 数据加载 ==============
 async function loadData() {
@@ -79,7 +87,7 @@ async function loadData() {
   }
   loading.value = true
   try {
-    const res = await listDeliverables(effectiveProjectId.value)
+    const res = await listFullDeliverables({ projectId: effectiveProjectId.value })
     tableData.value = res ?? []
   } catch {
     /* handled by interceptor */
@@ -92,78 +100,8 @@ function handleSearch() {
   loadData()
 }
 
-// 初始化清单
-function handleInit() {
-  if (!effectiveProjectId.value) {
-    ElMessage.warning('请输入项目 ID')
-    return
-  }
-  ElMessageBox.confirm(
-    `确认为项目「${effectiveProjectId.value}」初始化终验交付物清单吗？`,
-    '初始化清单',
-    { type: 'warning' }
-  )
-    .then(async () => {
-      await initChecklist(effectiveProjectId.value!)
-      ElMessage.success('清单已初始化')
-      loadData()
-    })
-    .catch(() => {
-      /* cancelled */
-    })
-}
-
-// ============== 上传 / 下载 / 取消 ==============
-function handleUpload(row: DeliverableChecklist) {
-  currentRow.value = row
-  uploadVisible.value = true
-}
-
-// FileUploader 上传成功回调：组件 emit 'success' 事件，负载为 Attachment 对象
-// （含 id / fileName / fileSize / mimeType / uploadTime 等字段）
-interface UploadedAttachment {
-  id: number
-  fileName?: string
-  fileSize?: number
-  mimeType?: string
-  uploadTime?: string
-}
-
-async function handleUploaded(file: UploadedAttachment) {
-  const row = currentRow.value
-  if (!row?.id) return
-  if (!file || typeof file.id !== 'number') {
-    ElMessage.warning('未获取到附件 ID')
-    return
-  }
-  try {
-    await markUploaded(row.id, file.id)
-    ElMessage.success('已标记上传')
-    uploadVisible.value = false
-    loadData()
-  } catch {
-    /* handled by interceptor */
-  }
-}
-
-function handleDownload(row: DeliverableChecklist) {
-  if (!row.attachmentId) return
-  window.open(downloadAttachment(row.attachmentId), '_blank')
-}
-
-function handleCancelUpload(row: DeliverableChecklist) {
-  if (!row.id) return
-  ElMessageBox.confirm(`确认取消「${typeLabel(row.deliverableType)}」的上传标记吗？`, '取消上传', {
-    type: 'warning'
-  })
-    .then(async () => {
-      await cancelUploaded(row.id!)
-      ElMessage.success('已取消上传')
-      loadData()
-    })
-    .catch(() => {
-      /* cancelled */
-    })
+function goDetail(id?: number) {
+  if (id != null) router.push({ name: 'DeliverableDetail', params: { id: String(id) } })
 }
 
 // 嵌入工作区时：项目 ID 变化或首次进入自动加载
@@ -181,109 +119,90 @@ onMounted(() => {
 
 <template>
   <div class="page-container">
-    <el-card shadow="never">
-      <template #header>
-        <div class="card-header">
-          <span class="page-title">终验交付物清单</span>
-          <span v-if="embedded" class="header-project-id">项目 ID：{{ effectiveProjectId }}</span>
-        </div>
+    <PageHeader title="项目交付件" :description="headerDesc">
+      <template #actions>
+        <el-button :icon="'Refresh'" :loading="loading" @click="loadData">刷新</el-button>
       </template>
+    </PageHeader>
 
-      <!-- 嵌入工作区时不显示手动输入区；独立路由进入时保留 -->
-      <el-form v-if="!embedded" :inline="true" @submit.prevent>
-        <el-form-item label="项目 ID">
-          <el-input-number
-            v-model="localProjectId"
-            :min="1"
-            :controls="false"
-            placeholder="请输入项目 ID"
-            style="width: 180px"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="'Search'" @click="handleSearch">查询</el-button>
-          <el-button type="success" :icon="'Files'" @click="handleInit">初始化清单</el-button>
-        </el-form-item>
-      </el-form>
+    <!-- 嵌入工作区时不显示手动输入区；独立路由进入时保留 -->
+    <el-form v-if="!embedded" :inline="true" @submit.prevent>
+      <el-form-item label="项目 ID">
+        <el-input-number
+          v-model="localProjectId"
+          :min="1"
+          :controls="false"
+          placeholder="请输入项目 ID"
+          style="width: 180px"
+        />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" :icon="'Search'" @click="handleSearch">查询</el-button>
+      </el-form-item>
+    </el-form>
 
-      <div v-else class="embedded-toolbar">
-        <el-button type="success" :icon="'Files'" @click="handleInit">初始化清单</el-button>
-        <el-button :icon="'Refresh'" @click="loadData">刷新</el-button>
+    <!-- 统计卡片 -->
+    <div class="stat-cards">
+      <div class="stat-card stat-total">
+        <div class="stat-label">交付件总数</div>
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-extra">项目模板预定义</div>
       </div>
+      <div class="stat-card stat-mandatory">
+        <div class="stat-label">必需交付件</div>
+        <div class="stat-value">{{ stats.mandatory }}</div>
+        <div class="stat-extra">mandatory = true</div>
+      </div>
+      <div class="stat-card stat-ready">
+        <div class="stat-label">已就绪</div>
+        <div class="stat-value">{{ stats.ready }}</div>
+        <div class="stat-extra">PUBLISHED 及以上</div>
+      </div>
+    </div>
 
-      <el-table v-loading="loading" :data="tableData" border stripe>
-        <el-table-column prop="id" label="ID" width="70" />
-        <el-table-column label="交付物类型" min-width="140">
-          <template #default="{ row }">{{ typeLabel(row.deliverableType) }}</template>
-        </el-table-column>
-        <el-table-column label="是否必需" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="requiredMeta(row).tagType" size="small">
-              {{ requiredMeta(row).label }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="上传状态" width="110" align="center">
-          <template #default="{ row }">
-            <el-tag :type="uploadedMeta(row).tagType" size="small">
-              {{ uploadedMeta(row).label }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="attachmentId" label="附件 ID" width="100" align="center">
-          <template #default="{ row }">{{ row.attachmentId ?? '-' }}</template>
-        </el-table-column>
-        <el-table-column label="确认时间" width="160" align="center">
-          <template #default="{ row }">{{ formatDateTime(row.checkedAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="220" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="handleUpload(row)">上传附件</el-button>
-            <el-button
-              v-if="row.attachmentId"
-              link
-              type="primary"
-              @click="handleDownload(row)"
-            >
-              下载
-            </el-button>
-            <el-button
-              v-if="row.uploaded"
-              link
-              type="danger"
-              @click="handleCancelUpload(row)"
-            >
-              取消上传
-            </el-button>
-          </template>
-        </el-table-column>
-        <template #empty>
-          <el-empty :description="embedded ? '当前项目暂无交付件，点击「初始化清单」生成' : '请输入项目 ID 并查询，或点击「初始化清单」'" />
+    <el-table v-loading="loading" :data="tableData" border stripe>
+      <el-table-column type="index" label="#" width="55" align="center" />
+      <el-table-column label="交付件名称" min-width="200" show-overflow-tooltip>
+        <template #default="{ row }">
+          <el-link type="primary" @click="goDetail(row.id)">{{ row.deliverableName }}</el-link>
         </template>
-      </el-table>
-
-      <!-- 底部校验状态 -->
-      <div v-if="tableData.length > 0" class="validate-bar">
-        <el-tag
-          :type="pendingCount === 0 ? 'success' : 'warning'"
-          size="large"
-        >
-          {{ pendingCount === 0 ? '✓ 全部必需项已上传，可以提交终验' : `还有 ${pendingCount} 项未上传` }}
-        </el-tag>
-      </div>
-    </el-card>
-
-    <!-- 上传弹窗 -->
-    <el-dialog v-model="uploadVisible" title="上传交付物" width="520px" destroy-on-close>
-      <div v-if="currentRow" class="upload-tip">
-        当前交付物：<strong>{{ typeLabel(currentRow.deliverableType) }}</strong>
-      </div>
-      <!-- 修复：FileUploader 组件 emit 'success' 事件（非 'uploaded'） -->
-      <FileUploader biz-type="DELIVERABLE" @success="handleUploaded" />
-      <template #footer>
-        <el-button @click="uploadVisible = false">关闭</el-button>
+      </el-table-column>
+      <el-table-column label="类型" min-width="120">
+        <template #default="{ row }">
+          {{ DELIVERABLE_TYPE_LABELS[row.deliverableType as keyof typeof DELIVERABLE_TYPE_LABELS] ?? row.deliverableType ?? '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="所属阶段" width="100" align="center">
+        <template #default="{ row }">{{ row.phaseId ?? '-' }}</template>
+      </el-table-column>
+      <el-table-column label="必需" width="90" align="center">
+        <template #default="{ row }">
+          <el-tag :type="row.mandatory ? 'warning' : 'info'" size="small">
+            {{ row.mandatory ? '必需' : '可选' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" width="110" align="center">
+        <template #default="{ row }">
+          <el-tag :type="statusMeta(row.status).tagType" size="small">
+            {{ statusMeta(row.status).label }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="版本" width="90" align="center">
+        <template #default="{ row }">
+          {{ row.currentVersion ? `v${row.currentVersion}` : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="110" fixed="right">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="goDetail(row.id)">查看详情</el-button>
+        </template>
+      </el-table-column>
+      <template #empty>
+        <el-empty :description="embedded ? '当前项目暂无交付件' : '请输入项目 ID 并查询'" />
       </template>
-    </el-dialog>
+    </el-table>
   </div>
 </template>
 
@@ -293,30 +212,59 @@ onMounted(() => {
   flex-direction: column;
   gap: 12px;
 }
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+
+/* 统计卡片 */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
-.page-title {
-  font-size: 16px;
+.stat-card {
+  background: var(--pms-color-bg-card, #fff);
+  border: 1px solid var(--pms-color-border-light, #e5e7eb);
+  border-radius: var(--pms-radius-lg, 8px);
+  padding: 16px;
+  box-shadow: var(--pms-shadow-card, 0 1px 2px rgba(0, 0, 0, 0.04));
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+}
+.stat-total::before {
+  background: #3b82f6;
+}
+.stat-mandatory::before {
+  background: #f59e0b;
+}
+.stat-ready::before {
+  background: #10b981;
+}
+.stat-label {
+  font-size: 12px;
+  color: var(--pms-color-text-secondary, #6b7280);
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 24px;
   font-weight: 600;
+  color: var(--pms-color-text-primary, #111827);
+  line-height: 1.2;
 }
-.header-project-id {
-  font-size: 13px;
-  color: var(--pms-color-text-secondary, #909399);
+.stat-extra {
+  font-size: 12px;
+  color: var(--pms-color-text-secondary, #9ca3af);
+  margin-top: 6px;
 }
-.embedded-toolbar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.upload-tip {
-  margin-bottom: 12px;
-  color: #606266;
-}
-.validate-bar {
-  margin-top: 16px;
-  text-align: center;
+
+@media (max-width: 768px) {
+  .stat-cards {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

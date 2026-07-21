@@ -218,7 +218,7 @@ function addDeliverable() {
   deliverables.value.push({
     id: genId('delv'),
     name: '新交付件',
-    type: 'DOCUMENT',
+    type: 'OTHER',
     required: true,
     signOffRole: '',
     phaseCode: phases.value[0]?.phaseCode ?? ''
@@ -335,7 +335,7 @@ function applySnapshot(snap?: TemplateSnapshot) {
   deliverables.value = ((snap.deliverables ?? []) as any[]).map((d: any) => ({
     id: genId('delv'),
     name: d.name ?? d.deliverableName ?? '',
-    type: d.type ?? d.deliverableType ?? 'DOCUMENT',
+    type: d.type ?? d.deliverableType ?? 'OTHER',
     required: d.required ?? d.mandatory ?? true,
     signOffRole: d.signOffRole ?? d.approverRole ?? '',
     phaseCode: d.phaseCode ?? ''
@@ -738,10 +738,14 @@ onMounted(() => {
           <el-table-column label="类型" width="140">
             <template #default="{ row }">
               <el-select v-model="row.type" size="small">
-                <el-option label="文档" value="DOCUMENT" />
-                <el-option label="代码" value="CODE" />
-                <el-option label="模型" value="MODEL" />
+                <el-option label="竣工资料" value="AS_BUILT" />
                 <el-option label="测试报告" value="TEST_REPORT" />
+                <el-option label="验收证书" value="ACCEPTANCE_CERT" />
+                <el-option label="培训记录" value="TRAINING_RECORD" />
+                <el-option label="操作手册" value="OPERATION_MANUAL" />
+                <el-option label="资产清单" value="ASSET_REGISTER" />
+                <el-option label="质保证书" value="WARRANTY_CERT" />
+                <el-option label="备件清单" value="SPARE_PARTS_LIST" />
                 <el-option label="其他" value="OTHER" />
               </el-select>
             </template>

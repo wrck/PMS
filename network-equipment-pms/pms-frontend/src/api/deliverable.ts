@@ -1,7 +1,7 @@
 import { del, get, post, put } from '@/utils/request'
 import request from '@/utils/request'
 
-/** 终验交付物类型 */
+/** 交付件类型（统一 8 类标准终验类型 + OTHER 兜底） */
 export type DeliverableType =
   | 'AS_BUILT'
   | 'TEST_REPORT'
@@ -11,7 +11,25 @@ export type DeliverableType =
   | 'ASSET_REGISTER'
   | 'WARRANTY_CERT'
   | 'SPARE_PARTS_LIST'
+  | 'OTHER'
 
+/** 交付件类型中文标签映射 */
+export const DELIVERABLE_TYPE_LABELS: Record<DeliverableType, string> = {
+  AS_BUILT: '竣工资料',
+  TEST_REPORT: '测试报告',
+  ACCEPTANCE_CERT: '验收证书',
+  TRAINING_RECORD: '培训记录',
+  OPERATION_MANUAL: '操作手册',
+  ASSET_REGISTER: '资产清单',
+  WARRANTY_CERT: '质保证书',
+  SPARE_PARTS_LIST: '备件清单',
+  OTHER: '其他'
+}
+
+/**
+ * @deprecated 终验校验已改为直接查 pms_deliverable 表，本接口保留用于历史兼容，将在下版本删除。
+ * 新代码请使用 {@link listFullDeliverables} 查询项目交付件。
+ */
 export interface DeliverableChecklist {
   id?: number
   projectId: number
@@ -23,14 +41,23 @@ export interface DeliverableChecklist {
   remarks?: string
 }
 
+/**
+ * @deprecated 使用 {@link listFullDeliverables} 替代。
+ */
 export function listDeliverables(projectId: number): Promise<DeliverableChecklist[]> {
   return get<DeliverableChecklist[]>(`/api/project/deliverable-checklist/project/${projectId}`)
 }
 
+/**
+ * @deprecated 终验时后端会自动初始化标准交付件，无需前端手动调用。
+ */
 export function initChecklist(projectId: number): Promise<boolean> {
   return post<boolean>(`/api/project/deliverable-checklist/project/${projectId}/init`)
 }
 
+/**
+ * @deprecated 使用 {@link uploadDeliverableInitialVersion} 替代。
+ */
 export function markUploaded(
   id: number,
   attachmentId: number
@@ -43,6 +70,9 @@ export function markUploaded(
   )
 }
 
+/**
+ * @deprecated 使用 Deliverable 状态机流转（submit/review/sign/publish）替代。
+ */
 /** 取消已上传的附件标记 */
 export function cancelUploaded(id: number): Promise<DeliverableChecklist> {
   return put<DeliverableChecklist>(
@@ -92,8 +122,10 @@ export const DELIVERABLE_STATUS_ORDER: DeliverableStatus[] = [
   'ARCHIVED'
 ]
 
-/** 交付件类型（全生命周期） */
-export type DeliverableKind = 'DOCUMENT' | 'CONFIG' | 'REPORT' | 'OTHER'
+/**
+ * @deprecated 已统一到 {@link DeliverableType}，新代码请直接使用 DeliverableType。
+ */
+export type DeliverableKind = DeliverableType
 
 /** 交付件实体（7 态状态机） */
 export interface Deliverable {
@@ -101,7 +133,7 @@ export interface Deliverable {
   projectId: number
   projectName?: string
   deliverableName: string
-  deliverableType?: DeliverableKind | string
+  deliverableType?: DeliverableType | string
   filePath?: string
   status?: DeliverableStatus
   phaseId?: number
