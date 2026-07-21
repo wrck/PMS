@@ -114,6 +114,13 @@ function revisionCount(row: Deliverable): number {
   return row.currentVersion ?? 1
 }
 
+/** 根据 phaseId 查找阶段名称（避免直接显示 ID） */
+function phaseNameOf(phaseId?: number | null): string {
+  if (!phaseId) return '-'
+  const phase = phaseOptions.value.find((p) => p.id === phaseId)
+  return phase?.phaseName ?? '-'
+}
+
 function getDeliverablesByStatus(status: DeliverableStatus): Deliverable[] {
   return filteredDeliverables.value.filter((d) => d.status === status)
 }
@@ -595,7 +602,7 @@ onMounted(async () => {
             <template #default="{ row }">{{ ownerName(row) }}</template>
           </el-table-column>
           <el-table-column label="阶段" width="100" align="center">
-            <template #default="{ row }">{{ row.phaseId ?? '-' }}</template>
+            <template #default="{ row }">{{ phaseNameOf(row.phaseId) }}</template>
           </el-table-column>
           <el-table-column label="修订次数" width="90" align="center">
             <template #default="{ row }">{{ revisionCount(row) }}</template>

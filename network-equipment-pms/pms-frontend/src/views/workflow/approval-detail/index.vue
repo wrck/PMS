@@ -33,6 +33,7 @@ import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ApprovalTimeline from '@/components/ApprovalTimeline.vue'
 import SensitiveFieldDisplay from '@/components/SensitiveFieldDisplay.vue'
+import { listProjects, type Project } from '@/api/project'
 import { useUserStore } from '@/stores/user'
 import type { EpTagType } from '@/types'
 
@@ -45,6 +46,7 @@ const userStore = useUserStore()
 const detail = ref<ApprovalDetailVO | null>(null)
 const loading = ref(false)
 const submitting = ref(false)
+const projectOptions = ref<Project[]>([])
 
 // 审批意见
 const opinion = ref('')
@@ -162,6 +164,11 @@ function formatDateTime(val?: string): string {
   return val.replace('T', ' ').slice(0, 19)
 }
 
+function projectNameOf(projectId?: number | null): string {
+  if (!projectId) return '-'
+  return projectOptions.value.find((p) => p.id === projectId)?.projectName ?? '-'
+}
+
 // ============ 业务数据字段（HIDDEN 已被后端过滤，前端兜底）============
 interface FieldEntry {
   name: string
@@ -268,6 +275,15 @@ const recentHistory = computed<ApprovalHistory[]>(() => {
 })
 
 // ============ 数据加载 ============
+async function loadProjectOptions() {
+  try {
+    const res = await listProjects({ page: 1, size: 200 })
+    projectOptions.value = res.records ?? []
+  } catch {
+    /* ignored */
+  }
+}
+
 async function loadDetail() {
   if (!recordId.value) return
   loading.value = true
@@ -358,6 +374,7 @@ function goHistory() {
 }
 
 onMounted(() => {
+  loadProjectOptions()
   loadDetail()
 })
 </script>
@@ -383,7 +400,7 @@ onMounted(() => {
       <!-- PageHeader -->
       <PageHeader
         :title="record.title"
-        :description="`编号 #${record.id} · ${typeLabel(record.approvalType)} · 来源项目 ${record.projectId ? '#' + record.projectId : '-'} · 第 ${currentRound} 轮`"
+        :description="`编号 #${record.id} · ${typeLabel(record.approvalType)} · 来源项目 ${projectNameOf(record.projectId)} · 第 ${currentRound} 轮`"
       >
         <template #actions>
           <el-tag :type="statusMeta(record.status).tagType" size="large" effect="dark">
@@ -431,13 +448,13 @@ onMounted(() => {
                 <el-tag size="small" effect="plain">{{ typeLabel(record.approvalType) }}</el-tag>
               </el-descriptions-item>
               <el-descriptions-item label="来源项目">
-                {{ record.projectId ? `#${record.projectId}` : '-' }}
+                {{ projectNameOf(record.projectId) }}
               </el-descriptions-item>
               <el-descriptions-item label="业务编号">
-                {{ record.businessCode || `#${record.businessId}` }}
+                {{ record.businessCode || '未关联业务' }}
               </el-descriptions-item>
               <el-descriptions-item label="提交人">
-                {{ record.submitterName || `#${record.submitterId}` }}
+                {{ record.submitterName || '匿名用户' }}
               </el-descriptions-item>
               <el-descriptions-item label="提交时间">
                 {{ formatDateTime(record.submittedAt) }}

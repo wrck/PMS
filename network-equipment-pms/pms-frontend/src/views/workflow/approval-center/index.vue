@@ -32,6 +32,7 @@ import {
   type ApprovalType
 } from '@/api/approval-center'
 import { useProjectContext } from '@/composables/useProjectContext'
+import { listProjects, type Project } from '@/api/project'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -56,6 +57,7 @@ const acting = ref(false)
 const pendingData = ref<ApprovalRecord[]>([])
 const submittedData = ref<ApprovalRecord[]>([])
 const allData = ref<ApprovalRecord[]>([])
+const projectOptions = ref<Project[]>([])
 
 // ============ 业务类型 / 状态选项 ============
 const typeOptions: { value: ApprovalType | string; label: string }[] = [
@@ -120,9 +122,13 @@ function typeLabel(type?: string): string {
   return typeOptions.find((t) => t.value === type)?.label ?? type ?? '-'
 }
 
+function projectNameOf(projectId?: number | null): string {
+  if (!projectId) return '-'
+  return projectOptions.value.find((p) => p.id === projectId)?.projectName ?? '-'
+}
+
 function projectLabel(rec: ApprovalRecord): string {
-  if (rec.projectId) return `#${rec.projectId}`
-  return '-'
+  return projectNameOf(rec.projectId)
 }
 
 function formatDateTime(val?: string): string {
@@ -223,12 +229,21 @@ const allTotal = computed(() => filteredAll.value.length)
 
 const subtitle = computed(() => {
   if (targetProjectId.value) {
-    return `当前项目 #${targetProjectId.value} · 待审批 ${filteredPending.value.length} 条 · 我发起 ${filteredSubmitted.value.length} 条 · 全部 ${allTotal.value} 条`
+    return `当前项目：${projectNameOf(targetProjectId.value)} · 待审批 ${filteredPending.value.length} 条 · 我发起 ${filteredSubmitted.value.length} 条 · 全部 ${allTotal.value} 条`
   }
   return `待审批 ${filteredPending.value.length} 条 · 我发起 ${filteredSubmitted.value.length} 条 · 全部 ${allTotal.value} 条`
 })
 
 // ============ 数据加载 ============
+async function loadProjectOptions() {
+  try {
+    const res = await listProjects({ page: 1, size: 200 })
+    projectOptions.value = res.records ?? []
+  } catch {
+    /* ignored */
+  }
+}
+
 async function loadData() {
   loading.value = true
   try {
@@ -407,6 +422,7 @@ watch(targetProjectId, () => {
 })
 
 onMounted(() => {
+  loadProjectOptions()
   loadData()
 })
 </script>
@@ -522,7 +538,7 @@ onMounted(() => {
               </span>
               <span class="meta-item">
                 <span class="meta-label">提交人：</span>
-                <span class="meta-value">{{ rec.submitterName || `#${rec.submitterId}` }}</span>
+                <span class="meta-value">{{ rec.submitterName || '未命名' }}</span>
               </span>
               <span class="meta-item">
                 <span class="meta-label">当前节点：</span>
@@ -654,7 +670,7 @@ onMounted(() => {
             </el-table-column>
             <el-table-column label="提交人" min-width="110">
               <template #default="{ row }">
-                {{ row.submitterName || `#${row.submitterId}` }}
+                {{ row.submitterName || '未命名' }}
               </template>
             </el-table-column>
             <el-table-column label="当前节点" min-width="120" show-overflow-tooltip>

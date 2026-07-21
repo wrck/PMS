@@ -98,6 +98,7 @@ export type DeliverableKind = 'DOCUMENT' | 'CONFIG' | 'REPORT' | 'OTHER'
 export interface Deliverable {
   id?: number
   projectId: number
+  projectName?: string
   deliverableName: string
   deliverableType?: DeliverableKind | string
   filePath?: string

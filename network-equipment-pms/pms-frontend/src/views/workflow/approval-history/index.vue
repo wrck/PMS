@@ -273,7 +273,7 @@ onMounted(() => {
                   </el-table-column>
                   <el-table-column label="审批人" min-width="110">
                     <template #default="{ row }">
-                      {{ row.operatorName || `#${row.operatorId}` }}
+                      {{ row.operatorName || '匿名用户' }}
                     </template>
                   </el-table-column>
                   <el-table-column label="审批结果" width="110" align="center">
