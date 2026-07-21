@@ -143,13 +143,18 @@ function phaseNameOf(phaseId?: number | null): string {
   return phase?.phaseName ?? `阶段#${phaseId}`
 }
 
-/** 根据 projectId 查找项目名称（避免直接显示 ID） */
-function projectNameOf(projectId?: number | null): string {
-  if (!projectId) return '-'
-  // 项目模式下 projectInfo 已加载
-  if (projectInfo.value?.id === projectId) return projectInfo.value.projectName
-  // 全局模式下从 projectOptions 查找
-  const proj = projectOptions.value.find((p) => p.id === projectId)
+/**
+ * 解析项目名称：优先使用后端返回的 projectName 字段，
+ * 缺失时再从本地 projectInfo / projectOptions 兜底查找。
+ */
+function projectNameOf(task: { projectId?: number | null; projectName?: string }): string {
+  // 1. 优先使用后端返回的 projectName（最可靠）
+  if (task.projectName && task.projectName.trim()) return task.projectName
+  // 2. 兜底：根据 projectId 从本地缓存查找
+  const pid = task.projectId
+  if (!pid) return '-'
+  if (projectInfo.value?.id === pid) return projectInfo.value.projectName
+  const proj = projectOptions.value.find((p) => p.id === pid)
   return proj?.projectName ?? '-'
 }
 
@@ -759,9 +764,14 @@ onMounted(async () => {
             min-width="220"
             show-overflow-tooltip
           />
-          <el-table-column label="所属项目" width="160" show-overflow-tooltip>
+          <el-table-column
+            v-if="!currentProjectId"
+            label="所属项目"
+            width="160"
+            show-overflow-tooltip
+          >
             <template #default="{ row }">
-              <span class="task-project">{{ projectNameOf(row.projectId) }}</span>
+              <span class="task-project">{{ projectNameOf(row) }}</span>
             </template>
           </el-table-column>
           <el-table-column label="所属阶段" width="140" show-overflow-tooltip>
@@ -886,8 +896,9 @@ onMounted(async () => {
             >
               <div class="card-title">{{ task.taskName }}</div>
               <div class="card-code">
-                <span class="card-project">{{ projectNameOf(task.projectId) }}</span>
-                <span v-if="task.phaseId" class="card-phase">· {{ phaseNameOf(task.phaseId) }}</span>
+                <span v-if="!currentProjectId" class="card-project">{{ projectNameOf(task) }}</span>
+                <span v-if="!currentProjectId && task.phaseId" class="card-phase">· </span>
+                <span v-if="task.phaseId" class="card-phase">{{ phaseNameOf(task.phaseId) }}</span>
               </div>
               <div class="card-meta">
                 <TaskPriorityTag
