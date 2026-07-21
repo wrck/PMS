@@ -18,6 +18,7 @@ import {
 } from 'element-plus'
 import {
   approveTask,
+  assignAgentTask,
   assignOemTask,
   completeTask,
   getTaskDetail,
@@ -641,9 +642,12 @@ async function handleEditSubmit() {
   await editFormRef.value.validate(async (valid) => {
     if (!valid) return
     editSubmitting.value = true
-    try {
-      const created = await assignOemTask(editForm as ImplTask)
-      ElMessage.success('保存成功')
+      try {
+        const isAgentTask = (editForm as ImplTask).taskType === 'AGENT'
+        const created = isAgentTask
+          ? await assignAgentTask(editForm as ImplTask)
+          : await assignOemTask(editForm as ImplTask)
+        ElMessage.success('保存成功')
       editVisible.value = false
       // 新建模式：跳转到新任务的详情页（脱离 ?action=create 状态）
       if (isCreateMode.value && created?.id) {

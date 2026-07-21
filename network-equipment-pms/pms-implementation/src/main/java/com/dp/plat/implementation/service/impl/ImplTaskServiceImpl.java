@@ -64,7 +64,7 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
             task.setStatus(existing.getStatus());
             task.setProgress(existing.getProgress());
             task.setActualStartDate(existing.getActualStartDate());
-            task.setActualEnd(existing.getActualEnd());
+            task.setActualEndDate(existing.getActualEndDate());
             // 工程师变更时发通知
             boolean engineerChanged = !java.util.Objects.equals(existing.getEngineerId(), task.getEngineerId())
                     && task.getEngineerId() != null;
@@ -97,7 +97,7 @@ public class ImplTaskServiceImpl extends ServiceImpl<ImplTaskMapper, ImplTask> i
             task.setStatus(existing.getStatus());
             task.setProgress(existing.getProgress());
             task.setActualStartDate(existing.getActualStartDate());
-            task.setActualEnd(existing.getActualEnd());
+            task.setActualEndDate(existing.getActualEndDate());
             boolean agentChanged = !java.util.Objects.equals(existing.getAgentId(), task.getAgentId())
                     && task.getAgentId() != null;
             this.updateById(task);
