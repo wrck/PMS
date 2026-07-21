@@ -20,16 +20,17 @@ export interface PhaseCriteria {
 /** 阶段退出条件（对齐后端 com.dp.plat.common.dto.PhaseExitGate） */
 export interface PhaseExitGate {
   requiredDeliverables?: Array<{
-    deliverableId?: number
+    /** 项目态为数据库 Long；模板态为前端生成的字符串 ID */
+    deliverableId?: number | string
     deliverableName?: string
     requiredStatus?: string
   }>
   requiredTasks?: Array<{
-    phaseId?: number
+    phaseId?: number | string
     allCompleted?: boolean
   }>
   requiredMilestones?: Array<{
-    milestoneId?: number
+    milestoneId?: number | string
     mustReached?: boolean
   }>
   requiredApprovals?: Array<{

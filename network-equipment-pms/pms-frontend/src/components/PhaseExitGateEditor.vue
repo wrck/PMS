@@ -19,18 +19,19 @@ import { ElMessage } from 'element-plus'
 // ===================== 类型定义（对齐后端 PhaseExitGate DTO） =====================
 
 export interface RequiredDeliverable {
-  deliverableId?: number
+  /** 项目态为数据库 Long；模板态为前端生成的字符串 ID */
+  deliverableId?: number | string
   deliverableName?: string
   requiredStatus?: string
 }
 
 export interface RequiredTask {
-  phaseId?: number
+  phaseId?: number | string
   allCompleted?: boolean
 }
 
 export interface RequiredMilestone {
-  milestoneId?: number
+  milestoneId?: number | string
   mustReached?: boolean
 }
 
@@ -47,7 +48,8 @@ export interface PhaseExitGate {
 }
 
 export interface PhaseResourceOption {
-  id: number
+  /** 项目态为数据库 Long；模板态为前端生成的字符串 ID */
+  id: number | string
   label: string
 }
 
@@ -124,7 +126,7 @@ function onDeliverableChange(idx: number, patch: Partial<RequiredDeliverable>) {
   emitChange({ ...gate.value, requiredDeliverables: list })
 }
 
-function selectDeliverable(idx: number, deliverableId?: number) {
+function selectDeliverable(idx: number, deliverableId?: number | string) {
   const option = props.deliverableOptions?.find((item) => item.id === deliverableId)
   onDeliverableChange(idx, {
     deliverableId,
@@ -261,7 +263,7 @@ defineExpose({ validate })
                 clearable
                 style="width: 100%"
                 placeholder="请选择当前项目交付件"
-                @update:model-value="(v: number | undefined) => selectDeliverable($index, v ?? undefined)"
+                @update:model-value="(v: number | string | undefined) => selectDeliverable($index, v ?? undefined)"
               >
                 <el-option
                   v-for="option in deliverableOptions ?? []"
@@ -334,7 +336,7 @@ defineExpose({ validate })
                 clearable
                 style="width: 100%"
                 placeholder="请选择当前项目阶段"
-                @update:model-value="(v: number | undefined) => onTaskChange($index, { phaseId: v ?? undefined })"
+                @update:model-value="(v: number | string | undefined) => onTaskChange($index, { phaseId: v ?? undefined })"
               >
                 <el-option
                   v-for="option in phaseOptions ?? []"
@@ -402,7 +404,7 @@ defineExpose({ validate })
                 clearable
                 style="width: 100%"
                 placeholder="请选择当前项目里程碑"
-                @update:model-value="(v: number | undefined) => onMilestoneChange($index, { milestoneId: v ?? undefined })"
+                @update:model-value="(v: number | string | undefined) => onMilestoneChange($index, { milestoneId: v ?? undefined })"
               >
                 <el-option
                   v-for="option in milestoneOptions ?? []"

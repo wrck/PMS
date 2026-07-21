@@ -3,7 +3,7 @@
 // PhaseManage - 阶段管理页（Task 7 重做）
 // -----------------------------------------------------------------------------
 // 双视图：流水线（横向卡片） + 时间轴（纵向 el-timeline），el-radio-group 切换。
-// 阶段详情抽屉：基本信息 + 退出条件（PhaseExitGateEditor 只读）+ 必需交付件
+// 阶段详情抽屉：基本信息 + 进入条件（只读）+ 退出条件（PhaseExitGateEditor 只读）+ 必需交付件
 //              + 阶段任务 + 阶段里程碑。
 // 推进阶段：退出条件 violations 校验 + 二次确认。
 // 入口：1) 工作区 Tab 嵌入（props.projectId）；2) 独立路由 /project/phase/:projectId。
@@ -25,6 +25,7 @@ import {
 import { getProject, listMilestones, type Milestone, type Project } from '@/api/project'
 import { listFullDeliverables, uploadDeliverableInitialVersion, type Deliverable } from '@/api/deliverable'
 import { getTasksByProject, type ImplTask } from '@/api/implementation'
+import type { PhaseCriteria } from '@/api/project-template'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -236,6 +237,13 @@ function selectPhase(phase: ProjectPhase) {
 }
 
 function resetPhaseForm(phase?: ProjectPhase) {
+  const rawEntry = phase?.entryCriteria
+  const entryCriteria: PhaseCriteria = rawEntry && typeof rawEntry === 'object'
+    ? {
+        requirePreviousPhaseComplete: Boolean((rawEntry as PhaseCriteria).requirePreviousPhaseComplete),
+        requireApproval: Boolean((rawEntry as PhaseCriteria).requireApproval)
+      }
+    : { requirePreviousPhaseComplete: false, requireApproval: false }
   Object.assign(phaseForm, {
     id: phase?.id,
     projectId: projectId.value,
@@ -243,7 +251,7 @@ function resetPhaseForm(phase?: ProjectPhase) {
     phaseName: phase?.phaseName ?? '',
     phaseCode: phase?.phaseCode ?? '',
     sortOrder: phase?.sortOrder ?? phases.value.length + 1,
-    entryCriteria: phase?.entryCriteria,
+    entryCriteria,
     exitCriteria: phase?.exitCriteria,
     status: phase?.status ?? 'NOT_STARTED',
     plannedStartDate: phase?.plannedStartDate,
@@ -251,6 +259,12 @@ function resetPhaseForm(phase?: ProjectPhase) {
     actualStartDate: phase?.actualStartDate,
     actualEndDate: phase?.actualEndDate
   })
+}
+
+/** 更新阶段进入条件（结构化对象） */
+function updateEntryCriteria(key: 'requirePreviousPhaseComplete' | 'requireApproval', value: boolean) {
+  const current = (phaseForm.entryCriteria as PhaseCriteria) ?? { requirePreviousPhaseComplete: false, requireApproval: false }
+  phaseForm.entryCriteria = { ...current, [key]: value }
 }
 
 function openCreatePhase() {
@@ -597,6 +611,36 @@ onMounted(reload)
             <el-descriptions-item label="实际结束">{{ formatDate(selectedPhase.actualEndDate) }}</el-descriptions-item>
           </el-descriptions>
 
+          <!-- 进入条件（只读） -->
+          <div class="detail-block">
+            <div class="block-title">进入条件</div>
+            <div class="entry-criteria-view">
+              <el-tag
+                :type="(selectedPhase.entryCriteria as PhaseCriteria)?.requirePreviousPhaseComplete ? 'success' : 'info'"
+                :effect="(selectedPhase.entryCriteria as PhaseCriteria)?.requirePreviousPhaseComplete ? 'dark' : 'plain'"
+                size="large"
+              >
+                {{ (selectedPhase.entryCriteria as PhaseCriteria)?.requirePreviousPhaseComplete ? '✓' : '○' }}
+                需要前置阶段完成
+              </el-tag>
+              <el-tag
+                :type="(selectedPhase.entryCriteria as PhaseCriteria)?.requireApproval ? 'success' : 'info'"
+                :effect="(selectedPhase.entryCriteria as PhaseCriteria)?.requireApproval ? 'dark' : 'plain'"
+                size="large"
+              >
+                {{ (selectedPhase.entryCriteria as PhaseCriteria)?.requireApproval ? '✓' : '○' }}
+                需要审批通过
+              </el-tag>
+              <span
+                v-if="!(selectedPhase.entryCriteria as PhaseCriteria)?.requirePreviousPhaseComplete
+                  && !(selectedPhase.entryCriteria as PhaseCriteria)?.requireApproval"
+                class="entry-criteria-empty"
+              >
+                未配置进入条件
+              </span>
+            </div>
+          </div>
+
           <!-- 退出条件（只读） -->
           <div class="detail-block">
             <div class="block-title">退出条件</div>
@@ -741,6 +785,24 @@ onMounted(reload)
                   style="width: 100%"
                 />
               </el-form-item>
+            </div>
+          </div>
+
+          <div class="detail-block">
+            <div class="block-title">进入条件</div>
+            <div class="entry-criteria-edit">
+              <el-checkbox
+                :model-value="(phaseForm.entryCriteria as PhaseCriteria)?.requirePreviousPhaseComplete ?? false"
+                @update:model-value="(v: boolean | string | number | undefined) => updateEntryCriteria('requirePreviousPhaseComplete', Boolean(v))"
+              >
+                需要前置阶段完成
+              </el-checkbox>
+              <el-checkbox
+                :model-value="(phaseForm.entryCriteria as PhaseCriteria)?.requireApproval ?? false"
+                @update:model-value="(v: boolean | string | number | undefined) => updateEntryCriteria('requireApproval', Boolean(v))"
+              >
+                需要审批通过
+              </el-checkbox>
             </div>
           </div>
 
@@ -1145,6 +1207,24 @@ onMounted(reload)
   border: 1px solid var(--pms-color-border-light, #ebeef5);
   border-radius: 6px;
   background: var(--pms-color-fill-lighter, #fafafa);
+}
+.entry-criteria-view {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 4px 0;
+}
+.entry-criteria-edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+  padding: 8px 4px;
+}
+.entry-criteria-empty {
+  color: var(--pms-color-text-secondary, #909399);
+  font-size: 13px;
 }
 @media (max-width: 900px) {
   .phase-form-grid {

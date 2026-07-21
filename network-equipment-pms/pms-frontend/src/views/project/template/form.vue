@@ -932,7 +932,9 @@ onMounted(() => {
               <div class="criteria-body">
                 <PhaseExitGateEditor
                   :model-value="phase.exitCriteria"
-                  :deliverable-options="deliverables.map((d) => ({ id: d.id, name: d.name }))"
+                  :deliverable-options="deliverables.map((d) => ({ id: d.id, label: d.name }))"
+                  :phase-options="phases.filter((p) => p.phaseCode).map((p) => ({ id: p.phaseCode, label: p.phaseName || p.phaseCode }))"
+                  :milestone-options="milestones.filter((m) => m.id).map((m) => ({ id: m.id, label: m.name || '未命名里程碑' }))"
                   @update:model-value="(v: PhaseExitGate) => updateExitCriteria(phase, v)"
                 />
               </div>
