@@ -11,17 +11,17 @@
 --     自动填充 'admin' 字符串时抛出 java.sql.SQLException:
 --       Incorrect integer value: 'admin' for column 'create_by' at row 1
 --
--- 修复方案：将 13 张表的 create_by / update_by 列改为 VARCHAR(64) NULL，
+-- 修复方案：将 11 张表的 create_by / update_by 列改为 VARCHAR(64) NULL，
 --          并把历史 BIGINT 值（如 1）回填为 'admin'，与 BaseEntity 语义对齐。
 --
--- 影响表清单（13 张）：
+-- 影响表清单（11 张，含 create_by/update_by 列的表）：
 --   V69: pms_project_template, pms_project_template_version
 --   V71: pms_project_phase, pms_project_config
 --   V72: pms_task_checklist, pms_task_comment, pms_task_activity
 --   V73: pms_task_dependency
 --   V74: pms_baseline_snapshot
---   V76: pms_approval_record, pms_approval_node, pms_approval_history,
---        pms_approval_field_permission
+--   V76: pms_approval_record, pms_approval_field_permission
+--   （V76 的 pms_approval_node / pms_approval_history 不含 create_by/update_by 列，跳过）
 -- =============================================================
 
 -- -------------------------------------------------------------
@@ -52,8 +52,6 @@ BEGIN
               'pms_task_dependency',
               'pms_baseline_snapshot',
               'pms_approval_record',
-              'pms_approval_node',
-              'pms_approval_history',
               'pms_approval_field_permission'
           );
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
@@ -112,10 +110,6 @@ UPDATE `pms_baseline_snapshot`             SET create_by = 'admin' WHERE create_
 UPDATE `pms_baseline_snapshot`             SET update_by = 'admin' WHERE update_by IS NOT NULL AND update_by REGEXP '^[0-9]+$';
 UPDATE `pms_approval_record`               SET create_by = 'admin' WHERE create_by IS NOT NULL AND create_by REGEXP '^[0-9]+$';
 UPDATE `pms_approval_record`               SET update_by = 'admin' WHERE update_by IS NOT NULL AND update_by REGEXP '^[0-9]+$';
-UPDATE `pms_approval_node`                 SET create_by = 'admin' WHERE create_by IS NOT NULL AND create_by REGEXP '^[0-9]+$';
-UPDATE `pms_approval_node`                 SET update_by = 'admin' WHERE update_by IS NOT NULL AND update_by REGEXP '^[0-9]+$';
-UPDATE `pms_approval_history`              SET create_by = 'admin' WHERE create_by IS NOT NULL AND create_by REGEXP '^[0-9]+$';
-UPDATE `pms_approval_history`              SET update_by = 'admin' WHERE update_by IS NOT NULL AND update_by REGEXP '^[0-9]+$';
 UPDATE `pms_approval_field_permission`     SET create_by = 'admin' WHERE create_by IS NOT NULL AND create_by REGEXP '^[0-9]+$';
 UPDATE `pms_approval_field_permission`     SET update_by = 'admin' WHERE update_by IS NOT NULL AND update_by REGEXP '^[0-9]+$';
 
@@ -133,13 +127,15 @@ UPDATE `pms_approval_field_permission`     SET update_by = 'admin' WHERE update_
 -- 4. 自检注释
 -- =============================================================
 -- 预期变更：
---   - 13 张表 × 2 列 = 26 个 ALTER MODIFY COLUMN BIGINT -> VARCHAR(64) NULL
+--   - 11 张表 × 2 列 = 22 个 ALTER MODIFY COLUMN BIGINT -> VARCHAR(64) NULL
 --   - 历史值 '1' / 1 统一回填为 'admin'（与 SecurityUtils.getCurrentUsername() 语义一致）
 --   - 修复后 ProjectPhase.insert 等 MyBatis-Plus 自动填充不再抛
 --     'Incorrect integer value: admin for column create_by' 错误
 --
 -- 兼容性说明：
 --   - 已存在 VARCHAR(64) 的表（V2 表 + V75 deliverable 三张子表）不受影响
+--   - V76 的 pms_approval_node / pms_approval_history 不含 create_by/update_by 列，
+--     不在影响范围内（V82 INSERT 也不向这两张表写 create_by/update_by）
 --   - V82 演示数据中的 create_by = 1 / update_by = 1 字面量
 --     经 ALTER 后变为 '1'，再经 §2 UPDATE 回填为 'admin'
 --   - V83 可重复执行：第二次执行时 information_schema 检测到列已为 VARCHAR，
