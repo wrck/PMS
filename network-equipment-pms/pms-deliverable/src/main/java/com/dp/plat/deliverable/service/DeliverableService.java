@@ -23,14 +23,15 @@ public interface DeliverableService extends IService<Deliverable> {
     // ==================== CRUD ====================
 
     /**
-     * 按项目/阶段/状态过滤查询交付件列表（参数均可空）。
+     * 按项目/阶段/状态/来源过滤查询交付件列表（参数均可空）。
      *
-     * @param projectId 项目ID（可空）
-     * @param phaseId   阶段ID（可空）
-     * @param status    状态码（可空，参考 {@link com.dp.plat.deliverable.enums.DeliverableStatus}）
+     * @param projectId         项目ID（可空）
+     * @param phaseId           阶段ID（可空）
+     * @param status            状态码（可空，参考 {@link com.dp.plat.deliverable.enums.DeliverableStatus}）
+     * @param templateInherited 是否模板预设（可空：null=全部，true=仅模板预设，false=仅过程新增）
      * @return 交付件列表（按 id 倒序）
      */
-    List<Deliverable> list(Long projectId, Long phaseId, String status);
+    List<Deliverable> list(Long projectId, Long phaseId, String status, Boolean templateInherited);
 
     /**
      * 新建交付件 — 默认 status=DRAFT、currentVersion=1；若提供 filePath 则同步创建 v1 版本记录。

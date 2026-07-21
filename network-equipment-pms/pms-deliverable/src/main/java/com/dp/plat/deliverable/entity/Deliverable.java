@@ -36,7 +36,7 @@ public class Deliverable extends BaseEntity {
     /** 交付件名称。 */
     private String deliverableName;
 
-    /** 交付件类型（AS_BUILT/TEST_REPORT/ACCEPTANCE_CERT/TRAINING_RECORD/OPERATION_MANUAL/ASSET_REGISTER/WARRANTY_CERT/SPARE_PARTS_LIST/OTHER）。 */
+    /** 交付件性质类型（见字典 pms_deliverable_type）：DOCUMENT/CODE/ENTITY_REF/MODEL/CONFIG/DATA/OTHER。 */
     private String deliverableType;
 
     /** 文件路径（最新版本）。 */
@@ -58,8 +58,17 @@ public class Deliverable extends BaseEntity {
     /** 是否必需交付件（影响阶段退出校验）。 */
     private Boolean mandatory;
 
+    /** 是否模板预设（模板实例化创建 = true，过程新增 = false）。 */
+    private Boolean templateInherited;
+
     /** 签核角色。 */
     private String approverRole;
+
+    /** 引用实体类型（见字典 pms_deliverable_ref_entity_type：TASK/ASSET/PHASE/PROJECT/DELIVERABLE/REPORT）。 */
+    private String refEntityType;
+
+    /** 引用实体ID（当 deliverableType=ENTITY_REF 时指向具体业务对象）。 */
+    private Long refEntityId;
 
     /** 发布时间（SIGNED → PUBLISHED 时写入）。 */
     private LocalDateTime publishedAt;

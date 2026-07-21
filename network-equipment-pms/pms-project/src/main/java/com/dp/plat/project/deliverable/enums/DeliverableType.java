@@ -1,12 +1,12 @@
 package com.dp.plat.project.deliverable.enums;
 
 /**
- * Standard final acceptance deliverable types.
+ * Standard final acceptance deliverable types (legacy).
  *
- * <p>Each project is initialised with one checklist record per deliverable type
- * via {@code initChecklist}. The {@link #displayName} is used in validation
- * messages listing missing deliverables.</p>
+ * @deprecated 交付件类型已改为数据字典驱动（字典 pms_deliverable_type），
+ * 终验校验改为只看 mandatory 标记。本枚举保留用于历史代码兼容，将在下版本删除。
  */
+@Deprecated
 public enum DeliverableType {
 
     /** As-built documentation. */

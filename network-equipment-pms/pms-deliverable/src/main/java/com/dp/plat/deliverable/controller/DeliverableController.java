@@ -50,12 +50,13 @@ public class DeliverableController {
 
     // ==================== CRUD ====================
 
-    @Operation(summary = "查询交付件列表（按项目/阶段/状态过滤）")
+    @Operation(summary = "查询交付件列表（按项目/阶段/状态/来源过滤）")
     @GetMapping("/list")
     public Result<List<Deliverable>> list(@RequestParam(required = false) Long projectId,
                                           @RequestParam(required = false) Long phaseId,
-                                          @RequestParam(required = false) String status) {
-        return Result.ok(deliverableService.list(projectId, phaseId, status));
+                                          @RequestParam(required = false) String status,
+                                          @RequestParam(required = false) Boolean templateInherited) {
+        return Result.ok(deliverableService.list(projectId, phaseId, status, templateInherited));
     }
 
     @Operation(summary = "查询交付件详情")

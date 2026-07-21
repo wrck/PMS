@@ -26,7 +26,8 @@ import {
   type TaskDef,
   type TemplateSnapshot
 } from '@/api/project-template'
-import { getAllRoles, type RoleOption } from '@/api/system'
+import { getAllRoles, type RoleOption, type SysDictItem } from '@/api/system'
+import { loadDeliverableTypes } from '@/api/deliverable'
 import PageHeader from '@/components/common/PageHeader.vue'
 import PhaseExitGateEditor from '@/components/PhaseExitGateEditor.vue'
 
@@ -38,6 +39,9 @@ const router = useRouter()
 const loading = ref(false)
 const submitting = ref(false)
 const publishing = ref(false)
+
+/** 交付件性质类型字典项（从数据字典 pms_deliverable_type 加载） */
+const deliverableTypeOptions = ref<SysDictItem[]>([])
 
 const isEdit = computed(() => !!route.params.id)
 
@@ -218,7 +222,7 @@ function addDeliverable() {
   deliverables.value.push({
     id: genId('delv'),
     name: '新交付件',
-    type: 'OTHER',
+    type: 'DOCUMENT',
     required: true,
     signOffRole: '',
     phaseCode: phases.value[0]?.phaseCode ?? ''
@@ -558,6 +562,9 @@ function handlePrev() {
 
 onMounted(() => {
   loadRoles()
+  loadDeliverableTypes().then((items) => {
+    deliverableTypeOptions.value = items
+  })
   const id = route.params.id as string | undefined
   if (id) loadTemplate(Number(id))
 })
@@ -737,16 +744,13 @@ onMounted(() => {
           </el-table-column>
           <el-table-column label="类型" width="140">
             <template #default="{ row }">
-              <el-select v-model="row.type" size="small">
-                <el-option label="竣工资料" value="AS_BUILT" />
-                <el-option label="测试报告" value="TEST_REPORT" />
-                <el-option label="验收证书" value="ACCEPTANCE_CERT" />
-                <el-option label="培训记录" value="TRAINING_RECORD" />
-                <el-option label="操作手册" value="OPERATION_MANUAL" />
-                <el-option label="资产清单" value="ASSET_REGISTER" />
-                <el-option label="质保证书" value="WARRANTY_CERT" />
-                <el-option label="备件清单" value="SPARE_PARTS_LIST" />
-                <el-option label="其他" value="OTHER" />
+              <el-select v-model="row.type" size="small" placeholder="请选择交付件性质类型">
+                <el-option
+                  v-for="item in deliverableTypeOptions"
+                  :key="item.itemValue"
+                  :label="item.itemText"
+                  :value="item.itemValue"
+                />
               </el-select>
             </template>
           </el-table-column>

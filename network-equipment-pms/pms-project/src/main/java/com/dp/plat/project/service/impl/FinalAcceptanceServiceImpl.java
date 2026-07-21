@@ -75,22 +75,15 @@ public class FinalAcceptanceServiceImpl extends ServiceImpl<FinalAcceptanceMappe
             throw new BusinessException("存在未验证的 Punch List 项，无法申请终验");
         }
         // All mandatory deliverables must reach at least PUBLISHED status.
-        // Auto-init standard deliverables when none exist for the project.
+        // 终验校验只看 mandatory 标记，不再依赖具体类型。
+        // 必需交付件由项目模板配置并通过模板实例化创建到 pms_deliverable 表。
         List<Deliverable> deliverables = deliverableMapper.selectList(
                 new LambdaQueryWrapper<Deliverable>()
                         .eq(Deliverable::getProjectId, projectId));
-        boolean hasMandatory = deliverables.stream()
-                .anyMatch(d -> Boolean.TRUE.equals(d.getMandatory()));
-        if (!hasMandatory) {
-            initStandardDeliverables(projectId);
-            deliverables = deliverableMapper.selectList(
-                    new LambdaQueryWrapper<Deliverable>()
-                            .eq(Deliverable::getProjectId, projectId));
-        }
         List<String> missing = new ArrayList<>();
         for (Deliverable item : deliverables) {
             if (Boolean.TRUE.equals(item.getMandatory()) && !isDeliverableReady(item.getStatus())) {
-                missing.add(item.getDeliverableName() != null ? item.getDeliverableName() : item.getDeliverableType());
+                missing.add(item.getDeliverableName() != null ? item.getDeliverableName() : "未命名交付件");
             }
         }
         if (!missing.isEmpty()) {
@@ -185,34 +178,5 @@ public class FinalAcceptanceServiceImpl extends ServiceImpl<FinalAcceptanceMappe
         return "PUBLISHED".equals(status)
                 || "REFERENCED".equals(status)
                 || "ARCHIVED".equals(status);
-    }
-
-    /**
-     * 为项目初始化 8 类标准终验交付件记录（phaseId=null, mandatory=true, status=DRAFT）。
-     *
-     * <p>替代原 {@code DeliverableChecklistService.initChecklist}，直接在 pms_deliverable 表中
-     * 创建标准类型记录，统一数据源。</p>
-     */
-    private void initStandardDeliverables(Long projectId) {
-        String[] standardTypes = {
-                "AS_BUILT", "TEST_REPORT", "ACCEPTANCE_CERT", "TRAINING_RECORD",
-                "OPERATION_MANUAL", "ASSET_REGISTER", "WARRANTY_CERT", "SPARE_PARTS_LIST"
-        };
-        String[] standardNames = {
-                "竣工资料", "测试报告", "验收证书", "培训记录",
-                "操作手册", "资产清单", "质保证书", "备件清单"
-        };
-        for (int i = 0; i < standardTypes.length; i++) {
-            Deliverable deliverable = Deliverable.builder()
-                    .projectId(projectId)
-                    .phaseId(null)
-                    .deliverableName(standardNames[i])
-                    .deliverableType(standardTypes[i])
-                    .status("DRAFT")
-                    .currentVersion(1)
-                    .mandatory(Boolean.TRUE)
-                    .build();
-            deliverableMapper.insert(deliverable);
-        }
     }
 }

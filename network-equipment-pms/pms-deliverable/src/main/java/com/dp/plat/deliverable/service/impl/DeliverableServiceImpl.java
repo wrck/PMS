@@ -54,11 +54,12 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
     // ==================== CRUD ====================
 
     @Override
-    public List<Deliverable> list(Long projectId, Long phaseId, String status) {
+    public List<Deliverable> list(Long projectId, Long phaseId, String status, Boolean templateInherited) {
         LambdaQueryWrapper<Deliverable> wrapper = new LambdaQueryWrapper<Deliverable>()
                 .eq(projectId != null, Deliverable::getProjectId, projectId)
                 .eq(phaseId != null, Deliverable::getPhaseId, phaseId)
                 .eq(status != null && !status.isBlank(), Deliverable::getStatus, status)
+                .eq(templateInherited != null, Deliverable::getTemplateInherited, templateInherited)
                 .orderByDesc(Deliverable::getId);
         return list(wrapper);
     }

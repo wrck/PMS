@@ -1,29 +1,67 @@
 import { del, get, post, put } from '@/utils/request'
 import request from '@/utils/request'
+import { getDictItems, type SysDictItem } from '@/api/system'
 
-/** 交付件类型（统一 8 类标准终验类型 + OTHER 兜底） */
-export type DeliverableType =
-  | 'AS_BUILT'
-  | 'TEST_REPORT'
-  | 'ACCEPTANCE_CERT'
-  | 'TRAINING_RECORD'
-  | 'OPERATION_MANUAL'
-  | 'ASSET_REGISTER'
-  | 'WARRANTY_CERT'
-  | 'SPARE_PARTS_LIST'
-  | 'OTHER'
+/** 交付件性质类型字典编码 */
+export const DELIVERABLE_TYPE_DICT = 'pms_deliverable_type'
+/** 交付件引用实体类型字典编码 */
+export const DELIVERABLE_REF_ENTITY_TYPE_DICT = 'pms_deliverable_ref_entity_type'
 
-/** 交付件类型中文标签映射 */
-export const DELIVERABLE_TYPE_LABELS: Record<DeliverableType, string> = {
-  AS_BUILT: '竣工资料',
-  TEST_REPORT: '测试报告',
-  ACCEPTANCE_CERT: '验收证书',
-  TRAINING_RECORD: '培训记录',
-  OPERATION_MANUAL: '操作手册',
-  ASSET_REGISTER: '资产清单',
-  WARRANTY_CERT: '质保证书',
-  SPARE_PARTS_LIST: '备件清单',
+/**
+ * @deprecated 交付件类型已改为数据字典驱动（字典 pms_deliverable_type），
+ * 请使用 {@link loadDeliverableTypes} 动态加载。本类型保留用于历史兼容。
+ */
+export type DeliverableType = string
+
+/**
+ * @deprecated 已改为数据字典驱动，请使用 {@link loadDeliverableTypes}。
+ */
+export const DELIVERABLE_TYPE_LABELS: Record<string, string> = {
+  DOCUMENT: '文档',
+  CODE: '代码',
+  ENTITY_REF: '实体引用',
+  MODEL: '模型',
+  CONFIG: '配置',
+  DATA: '数据',
   OTHER: '其他'
+}
+
+/** 交付件类型字典项缓存（首次调用后填充） */
+let deliverableTypeItems: SysDictItem[] | null = null
+
+/** 加载交付件性质类型字典（带缓存） */
+export async function loadDeliverableTypes(): Promise<SysDictItem[]> {
+  if (deliverableTypeItems) return deliverableTypeItems
+  try {
+    deliverableTypeItems = await getDictItems(DELIVERABLE_TYPE_DICT)
+  } catch {
+    deliverableTypeItems = []
+  }
+  return deliverableTypeItems
+}
+
+/** 交付件引用实体类型字典项缓存 */
+let deliverableRefEntityTypeItems: SysDictItem[] | null = null
+
+/** 加载交付件引用实体类型字典（带缓存） */
+export async function loadDeliverableRefEntityTypes(): Promise<SysDictItem[]> {
+  if (deliverableRefEntityTypeItems) return deliverableRefEntityTypeItems
+  try {
+    deliverableRefEntityTypeItems = await getDictItems(DELIVERABLE_REF_ENTITY_TYPE_DICT)
+  } catch {
+    deliverableRefEntityTypeItems = []
+  }
+  return deliverableRefEntityTypeItems
+}
+
+/** 翻译交付件类型值为中文标签（优先用字典缓存，兜底 DELIVERABLE_TYPE_LABELS） */
+export function translateDeliverableType(value?: string): string {
+  if (!value) return '-'
+  if (deliverableTypeItems) {
+    const item = deliverableTypeItems.find((it) => it.itemValue === value)
+    if (item) return item.itemText
+  }
+  return DELIVERABLE_TYPE_LABELS[value] ?? value
 }
 
 /**
@@ -139,7 +177,10 @@ export interface Deliverable {
   phaseId?: number
   currentVersion?: number
   mandatory?: boolean
+  templateInherited?: boolean
   approverRole?: string
+  refEntityType?: string
+  refEntityId?: number
   publishedAt?: string
   archivedAt?: string
   createBy?: string
@@ -219,11 +260,12 @@ export interface ReviseRequest {
 
 // -------------------- CRUD --------------------
 
-/** 按项目/阶段/状态过滤查询交付件列表 */
+/** 按项目/阶段/状态/来源过滤查询交付件列表 */
 export function listFullDeliverables(params: {
   projectId?: number
   phaseId?: number
   status?: DeliverableStatus | string
+  templateInherited?: boolean
 }): Promise<Deliverable[]> {
   return get<Deliverable[]>('/api/deliverable/list', params)
 }

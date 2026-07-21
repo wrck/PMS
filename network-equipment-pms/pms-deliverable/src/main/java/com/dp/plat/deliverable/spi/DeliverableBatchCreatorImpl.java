@@ -49,6 +49,7 @@ public class DeliverableBatchCreatorImpl implements DeliverableBatchCreator {
                     .status(INITIAL_STATUS)
                     .currentVersion(INITIAL_VERSION)
                     .mandatory(def.getMandatory() != null ? def.getMandatory() : Boolean.FALSE)
+                    .templateInherited(Boolean.TRUE)
                     .approverRole(def.getApproverRole())
                     .build();
             deliverableMapper.insert(deliverable);

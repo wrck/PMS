@@ -24,8 +24,9 @@ import {
 } from '@/api/project-phase'
 import { getProject, listMilestones, type Milestone, type Project } from '@/api/project'
 import {
-  DELIVERABLE_TYPE_LABELS,
   listFullDeliverables,
+  loadDeliverableTypes,
+  translateDeliverableType,
   uploadDeliverableInitialVersion,
   type Deliverable
 } from '@/api/deliverable'
@@ -112,7 +113,7 @@ const deliverableOptions = computed(() => projectDeliverables.value
   .map((item) => ({
     id: item.id,
     label: item.deliverableName
-      || (DELIVERABLE_TYPE_LABELS as Record<string, string>)[item.deliverableType ?? '']
+      || translateDeliverableType(item.deliverableType)
       || '未命名交付件'
   })))
 const phaseOptions = computed(() => phases.value
@@ -217,7 +218,7 @@ async function loadProjectResources() {
 }
 
 async function reload() {
-  await Promise.all([loadProject(), loadPhases(), loadProjectResources()])
+  await Promise.all([loadProject(), loadPhases(), loadProjectResources(), loadDeliverableTypes()])
 }
 
 /** 加载阶段详情关联数据（交付件/任务/里程碑） */
@@ -677,7 +678,11 @@ onMounted(reload)
                   </el-link>
                 </template>
               </el-table-column>
-              <el-table-column label="类型" width="120" prop="deliverableType" />
+              <el-table-column label="类型" width="120">
+                <template #default="{ row }">
+                  {{ translateDeliverableType(row.deliverableType) }}
+                </template>
+              </el-table-column>
               <el-table-column label="状态" width="100" align="center">
                 <template #default="{ row }">
                   <el-tag size="small" type="info">{{ row.status || '-' }}</el-tag>

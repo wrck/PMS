@@ -293,27 +293,24 @@ class FinalAcceptanceServiceImplTest {
     }
 
     @Test
-    @DisplayName("apply: 无交付件记录时自动初始化并校验")
-    void apply_emptyDeliverables_autoInit_throws() {
+    @DisplayName("apply: 无必需交付件时直接通过（不再自动初始化）")
+    void apply_noMandatoryDeliverables_passes() {
         Project project = Project.builder().status(STATUS_APPROVED).build();
         project.setId(10L);
         when(projectMapper.selectById(10L)).thenReturn(project);
         when(milestoneService.list(any(Wrapper.class)))
                 .thenReturn(Collections.singletonList(milestone("M1", STATUS_COMPLETED)));
         when(punchListService.isAllVerified(10L)).thenReturn(true);
-        // 首次查询返回空（无 mandatory 交付件），触发自动初始化
-        // 初始化后第二次查询返回 DRAFT 状态的交付件（缺省未就绪），应抛异常
-        when(deliverableMapper.selectList(any(Wrapper.class)))
-                .thenReturn(Collections.emptyList())
-                .thenReturn(draftDeliverables());
-        // 初始化时插入 8 条标准交付件记录
-        when(deliverableMapper.insert(any(Deliverable.class))).thenReturn(1);
+        // 无任何交付件记录（无 mandatory），终验应直接通过
+        when(deliverableMapper.selectList(any(Wrapper.class))).thenReturn(Collections.emptyList());
+        when(finalAcceptanceMapper.selectOne(any(Wrapper.class), anyBoolean())).thenReturn(null);
+        when(finalAcceptanceMapper.insert(any(FinalAcceptance.class))).thenReturn(1);
 
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> finalAcceptanceService.apply(10L, "report"));
-        assertTrue(ex.getMessage().contains("终验交付物未就绪"));
-        verify(deliverableMapper, times(8)).insert(any(Deliverable.class));
-        verify(finalAcceptanceMapper, never()).insert(any(FinalAcceptance.class));
+        Result result = finalAcceptanceService.apply(10L, "report");
+
+        assertTrue(result.isSuccess());
+        verify(deliverableMapper, never()).insert(any(Deliverable.class));
+        verify(finalAcceptanceMapper, times(1)).insert(any(FinalAcceptance.class));
     }
 
     @Test

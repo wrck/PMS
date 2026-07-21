@@ -1,11 +1,14 @@
 package com.dp.plat.deliverable.enums;
 
 /**
- * 交付件类型枚举（统一 8 类标准终验类型 + OTHER 兜底）。
+ * 交付件类型枚举（旧版终验用途分类）。
  *
- * <p>与 pms-project 模块的 {@code com.dp.plat.project.deliverable.enums.DeliverableType} 对齐，
- * 新增 {@link #OTHER} 兜底类型用于非标准交付件。</p>
+ * @deprecated 交付件类型已改为数据字典驱动（字典 pms_deliverable_type），
+ * 性质分类为 DOCUMENT/CODE/ENTITY_REF/MODEL/CONFIG/DATA/OTHER。
+ * 终验校验改为只看 mandatory 标记，不再依赖具体类型。
+ * 本枚举保留用于历史代码兼容，将在下版本删除。
  */
+@Deprecated
 public enum DeliverableType {
 
     /** 竣工资料。 */
