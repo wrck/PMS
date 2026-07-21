@@ -222,10 +222,13 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* 工作区采用自然文档流：让外层 el-main 负责纵向滚动，
+   不要在内部用 height:100% + overflow:auto 产生嵌套滚动条
+   导致页面内容超出窗口时无法滚动浏览。 */
 .project-workspace {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 100%;
 }
 .workspace-meta {
   display: flex;
@@ -250,11 +253,12 @@ onBeforeUnmount(() => {
   font-weight: 500;
 }
 .workspace-tabs {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
+  /* tabs 内容跟随自然流，超出部分由外层 el-main 滚动 */
+  flex: 1 1 auto;
 }
 .workspace-tabs :deep(.el-tabs__content) {
   padding-top: 16px;
+  /* 内容超出时由外层 main 滚动，此处不再 overflow:auto */
+  overflow: visible;
 }
 </style>

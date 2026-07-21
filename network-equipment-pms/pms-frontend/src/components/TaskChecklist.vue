@@ -147,6 +147,21 @@ async function handleSubmit() {
   })
 }
 
+/**
+ * 弹窗完全关闭后清理表单。
+ *
+ * <p>不再使用 destroy-on-close（会让 dialog 内部表单每次销毁重建，
+ * 在父级有 transform/filter 等 CSS 属性时容易触发 el-input 焦点
+ * 反复获取/丢失，造成页面闪烁）。改为关闭后手动清理：
+ *   1. clearValidate 移除校验状态
+ *   2. resetForm 重置表单字段
+ * </p>
+ */
+function handleDialogClosed() {
+  formRef.value?.clearValidate()
+  resetForm()
+}
+
 // ============ 删除 ============
 function handleDelete(row: TaskChecklistItem) {
   if (!row.id) return
@@ -240,7 +255,9 @@ onMounted(() => {
       v-model="dialogVisible"
       :title="dialogTitle"
       width="520px"
-      destroy-on-close
+      append-to-body
+      :close-on-click-modal="false"
+      @closed="handleDialogClosed"
     >
       <el-form
         ref="formRef"
