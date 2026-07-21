@@ -1130,44 +1130,773 @@ VALUES
 (19, 2016, NULL, 'phase.exit.check.approval',           'false', '端到端测试：阶段退出免审批', 1, NOW(), 1, NOW(), 0, 0);
 
 -- =============================================================
+-- 23. 全量补全：覆盖所有状态枚举 + 每个项目数据完整性
+-- =============================================================
+-- 修复目标：
+--   A. 项目状态全集：补充 CLOSED（2017）+ REJECTED（2018）
+--   B. 任务状态全集：补充 CONFIRMED（2012 项目 COMPLETED + 2017 项目 CLOSED）
+--   C. 修复 P0 跨项目 phase_id 引用（项目 2009 的 task/dlv/milestone 误引 2001 的 phase）
+--   D. 每个项目都补全 phase/member/task/deliverable/milestone 基础数据
+--   E. 推进每个项目的 phase/task 状态与项目状态语义一致
+-- =============================================================
+
+-- -------------------------------------------------------------
+-- 23.A P0 修复：项目 2009 自有 phase + 修复跨项目 phase_id 引用
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_project_phase`
+    (`id`, `project_id`, `template_phase_id`, `phase_name`, `phase_code`, `sort_order`,
+     `entry_criteria`, `exit_criteria`, `status`,
+     `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(5031, 2009, NULL, '准备阶段', 'PREPARE',     1, NULL, NULL, 'COMPLETED',
+     '2026-01-15', '2026-01-31', '2026-01-20', '2026-01-30', 1, NOW(), 1, NOW(), 0, 0),
+(5032, 2009, NULL, '规划阶段', 'PLAN',        2, NULL, NULL, 'IN_PROGRESS',
+     '2026-02-01', '2026-04-30', '2026-02-05', NULL, 1, NOW(), 1, NOW(), 0, 0),
+(5033, 2009, NULL, '实施阶段', 'IMPLEMENT',   3, NULL, NULL, 'NOT_STARTED',
+     '2026-05-01', '2026-12-31', NULL, NULL, 1, NOW(), 1, NOW(), 0, 0);
+
+-- 修复跨项目引用：原 task 8023/8024/8025、dlv 2022/2023、milestone 1019 的 phase_id 指向 2001 的 phase
+UPDATE `pms_impl_task`   SET phase_id = 5031 WHERE id = 8023 AND project_id = 2009;
+UPDATE `pms_impl_task`   SET phase_id = 5032 WHERE id IN (8024, 8025) AND project_id = 2009;
+UPDATE `pms_deliverable` SET phase_id = 5031 WHERE id = 2022 AND project_id = 2009;
+UPDATE `pms_deliverable` SET phase_id = 5032 WHERE id = 2023 AND project_id = 2009;
+UPDATE `pms_milestone`   SET phase_id = 5031 WHERE id = 1019 AND project_id = 2009;
+
+-- -------------------------------------------------------------
+-- 23.B 项目 2003（IN_PROGRESS 分支网点）补全
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_project_phase`
+    (`id`, `project_id`, `template_phase_id`, `phase_name`, `phase_code`, `sort_order`,
+     `entry_criteria`, `exit_criteria`, `status`,
+     `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(5034, 2003, NULL, '准备阶段', 'PREPARE',     1, NULL, NULL, 'COMPLETED',
+     '2026-03-01', '2026-03-31', '2026-03-05', '2026-03-30', 1, NOW(), 1, NOW(), 0, 0),
+(5035, 2003, NULL, '实施阶段', 'IMPLEMENT',   2, NULL, NULL, 'IN_PROGRESS',
+     '2026-04-01', '2026-11-30', '2026-04-05', NULL, 1, NOW(), 1, NOW(), 0, 0);
+
+INSERT IGNORE INTO `pms_impl_task`
+    (`id`, `project_id`, `milestone_id`, `task_name`, `task_type`,
+     `agent_id`, `engineer_id`, `engineer_name`,
+     `plan_start_date`, `plan_end_date`, `actual_start_date`, `actual_end_date`,
+     `status`, `progress`, `work_description`,
+     `parent_task_id`, `task_path`, `depth`, `priority`,
+     `actual_hours`, `remaining_hours`, `phase_id`, `task_weight`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(8031, 2003, NULL, '分支网点设备清单梳理', 'AGENT',
+     NULL, 3, '刘伟',
+     '2026-03-05', '2026-03-25', '2026-03-05', '2026-03-25',
+     'COMPLETED', 100, '200 个分支网点设备清单梳理完成',
+     NULL, '/8031/', 0, 'HIGH',
+     32.00, 0.00, 5034, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0),
+(8032, 2003, NULL, '分支网点设备分批替换', 'AGENT',
+     NULL, 4, '赵琳',
+     '2026-04-05', '2026-10-31', '2026-04-05', NULL,
+     'IN_PROGRESS', 50, '已完成 100 个分支网点设备替换',
+     8031, '/8031/8032/', 1, 'HIGH',
+     400.00, 400.00, 5035, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0);
+
+INSERT IGNORE INTO `pms_deliverable`
+    (`id`, `project_id`, `deliverable_name`, `deliverable_type`, `file_path`, `status`,
+     `phase_id`, `current_version`, `mandatory`, `approver_role`, `published_at`, `archived_at`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(2030, 2003, '分支网点设备清单', 'DOCUMENT', '/files/branch-device-list-2003.xlsx', 'PUBLISHED',
+     5034, 1, 1, 'PROJECT_MANAGER', NOW() - INTERVAL 100 DAY, NULL,
+     'admin', NOW() - INTERVAL 120 DAY, 'admin', NOW() - INTERVAL 100 DAY, 0);
+
+INSERT IGNORE INTO `pms_milestone`
+    (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
+     `plan_date`, `planned_date`, `actual_date`, `description`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(1023, 2003, 5035, '分支网点设备替换 50%', 'INSTALLATION', 'IN_PROGRESS',
+     '2026-08-15', '2026-08-15', NULL, '100 个分支网点设备替换完成',
+     'admin', NOW() - INTERVAL 60 DAY, 'admin', NOW() - INTERVAL 5 DAY, 0);
+
+-- -------------------------------------------------------------
+-- 23.C 项目 2004（IN_PROGRESS 总集）补全
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_project_phase`
+    (`id`, `project_id`, `template_phase_id`, `phase_name`, `phase_code`, `sort_order`,
+     `entry_criteria`, `exit_criteria`, `status`,
+     `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(5036, 2004, NULL, '准备阶段', 'PREPARE',     1, NULL, NULL, 'COMPLETED',
+     '2026-02-01', '2026-02-28', '2026-02-05', '2026-02-28', 1, NOW(), 1, NOW(), 0, 0),
+(5037, 2004, NULL, '规划阶段', 'PLAN',        2, NULL, NULL, 'IN_PROGRESS',
+     '2026-03-01', '2026-06-30', '2026-03-05', NULL, 1, NOW(), 1, NOW(), 0, 0);
+
+INSERT IGNORE INTO `pms_deliverable`
+    (`id`, `project_id`, `deliverable_name`, `deliverable_type`, `file_path`, `status`,
+     `phase_id`, `current_version`, `mandatory`, `approver_role`, `published_at`, `archived_at`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(2031, 2004, '数据中心建设总体规划', 'DOCUMENT', '/files/dc-master-plan-2004-v1.docx', 'PUBLISHED',
+     5037, 1, 1, 'TECH_LEAD', NOW() - INTERVAL 60 DAY, NULL,
+     'admin', NOW() - INTERVAL 90 DAY, 'admin', NOW() - INTERVAL 60 DAY, 0);
+
+INSERT IGNORE INTO `pms_milestone`
+    (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
+     `plan_date`, `planned_date`, `actual_date`, `description`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(1024, 2004, 5037, '数据中心总体规划评审', 'NETWORK_DESIGN', 'IN_PROGRESS',
+     '2026-06-30', '2026-06-30', NULL, '数据中心总体规划评审进行中',
+     'admin', NOW() - INTERVAL 30 DAY, 'admin', NOW() - INTERVAL 3 DAY, 0);
+
+-- -------------------------------------------------------------
+-- 23.D 项目 2005（IN_PROGRESS 子项目）补全
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_project_phase`
+    (`id`, `project_id`, `template_phase_id`, `phase_name`, `phase_code`, `sort_order`,
+     `entry_criteria`, `exit_criteria`, `status`,
+     `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(5038, 2005, NULL, '准备阶段', 'PREPARE',     1, NULL, NULL, 'COMPLETED',
+     '2026-02-15', '2026-03-31', '2026-02-20', '2026-03-30', 1, NOW(), 1, NOW(), 0, 0),
+(5039, 2005, NULL, '实施阶段', 'IMPLEMENT',   2, NULL, NULL, 'IN_PROGRESS',
+     '2026-04-01', '2026-10-31', '2026-04-05', NULL, 1, NOW(), 1, NOW(), 0, 0);
+
+INSERT IGNORE INTO `pms_impl_task`
+    (`id`, `project_id`, `milestone_id`, `task_name`, `task_type`,
+     `agent_id`, `engineer_id`, `engineer_name`,
+     `plan_start_date`, `plan_end_date`, `actual_start_date`, `actual_end_date`,
+     `status`, `progress`, `work_description`,
+     `parent_task_id`, `task_path`, `depth`, `priority`,
+     `actual_hours`, `remaining_hours`, `phase_id`, `task_weight`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(8033, 2005, NULL, '机房基础设施部署', 'AGENT',
+     NULL, 4, '赵琳',
+     '2026-04-05', '2026-07-31', '2026-04-05', NULL,
+     'IN_PROGRESS', 60, '机房弱电/空调/UPS 部署完成 60%',
+     NULL, '/8033/', 0, 'HIGH',
+     200.00, 160.00, 5039, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0);
+
+INSERT IGNORE INTO `pms_milestone`
+    (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
+     `plan_date`, `planned_date`, `actual_date`, `description`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(1025, 2005, 5039, '机房基础设施完工', 'INSTALLATION', 'IN_PROGRESS',
+     '2026-07-31', '2026-07-31', NULL, 'A 栋机房基础设施部署',
+     'admin', NOW() - INTERVAL 90 DAY, 'admin', NOW() - INTERVAL 5 DAY, 0);
+
+-- -------------------------------------------------------------
+-- 23.E 项目 2007（APPROVED 待启动）补全
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_project_phase`
+    (`id`, `project_id`, `template_phase_id`, `phase_name`, `phase_code`, `sort_order`,
+     `entry_criteria`, `exit_criteria`, `status`,
+     `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(5040, 2007, NULL, '准备阶段', 'PREPARE',     1, NULL, NULL, 'NOT_STARTED',
+     '2026-05-01', '2026-05-31', NULL, NULL, 1, NOW(), 1, NOW(), 0, 0),
+(5041, 2007, NULL, '规划阶段', 'PLAN',        2, NULL, NULL, 'NOT_STARTED',
+     '2026-06-01', '2026-08-31', NULL, NULL, 1, NOW(), 1, NOW(), 0, 0);
+
+INSERT IGNORE INTO `pms_impl_task`
+    (`id`, `project_id`, `milestone_id`, `task_name`, `task_type`,
+     `agent_id`, `engineer_id`, `engineer_name`,
+     `plan_start_date`, `plan_end_date`, `actual_start_date`, `actual_end_date`,
+     `status`, `progress`, `work_description`,
+     `parent_task_id`, `task_path`, `depth`, `priority`,
+     `actual_hours`, `remaining_hours`, `phase_id`, `task_weight`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(8034, 2007, NULL, '证券核心系统现状评估', 'AGENT',
+     NULL, 2, '张明',
+     '2026-05-01', '2026-05-31', NULL, NULL,
+     'PENDING', 0, '等待项目启动后开始评估',
+     NULL, '/8034/', 0, 'HIGH',
+     0.00, 40.00, 5040, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0);
+
+INSERT IGNORE INTO `pms_deliverable`
+    (`id`, `project_id`, `deliverable_name`, `deliverable_type`, `file_path`, `status`,
+     `phase_id`, `current_version`, `mandatory`, `approver_role`, `published_at`, `archived_at`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(2032, 2007, '证券核心系统迁移需求草案', 'DOCUMENT', '/files/sec-migration-req-2007-draft.docx', 'DRAFT',
+     5040, 1, 1, NULL, NULL, NULL,
+     'admin', NOW() - INTERVAL 30 DAY, 'admin', NOW() - INTERVAL 5 DAY, 0);
+
+INSERT IGNORE INTO `pms_milestone`
+    (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
+     `plan_date`, `planned_date`, `actual_date`, `description`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(1026, 2007, 5040, '现状评估完成', 'SITE_SURVEY', 'PENDING',
+     '2026-05-31', '2026-05-31', NULL, '证券核心系统现状评估',
+     'admin', NOW() - INTERVAL 10 DAY, 'admin', NOW() - INTERVAL 1 DAY, 0);
+
+INSERT IGNORE INTO `pms_approval_record`
+    (`id`, `approval_type`, `business_id`, `business_code`, `project_id`, `process_instance_id`,
+     `title`, `submitter_id`, `submitter_name`,
+     `current_node_id`, `current_node_name`, `status`, `round`,
+     `submitted_at`, `completed_at`, `timeout_at`, `escalated`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(9029, 'PROJECT', 2007, 'PRJ-2026-2007', 2007, NULL,
+     'ZZ 证券核心系统迁移立项审批', 2, '张明',
+     'node-ccb', 'CCB 评审', 'APPROVED', 1,
+     NOW() - INTERVAL 95 DAY, NOW() - INTERVAL 90 DAY, NULL, 0,
+     1, NOW(), 1, NOW(), 0, 0);
+
+-- -------------------------------------------------------------
+-- 23.F 项目 2008（PENDING 未启动）补全
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_project_phase`
+    (`id`, `project_id`, `template_phase_id`, `phase_name`, `phase_code`, `sort_order`,
+     `entry_criteria`, `exit_criteria`, `status`,
+     `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(5042, 2008, NULL, '准备阶段', 'PREPARE',     1, NULL, NULL, 'NOT_STARTED',
+     '2026-06-01', '2026-06-30', NULL, NULL, 1, NOW(), 1, NOW(), 0, 0);
+
+INSERT IGNORE INTO `pms_deliverable`
+    (`id`, `project_id`, `deliverable_name`, `deliverable_type`, `file_path`, `status`,
+     `phase_id`, `current_version`, `mandatory`, `approver_role`, `published_at`, `archived_at`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(2033, 2008, '网络设备迁移方案草案', 'DOCUMENT', '/files/net-migration-plan-2008-draft.docx', 'DRAFT',
+     5042, 1, 1, NULL, NULL, NULL,
+     'admin', NOW() - INTERVAL 20 DAY, 'admin', NOW() - INTERVAL 3 DAY, 0);
+
+INSERT IGNORE INTO `pms_approval_record`
+    (`id`, `approval_type`, `business_id`, `business_code`, `project_id`, `process_instance_id`,
+     `title`, `submitter_id`, `submitter_name`,
+     `current_node_id`, `current_node_name`, `status`, `round`,
+     `submitted_at`, `completed_at`, `timeout_at`, `escalated`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(9030, 'PROJECT', 2008, 'PRJ-2026-2008', 2008, NULL,
+     '网络设备迁移子项目立项审批', 3, '刘伟',
+     'node-ccb', 'CCB 评审', 'PENDING', 1,
+     NOW() - INTERVAL 5 DAY, NULL, NOW() + INTERVAL 10 DAY, 0,
+     1, NOW(), 1, NOW(), 0, 0);
+
+-- -------------------------------------------------------------
+-- 23.G 项目 2010（IN_PROGRESS 3 phase 0 task）补全
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_impl_task`
+    (`id`, `project_id`, `milestone_id`, `task_name`, `task_type`,
+     `agent_id`, `engineer_id`, `engineer_name`,
+     `plan_start_date`, `plan_end_date`, `actual_start_date`, `actual_end_date`,
+     `status`, `progress`, `work_description`,
+     `parent_task_id`, `task_path`, `depth`, `priority`,
+     `actual_hours`, `remaining_hours`, `phase_id`, `task_weight`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(8035, 2010, NULL, '华东区域 OSPF 路由部署', 'AGENT',
+     NULL, 4, '赵琳',
+     '2026-03-20', '2026-08-31', '2026-03-20', NULL,
+     'IN_PROGRESS', 70, '已完成 5 省的 OSPF 部署',
+     NULL, '/8035/', 0, 'HIGH',
+     280.00, 120.00, 5019, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0),
+(8036, 2010, NULL, '华东区域 BGP 路由联调', 'AGENT',
+     NULL, 4, '赵琳',
+     '2026-09-01', '2026-09-30', NULL, NULL,
+     'PENDING', 0, '等待 OSPF 部署完成',
+     8035, '/8035/8036/', 1, 'HIGH',
+     0.00, 80.00, 5020, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0);
+
+INSERT IGNORE INTO `pms_deliverable`
+    (`id`, `project_id`, `deliverable_name`, `deliverable_type`, `file_path`, `status`,
+     `phase_id`, `current_version`, `mandatory`, `approver_role`, `published_at`, `archived_at`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(2034, 2010, '华东区域路由设计方案', 'DOCUMENT', '/files/ec-routing-design-2010.docx', 'SUBMITTED',
+     5019, 1, 1, 'PROJECT_MANAGER', NULL, NULL,
+     'admin', NOW() - INTERVAL 30 DAY, 'admin', NOW() - INTERVAL 5 DAY, 0);
+
+INSERT IGNORE INTO `pms_milestone`
+    (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
+     `plan_date`, `planned_date`, `actual_date`, `description`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(1027, 2010, 5019, '华东 OSPF 部署完成', 'INSTALLATION', 'IN_PROGRESS',
+     '2026-08-31', '2026-08-31', NULL, '5 省 OSPF 部署完成',
+     'admin', NOW() - INTERVAL 60 DAY, 'admin', NOW() - INTERVAL 3 DAY, 0);
+
+-- -------------------------------------------------------------
+-- 23.H 项目 2011（FINAL_ACCEPTANCE）补全：应有 COMPLETED task + SIGNED dlv
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_project_phase`
+    (`id`, `project_id`, `template_phase_id`, `phase_name`, `phase_code`, `sort_order`,
+     `entry_criteria`, `exit_criteria`, `status`,
+     `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(5043, 2011, NULL, '实施阶段', 'IMPLEMENT',   1, NULL, NULL, 'COMPLETED',
+     '2026-02-05', '2026-08-15', '2026-02-05', '2026-08-10', 1, NOW(), 1, NOW(), 0, 0),
+(5044, 2011, NULL, '验收阶段', 'OPERATE',     2, NULL, NULL, 'IN_PROGRESS',
+     '2026-08-16', '2026-09-15', '2026-08-16', NULL, 1, NOW(), 1, NOW(), 0, 0);
+
+INSERT IGNORE INTO `pms_impl_task`
+    (`id`, `project_id`, `milestone_id`, `task_name`, `task_type`,
+     `agent_id`, `engineer_id`, `engineer_name`,
+     `plan_start_date`, `plan_end_date`, `actual_start_date`, `actual_end_date`,
+     `status`, `progress`, `work_description`,
+     `parent_task_id`, `task_path`, `depth`, `priority`,
+     `actual_hours`, `remaining_hours`, `phase_id`, `task_weight`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(8037, 2011, NULL, '华南区域骨干网部署', 'AGENT',
+     NULL, 5, '孙磊',
+     '2026-02-05', '2026-07-31', '2026-02-05', '2026-07-25',
+     'COMPLETED', 100, '华南 4 省骨干网部署完成',
+     NULL, '/8037/', 0, 'HIGH',
+     400.00, 0.00, 5043, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0),
+(8038, 2011, NULL, '华南区域终验测试', 'OEM',
+     NULL, 5, '孙磊',
+     '2026-08-16', '2026-09-05', '2026-08-16', NULL,
+     'IN_PROGRESS', 60, '4 省终验测试进行中',
+     8037, '/8037/8038/', 1, 'CRITICAL',
+     80.00, 40.00, 5044, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0);
+
+INSERT IGNORE INTO `pms_deliverable`
+    (`id`, `project_id`, `deliverable_name`, `deliverable_type`, `file_path`, `status`,
+     `phase_id`, `current_version`, `mandatory`, `approver_role`, `published_at`, `archived_at`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(2035, 2011, '华南区域骨干网部署报告', 'DOCUMENT', '/files/sc-deployment-report-2011.docx', 'PUBLISHED',
+     5043, 1, 1, 'TECH_LEAD', NOW() - INTERVAL 30 DAY, NULL,
+     'admin', NOW() - INTERVAL 100 DAY, 'admin', NOW() - INTERVAL 30 DAY, 0),
+(2036, 2011, '华南区域终验测试报告', 'REPORT', '/files/sc-acceptance-report-2011.docx', 'SIGNED',
+     5044, 1, 1, 'PROJECT_MANAGER', NOW() - INTERVAL 5 DAY, NULL,
+     'admin', NOW() - INTERVAL 30 DAY, 'admin', NOW() - INTERVAL 5 DAY, 0);
+
+INSERT IGNORE INTO `pms_milestone`
+    (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
+     `plan_date`, `planned_date`, `actual_date`, `description`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(1028, 2011, 5044, '华南区域终验', 'FINAL_ACCEPTANCE', 'IN_PROGRESS',
+     '2026-09-15', '2026-09-15', NULL, '华南区域骨干网终验',
+     'admin', NOW() - INTERVAL 30 DAY, 'admin', NOW() - INTERVAL 1 DAY, 0);
+
+INSERT IGNORE INTO `pms_approval_record`
+    (`id`, `approval_type`, `business_id`, `business_code`, `project_id`, `process_instance_id`,
+     `title`, `submitter_id`, `submitter_name`,
+     `current_node_id`, `current_node_name`, `status`, `round`,
+     `submitted_at`, `completed_at`, `timeout_at`, `escalated`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(9031, 'PROJECT', 2011, 'PRJ-2026-2011', 2011, NULL,
+     '华南区域广域网终验审批', 5, '孙磊',
+     'node-customer-acceptance', '客户验收', 'APPROVED', 1,
+     NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 5 DAY, NULL, 0,
+     1, NOW(), 1, NOW(), 0, 0);
+
+INSERT IGNORE INTO `pms_baseline_snapshot`
+    (`id`, `project_id`, `baseline_name`, `status`, `snapshot_json`, `change_reason`,
+     `approval_record_id`, `approved_at`, `approved_by`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(7022, 2011, '华南区域终验基线', 'APPROVED',
+    JSON_ARRAY(
+        JSON_OBJECT('taskId',8037,'taskName','华南区域骨干网部署','plannedStart','2026-02-05','plannedEnd','2026-07-31','duration',177,'plannedHours',400),
+        JSON_OBJECT('taskId',8038,'taskName','华南区域终验测试','plannedStart','2026-08-16','plannedEnd','2026-09-05','duration',21,'plannedHours',120)
+    ),
+    '华南区域终验基线', NULL, NOW() - INTERVAL 30 DAY, 1,
+    1, NOW() - INTERVAL 60 DAY, 1, NOW() - INTERVAL 30 DAY, 0, 0);
+
+-- -------------------------------------------------------------
+-- 23.I 项目 2012（COMPLETED）补全：CONFIRMED 任务 + SIGNED 交付件
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_impl_task`
+    (`id`, `project_id`, `milestone_id`, `task_name`, `task_type`,
+     `agent_id`, `engineer_id`, `engineer_name`,
+     `plan_start_date`, `plan_end_date`, `actual_start_date`, `actual_end_date`,
+     `status`, `progress`, `work_description`,
+     `parent_task_id`, `task_path`, `depth`, `priority`,
+     `actual_hours`, `remaining_hours`, `phase_id`, `task_weight`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+-- CONFIRMED 任务：已完成并经客户确认（覆盖任务 6 态的最后一个 CONFIRMED）
+(8039, 2012, NULL, '华北区域骨干网部署', 'AGENT',
+     NULL, 6, '吴婷',
+     '2026-03-20', '2026-07-25', '2026-03-20', '2026-07-25',
+     'CONFIRMED', 100, '华北 5 省骨干网部署完成并经客户确认',
+     NULL, '/8039/', 0, 'HIGH',
+     400.00, 0.00, 5022, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0),
+(8040, 2012, NULL, '华北区域终验报告', 'OEM',
+     NULL, 6, '吴婷',
+     '2026-08-11', '2026-08-25', '2026-08-11', '2026-08-25',
+     'CONFIRMED', 100, '终验报告客户已确认',
+     8039, '/8039/8040/', 1, 'HIGH',
+     40.00, 0.00, 5024, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0);
+
+INSERT IGNORE INTO `pms_deliverable`
+    (`id`, `project_id`, `deliverable_name`, `deliverable_type`, `file_path`, `status`,
+     `phase_id`, `current_version`, `mandatory`, `approver_role`, `published_at`, `archived_at`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(2037, 2012, '华北区域骨干网部署报告', 'DOCUMENT', '/files/nc-deployment-report-2012.docx', 'SIGNED',
+     5022, 1, 1, 'PROJECT_MANAGER', NOW() - INTERVAL 30 DAY, NULL,
+     'admin', NOW() - INTERVAL 100 DAY, 'admin', NOW() - INTERVAL 30 DAY, 0),
+(2038, 2012, '华北区域终验报告', 'REPORT', '/files/nc-acceptance-report-2012.docx', 'PUBLISHED',
+     5024, 1, 1, 'TECH_LEAD', NOW() - INTERVAL 25 DAY, NULL,
+     'admin', NOW() - INTERVAL 60 DAY, 'admin', NOW() - INTERVAL 25 DAY, 0);
+
+INSERT IGNORE INTO `pms_milestone`
+    (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
+     `plan_date`, `planned_date`, `actual_date`, `description`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(1029, 2012, 5024, '华北区域终验', 'FINAL_ACCEPTANCE', 'COMPLETED',
+     '2026-08-25', '2026-08-25', '2026-08-25', '华北区域终验通过',
+     'admin', NOW() - INTERVAL 25 DAY, 'admin', NOW() - INTERVAL 25 DAY, 0);
+
+INSERT IGNORE INTO `pms_approval_record`
+    (`id`, `approval_type`, `business_id`, `business_code`, `project_id`, `process_instance_id`,
+     `title`, `submitter_id`, `submitter_name`,
+     `current_node_id`, `current_node_name`, `status`, `round`,
+     `submitted_at`, `completed_at`, `timeout_at`, `escalated`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(9032, 'PROJECT', 2012, 'PRJ-2026-2012', 2012, NULL,
+     '华北区域广域网终验审批', 6, '吴婷',
+     'node-customer-acceptance', '客户验收', 'APPROVED', 1,
+     NOW() - INTERVAL 30 DAY, NOW() - INTERVAL 25 DAY, NULL, 0,
+     1, NOW(), 1, NOW(), 0, 0);
+
+-- -------------------------------------------------------------
+-- 23.J 项目 2014（IN_PROGRESS 4 层第 2 层）补全
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_project_phase`
+    (`id`, `project_id`, `template_phase_id`, `phase_name`, `phase_code`, `sort_order`,
+     `entry_criteria`, `exit_criteria`, `status`,
+     `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(5045, 2014, NULL, '准备阶段', 'PREPARE',     1, NULL, NULL, 'COMPLETED',
+     '2026-02-01', '2026-02-28', '2026-02-05', '2026-02-28', 1, NOW(), 1, NOW(), 0, 0),
+(5046, 2014, NULL, '实施阶段', 'IMPLEMENT',   2, NULL, NULL, 'IN_PROGRESS',
+     '2026-03-01', '2026-12-31', '2026-03-05', NULL, 1, NOW(), 1, NOW(), 0, 0);
+
+INSERT IGNORE INTO `pms_impl_task`
+    (`id`, `project_id`, `milestone_id`, `task_name`, `task_type`,
+     `agent_id`, `engineer_id`, `engineer_name`,
+     `plan_start_date`, `plan_end_date`, `actual_start_date`, `actual_end_date`,
+     `status`, `progress`, `work_description`,
+     `parent_task_id`, `task_path`, `depth`, `priority`,
+     `actual_hours`, `remaining_hours`, `phase_id`, `task_weight`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(8041, 2014, NULL, '一期核心网硬件部署', 'AGENT',
+     NULL, 2, '张明',
+     '2026-03-05', '2026-09-30', '2026-03-05', NULL,
+     'IN_PROGRESS', 50, '3 大核心节点硬件部署完成 50%',
+     NULL, '/8041/', 0, 'CRITICAL',
+     400.00, 400.00, 5046, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0);
+
+INSERT IGNORE INTO `pms_deliverable`
+    (`id`, `project_id`, `deliverable_name`, `deliverable_type`, `file_path`, `status`,
+     `phase_id`, `current_version`, `mandatory`, `approver_role`, `published_at`, `archived_at`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(2039, 2014, '一期核心网硬件部署方案', 'DOCUMENT', '/files/5g-core-hw-deploy-2014.docx', 'SUBMITTED',
+     5046, 1, 1, 'TECH_LEAD', NULL, NULL,
+     'admin', NOW() - INTERVAL 30 DAY, 'admin', NOW() - INTERVAL 5 DAY, 0);
+
+INSERT IGNORE INTO `pms_milestone`
+    (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
+     `plan_date`, `planned_date`, `actual_date`, `description`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(1030, 2014, 5046, '一期核心网硬件就绪', 'INSTALLATION', 'IN_PROGRESS',
+     '2026-09-30', '2026-09-30', NULL, '3 大核心节点硬件部署完成',
+     'admin', NOW() - INTERVAL 90 DAY, 'admin', NOW() - INTERVAL 5 DAY, 0);
+
+-- -------------------------------------------------------------
+-- 23.K 项目 2015（IN_PROGRESS 4 层第 3 层）补全：给 task 8028 一个 phase
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_project_phase`
+    (`id`, `project_id`, `template_phase_id`, `phase_name`, `phase_code`, `sort_order`,
+     `entry_criteria`, `exit_criteria`, `status`,
+     `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(5047, 2015, NULL, '实施阶段', 'IMPLEMENT',   1, NULL, NULL, 'IN_PROGRESS',
+     '2026-03-01', '2026-10-31', '2026-03-05', NULL, 1, NOW(), 1, NOW(), 0, 0);
+
+-- 修复 task 8028 / deliverable 2026 的 phase_id（原为 NULL）
+UPDATE `pms_impl_task`   SET phase_id = 5047 WHERE id = 8028 AND project_id = 2015;
+UPDATE `pms_deliverable` SET phase_id = 5047 WHERE id = 2026 AND project_id = 2015;
+
+INSERT IGNORE INTO `pms_milestone`
+    (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
+     `plan_date`, `planned_date`, `actual_date`, `description`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(1031, 2015, 5047, '核心设备单机调测', 'TESTING', 'IN_PROGRESS',
+     '2026-06-30', '2026-06-30', NULL, '5 台核心设备调测中',
+     'admin', NOW() - INTERVAL 90 DAY, 'admin', NOW() - INTERVAL 5 DAY, 0);
+
+-- -------------------------------------------------------------
+-- 23.L 新增项目 2017（CLOSED 状态）：完整演示项目关闭生命周期
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_project`
+    (`id`, `project_code`, `project_name`, `project_type`, `status`,
+     `customer_name`, `customer_contact`, `customer_phone`, `contract_no`, `contract_amount`,
+     `plan_start_date`, `plan_end_date`, `actual_start_date`, `actual_end_date`,
+     `project_manager_id`, `project_manager_name`, `description`, `progress`, `priority`,
+     `parent_project_id`, `project_path`, `depth`, `weight`,
+     `template_id`, `template_version`, `current_phase_id`,
+     `project_objective`, `project_scope`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+-- 项目 2017：CLOSED 状态（已关闭归档项目）
+(2017, 'IMPL-2025-201', 'TT 网络改造历史项目（已关闭）', 'NETWORK_DEVICE', 'CLOSED',
+     'TT 集团', '历史接口', '13900000060', 'HT-2025-201', 1500000.00,
+     '2025-03-01', '2025-12-31', '2025-03-05', '2025-12-20',
+     6, '吴婷', '历史项目，已完成验收并关闭归档', 100, 'NORMAL',
+     NULL, '/2017/', 0, 1.00,
+     2, 'v2.0.0', NULL,
+     'TT 集团网络改造（历史项目）', 'TT 集团总部',
+     'admin', NOW() - INTERVAL 500 DAY, 'admin', NOW() - INTERVAL 200 DAY, 0),
+-- 项目 2018：REJECTED 状态（立项被驳回）
+(2018, 'IMPL-2026-106', '海外分支机构网络试点（驳回）', 'NETWORK_DEVICE', 'REJECTED',
+     '海外试点', '海外接口', '13900000070', 'HT-2026-106', 800000.00,
+     '2026-04-01', '2026-09-30', NULL, NULL,
+     2, '张明', '立项申请被 CCB 驳回：预算与战略不匹配', 0, 'LOW',
+     NULL, '/2018/', 0, 1.00,
+     2, 'v2.0.0', NULL,
+     '海外分支机构网络试点', '海外 3 个分支机构',
+     'admin', NOW() - INTERVAL 60 DAY, 'admin', NOW() - INTERVAL 30 DAY, 0);
+
+-- 2017/2018 项目成员
+INSERT IGNORE INTO `pms_project_member`
+    (`id`, `project_id`, `user_id`, `user_name`, `role`, `join_date`, `leave_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(7035, 2017, 6,   '吴婷',    'PROJECT_MANAGER', '2025-03-01', '2025-12-31', 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7036, 2017, 2,   '张明',    'PROJECT_MEMBER',  '2025-03-01', '2025-12-31', 'admin', NOW(), 'admin', NOW(), 0, 0),
+(7037, 2018, 2,   '张明',    'PROJECT_MANAGER', '2026-04-01', NULL,         'admin', NOW(), 'admin', NOW(), 0, 0),
+(7038, 2018, 200, '审批员A', 'APPROVER',        '2026-04-01', NULL,         'admin', NOW(), 'admin', NOW(), 0, 0);
+
+-- 项目 2017 phase（4 个全 COMPLETED，演示项目关闭生命周期）
+INSERT IGNORE INTO `pms_project_phase`
+    (`id`, `project_id`, `template_phase_id`, `phase_name`, `phase_code`, `sort_order`,
+     `entry_criteria`, `exit_criteria`, `status`,
+     `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(5048, 2017, NULL, '准备阶段', 'PREPARE',     1, NULL, NULL, 'COMPLETED',
+     '2025-03-01', '2025-03-31', '2025-03-05', '2025-03-30', 1, NOW(), 1, NOW(), 0, 0),
+(5049, 2017, NULL, '实施阶段', 'IMPLEMENT',   2, NULL, NULL, 'COMPLETED',
+     '2025-04-01', '2025-09-30', '2025-04-05', '2025-09-25', 1, NOW(), 1, NOW(), 0, 0),
+(5050, 2017, NULL, '验收阶段', 'OPERATE',     3, NULL, NULL, 'COMPLETED',
+     '2025-10-01', '2025-12-15', '2025-10-05', '2025-12-10', 1, NOW(), 1, NOW(), 0, 0),
+(5051, 2017, NULL, '归档阶段', 'OPERATE',     4, NULL, NULL, 'COMPLETED',
+     '2025-12-16', '2025-12-31', '2025-12-15', '2025-12-20', 1, NOW(), 1, NOW(), 0, 0);
+
+-- 项目 2017 task（CONFIRMED 状态，已完成并经客户确认）
+INSERT IGNORE INTO `pms_impl_task`
+    (`id`, `project_id`, `milestone_id`, `task_name`, `task_type`,
+     `agent_id`, `engineer_id`, `engineer_name`,
+     `plan_start_date`, `plan_end_date`, `actual_start_date`, `actual_end_date`,
+     `status`, `progress`, `work_description`,
+     `parent_task_id`, `task_path`, `depth`, `priority`,
+     `actual_hours`, `remaining_hours`, `phase_id`, `task_weight`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(8042, 2017, NULL, 'TT 集团网络设备部署', 'AGENT',
+     NULL, 6, '吴婷',
+     '2025-04-05', '2025-08-31', '2025-04-05', '2025-08-25',
+     'CONFIRMED', 100, 'TT 集团设备部署完成并客户确认',
+     NULL, '/8042/', 0, 'HIGH',
+     400.00, 0.00, 5049, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0),
+(8043, 2017, NULL, 'TT 集团终验报告', 'OEM',
+     NULL, 6, '吴婷',
+     '2025-11-15', '2025-12-10', '2025-11-15', '2025-12-10',
+     'CONFIRMED', 100, '终验报告客户已确认归档',
+     8042, '/8042/8043/', 1, 'HIGH',
+     40.00, 0.00, 5050, 1.00,
+     'admin', NOW(), 'admin', NOW(), 0);
+
+-- 项目 2017 deliverable（PUBLISHED + ARCHIVED）
+INSERT IGNORE INTO `pms_deliverable`
+    (`id`, `project_id`, `deliverable_name`, `deliverable_type`, `file_path`, `status`,
+     `phase_id`, `current_version`, `mandatory`, `approver_role`, `published_at`, `archived_at`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(2040, 2017, 'TT 集团网络部署报告', 'DOCUMENT', '/files/tt-deployment-report-2017.docx', 'ARCHIVED',
+     5049, 1, 1, 'TECH_LEAD', NOW() - INTERVAL 400 DAY, NOW() - INTERVAL 200 DAY,
+     'admin', NOW() - INTERVAL 480 DAY, 'admin', NOW() - INTERVAL 200 DAY, 0),
+(2041, 2017, 'TT 集团终验报告', 'REPORT', '/files/tt-acceptance-report-2017.docx', 'ARCHIVED',
+     5050, 1, 1, 'PROJECT_MANAGER', NOW() - INTERVAL 220 DAY, NOW() - INTERVAL 200 DAY,
+     'admin', NOW() - INTERVAL 280 DAY, 'admin', NOW() - INTERVAL 200 DAY, 0);
+
+-- 项目 2017 milestone（COMPLETED）
+INSERT IGNORE INTO `pms_milestone`
+    (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
+     `plan_date`, `planned_date`, `actual_date`, `description`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(1032, 2017, 5050, 'TT 集团终验通过', 'FINAL_ACCEPTANCE', 'COMPLETED',
+     '2025-12-10', '2025-12-10', '2025-12-10', 'TT 集团终验通过',
+     'admin', NOW() - INTERVAL 220 DAY, 'admin', NOW() - INTERVAL 200 DAY, 0);
+
+-- 项目 2017 approval（APPROVED）
+INSERT IGNORE INTO `pms_approval_record`
+    (`id`, `approval_type`, `business_id`, `business_code`, `project_id`, `process_instance_id`,
+     `title`, `submitter_id`, `submitter_name`,
+     `current_node_id`, `current_node_name`, `status`, `round`,
+     `submitted_at`, `completed_at`, `timeout_at`, `escalated`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(9033, 'PROJECT', 2017, 'PRJ-2025-2017',    2017, NULL,
+     'TT 集团项目立项审批', 6, '吴婷',
+     'node-ccb', 'CCB 评审', 'APPROVED', 1,
+     NOW() - INTERVAL 500 DAY, NOW() - INTERVAL 495 DAY, NULL, 0,
+     1, NOW(), 1, NOW(), 0, 0),
+(9034, 'PROJECT', 2017, 'PRJ-2025-2017-FA', 2017, NULL,
+     'TT 集团终验审批', 6, '吴婷',
+     'node-customer-acceptance', '客户验收', 'APPROVED', 1,
+     NOW() - INTERVAL 220 DAY, NOW() - INTERVAL 200 DAY, NULL, 0,
+     1, NOW(), 1, NOW(), 0, 0);
+
+-- 项目 2017 baseline（APPROVED）
+INSERT IGNORE INTO `pms_baseline_snapshot`
+    (`id`, `project_id`, `baseline_name`, `status`, `snapshot_json`, `change_reason`,
+     `approval_record_id`, `approved_at`, `approved_by`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(7023, 2017, 'TT 集团项目基线', 'APPROVED',
+    JSON_ARRAY(
+        JSON_OBJECT('taskId',8042,'taskName','TT 集团网络设备部署','plannedStart','2025-04-05','plannedEnd','2025-08-31','duration',149,'plannedHours',400),
+        JSON_OBJECT('taskId',8043,'taskName','TT 集团终验报告','plannedStart','2025-11-15','plannedEnd','2025-12-10','duration',26,'plannedHours',40)
+    ),
+    'TT 集团项目基线', 9034, NOW() - INTERVAL 220 DAY, 1,
+    1, NOW() - INTERVAL 280 DAY, 1, NOW() - INTERVAL 220 DAY, 0, 0);
+
+-- -------------------------------------------------------------
+-- 23.M 项目 2018（REJECTED 状态）：立项被驳回，仅 phase/deliverable/milestone/approval
+-- -------------------------------------------------------------
+INSERT IGNORE INTO `pms_project_phase`
+    (`id`, `project_id`, `template_phase_id`, `phase_name`, `phase_code`, `sort_order`,
+     `entry_criteria`, `exit_criteria`, `status`,
+     `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(5052, 2018, NULL, '准备阶段', 'PREPARE',     1, NULL, NULL, 'NOT_STARTED',
+     '2026-04-01', '2026-04-30', NULL, NULL, 1, NOW(), 1, NOW(), 0, 0);
+
+INSERT IGNORE INTO `pms_deliverable`
+    (`id`, `project_id`, `deliverable_name`, `deliverable_type`, `file_path`, `status`,
+     `phase_id`, `current_version`, `mandatory`, `approver_role`, `published_at`, `archived_at`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(2042, 2018, '海外分支机构试点方案草案', 'DOCUMENT', '/files/overseas-pilot-plan-2018-draft.docx', 'DRAFT',
+     5052, 1, 1, NULL, NULL, NULL,
+     'admin', NOW() - INTERVAL 50 DAY, 'admin', NOW() - INTERVAL 30 DAY, 0);
+
+INSERT IGNORE INTO `pms_milestone`
+    (`id`, `project_id`, `phase_id`, `milestone_name`, `milestone_type`, `status`,
+     `plan_date`, `planned_date`, `actual_date`, `description`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+VALUES
+(1033, 2018, 5052, '海外试点启动', 'SITE_SURVEY', 'PENDING',
+     '2026-04-30', '2026-04-30', NULL, '海外试点项目启动（被驳回未启动）',
+     'admin', NOW() - INTERVAL 50 DAY, 'admin', NOW() - INTERVAL 30 DAY, 0);
+
+INSERT IGNORE INTO `pms_approval_record`
+    (`id`, `approval_type`, `business_id`, `business_code`, `project_id`, `process_instance_id`,
+     `title`, `submitter_id`, `submitter_name`,
+     `current_node_id`, `current_node_name`, `status`, `round`,
+     `submitted_at`, `completed_at`, `timeout_at`, `escalated`,
+     `create_by`, `create_time`, `update_by`, `update_time`, `deleted`, `version`)
+VALUES
+(9035, 'PROJECT', 2018, 'PRJ-2026-2018', 2018, NULL,
+     '海外分支机构网络试点立项审批', 2, '张明',
+     'node-ccb', 'CCB 评审', 'REJECTED', 1,
+     NOW() - INTERVAL 35 DAY, NOW() - INTERVAL 30 DAY, NULL, 0,
+     1, NOW(), 1, NOW(), 0, 0);
+
+-- =============================================================
 -- 22. 数据完整性自检注释
 -- =============================================================
--- 预期数据条数（V82 执行后，与 V61/V77 累计）：
+-- 预期数据条数（V82 执行后，与 V61/V77 累计，含 §1~§21 + §23 全量补全）：
 --   pms_project_template             新增 9 条（id 2~10），累计 10 条（含 V77 的 1）
 --   pms_project_template_version     新增 9 条，累计 10 条
---   pms_project                      新增 16 条（id 2001~2016），累计 27 条（V61:10 + V77:1 + 本批次:16）
---     - 主子项目结构 5 组（覆盖 2/3/4 层级）
+--   pms_project                      新增 18 条（id 2001~2018），累计 29 条（V61:10 + V77:1 + 本批次:18）
+--     - 主子项目结构 5 组（覆盖 2/3/4 层级）+ 2 个独立状态演示项目（2017/2018）
 --     - 11 个子项目（parent_project_id 非空）
---   pms_project_phase                新增 21 条（5010~5030），累计 23 条
+--     - 8 状态全覆盖（每种状态至少 1 个完整项目）：
+--         PENDING(2008) / APPROVED(2007) / IN_PROGRESS(2001/2002/2003/2004/2005/2009/2010/2013/2014/2015)
+--         / INITIAL_ACCEPTANCE(2006) / FINAL_ACCEPTANCE(2011) / COMPLETED(2012)
+--         / CLOSED(2017) / REJECTED(2018)
+--   pms_project_phase                新增 22 条（5031~5052，§23 补全），累计 45 条
 --     - 4 状态全覆盖：NOT_STARTED/IN_PROGRESS/COMPLETED/SKIPPED
---   pms_project_member               新增 25 条（7010~7034），累计 28 条
---   pms_impl_task                    新增 21 条（8010~8030），累计 24 条
---     - 6 状态全覆盖：PENDING/ACCEPTED/IN_PROGRESS/COMPLETED/CONFIRMED/REJECTED
+--     - 每个项目至少有 1 个 phase，phase status 与 project status 语义一致
+--   pms_project_member               新增 29 条（7010~7038，§23 新增 4 条），累计 32 条
+--   pms_impl_task                    新增 34 条（8010~8043，§23 新增 13 条），累计 37 条
+--     - 6 状态全覆盖：PENDING/ACCEPTED/IN_PROGRESS/COMPLETED/CONFIRMED(8039/8040/8042/8043)/REJECTED
+--     - task status 与 phase status / project status 语义一致
 --   pms_task_checklist               新增 12 条，累计 14 条
 --   pms_task_comment                 新增 12 条（新表）
 --   pms_task_activity                新增 12 条（新表）
 --   pms_task_dependency              新增 17 条，累计 18 条
 --     - 4 类型全覆盖：FS/FF/SS/SF
---   pms_deliverable                  新增 18 条（2010~2027），累计 20 条
+--   pms_deliverable                  新增 31 条（2010~2042，§23 新增 13 条），累计 33 条
 --     - 7 状态全覆盖：DRAFT/SUBMITTED/REVIEWED/SIGNED/PUBLISHED/REFERENCED/ARCHIVED
+--     - 每个项目至少 1 个 deliverable，状态与 project status 语义一致
 --   pms_deliverable_version          新增 16 条，累计 17 条
 --   pms_deliverable_signature        新增 10 条，累计 11 条
 --     - 3 类型全覆盖：ELECTRONIC/STAMP/DIGITAL
 --   pms_deliverable_reference        新增 12 条（新表）
 --     - 4 类型全覆盖：CITATION/DERIVATIVE/REPLACES/ATTACHMENT（其中 CITATION/DERIVATIVE）
---   pms_baseline_snapshot            新增 12 条（7010~7021），累计 13 条
+--   pms_baseline_snapshot            新增 14 条（7010~7023，§23 新增 2 条），累计 15 条
 --     - 3 状态全覆盖：DRAFT/APPROVED/SUPERSEDED
---   pms_approval_record              新增 19 条（9010~9028），累计 20 条
+--   pms_approval_record              新增 26 条（9010~9035，§23 新增 7 条），累计 27 条
 --     - 5 状态全覆盖：PENDING/APPROVED/REJECTED/WITHDRAWN/TIMEOUT
 --   pms_approval_node                新增 22 条，累计 23 条
 --   pms_approval_history             新增 37 条，累计 38 条
 --     - 7 动作全覆盖：SUBMIT/APPROVE/REJECT/WITHDRAW/RESUBMIT/ESCALATE/TIMEOUT
 --   pms_approval_field_permission    新增 13 条，累计 16 条
 --     - 3 权限全覆盖：VISIBLE/MASKED/HIDDEN
---   pms_milestone                    新增 13 条（1010~1022）
+--   pms_milestone                    新增 24 条（1010~1033，§23 新增 11 条）
 --     - 5 状态全覆盖：PENDING/IN_PROGRESS/COMPLETED/OVERDUE/BLOCKED
+--     - 每个项目至少 1 个 milestone，状态与 project status 语义一致
 --   pms_project_config               新增 10 条
 --   demo_network_cutover             新增 8 条，累计 10 条
 --     - 8 状态全覆盖：DRAFT/PENDING_REVIEW/PENDING_CONFIRM/EXECUTING/VERIFYING/COMPLETED/ROLLED_BACK/REJECTED
+-- =============================================================
+-- §23 全量补全摘要（覆盖所有状态枚举 + 每个项目数据完整性）：
+--   23.A 修复 P0：项目 2009 跨项目 phase_id 引用（新增 2009 自有 phase 5031/5032/5033 + UPDATE）
+--   23.B 项目 2003（IN_PROGRESS）补全：2 phase + 2 task + 1 dlv + 1 milestone
+--   23.C 项目 2004（IN_PROGRESS）补全：2 phase + 1 dlv + 1 milestone
+--   23.D 项目 2005（IN_PROGRESS）补全：2 phase + 1 task + 1 milestone
+--   23.E 项目 2007（APPROVED）补全：2 phase + 1 task + 1 dlv + 1 milestone + 1 approval
+--   23.F 项目 2008（PENDING）补全：1 phase + 1 dlv + 1 approval
+--   23.G 项目 2010（IN_PROGRESS）补全：2 task + 1 dlv + 1 milestone
+--   23.H 项目 2011（FINAL_ACCEPTANCE）补全：2 phase + 2 task + 2 dlv + 1 milestone + 1 approval + 1 baseline
+--   23.I 项目 2012（COMPLETED）补全：2 CONFIRMED task + 2 dlv + 1 milestone + 1 approval
+--   23.J 项目 2014（IN_PROGRESS）补全：2 phase + 1 task + 1 dlv + 1 milestone
+--   23.K 项目 2015（IN_PROGRESS）补全：1 phase + 修复 task 8028/dlv 2026 的 phase_id + 1 milestone
+--   23.L 新增项目 2017（CLOSED）：4 member + 4 phase + 2 CONFIRMED task + 2 ARCHIVED dlv + 1 milestone + 2 approval + 1 baseline
+--   23.M 新增项目 2018（REJECTED）：1 phase + 1 dlv + 1 milestone + 1 REJECTED approval
 -- =============================================================
 -- 文件结束
