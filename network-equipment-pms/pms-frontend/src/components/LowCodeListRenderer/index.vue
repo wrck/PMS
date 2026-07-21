@@ -246,16 +246,16 @@ async function loadDict(dictCode: string): Promise<void> {
   if (!dictCode || dictCache[dictCode] || loadingDictCodes[dictCode]) return
   loadingDictCodes[dictCode] = true
   try {
-    // 通过 keyword 查询字典，取第一项匹配 code 的字典
-    const dictPage = await getDictPage({ keyword: dictCode, page: 1, size: 50 })
-    const dict = (dictPage.records || []).find((d) => d.code === dictCode)
+    // 通过 dictName 查询字典，取第一项匹配 dictType 的字典
+    const dictPage = await getDictPage({ dictName: dictCode, page: 1, size: 50 })
+    const dict = (dictPage.records || []).find((d) => d.dictType === dictCode)
     if (!dict || !dict.id) {
       // 未找到字典，置为空数组避免重复加载
       dictCache[dictCode] = []
       return
     }
     const items: SysDictItem[] = await getDictItems(dictCode)
-    dictCache[dictCode] = items.map((it) => ({ label: it.label, value: it.value }))
+    dictCache[dictCode] = items.map((it) => ({ label: it.itemText, value: it.itemValue }))
   } catch {
     // 加载失败也置空，避免无限重试
     dictCache[dictCode] = []

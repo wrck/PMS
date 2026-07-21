@@ -109,12 +109,12 @@ function applyCycleHighlight(cycleIds?: number[]) {
   if (!cycleIds?.length) return
   const idStrs = cycleIds.map(String)
   for (const id of idStrs) {
-    graph.setElementState(id, 'cycle')
+    graph.setElementState(id, ['cycle'])
   }
   prevHighlightIds.push(...idStrs)
   for (let i = 0; i < cycleIds.length - 1; i++) {
     const edgeId = `${cycleIds[i]}-${cycleIds[i + 1]}`
-    graph.setElementState(edgeId, 'cycle')
+    graph.setElementState(edgeId, ['cycle'])
     prevHighlightIds.push(edgeId)
   }
 }

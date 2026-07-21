@@ -15,6 +15,7 @@ import {
 } from '@element-plus/icons-vue'
 import {
   getTemplate,
+  getPublishedVersion,
   createTemplate,
   updateTemplate,
   publishVersion,
@@ -22,6 +23,7 @@ import {
   type ProjectTemplate,
   type TemplateSnapshot
 } from '@/api/project-template'
+import { getAllRoles, type RoleOption } from '@/api/system'
 import PageHeader from '@/components/common/PageHeader.vue'
 
 defineOptions({ name: 'ProjectTemplateForm' })
@@ -113,6 +115,9 @@ interface MilestoneNode {
   description?: string
 }
 const milestones = ref<MilestoneNode[]>([])
+
+// 角色下拉数据
+const roles = ref<RoleOption[]>([])
 
 // 发布对话框
 const publishDialogVisible = ref(false)
@@ -255,18 +260,89 @@ function removeMilestone(idx: number) {
 
 // ============== 数据加载 ==============
 
+/**
+ * 将后端 TemplateSnapshot 中的 DTO 字段映射到前端各 ref 节点。
+ * 字段差异参考 com.dp.plat.common.dto.TemplateSnapshot。
+ */
+function applySnapshot(snap?: TemplateSnapshot) {
+  if (!snap) return
+  // 阶段：字段名一致
+  phases.value = (snap.phases ?? []) as PhaseDef[]
+
+  // 任务：字段名一致（id/children 等前端字段在加载时缺失，由 addTask 等生成）
+  tasks.value = ((snap.tasks ?? []) as any[]).map((t: any) => ({
+    id: genId('task'),
+    taskName: t.taskName ?? '',
+    taskCode: t.taskCode ?? '',
+    phaseCode: t.phaseCode ?? '',
+    assigneeRole: t.assigneeRole ?? '',
+    plannedHours: t.plannedHours ?? 0,
+    weight: t.weight ?? 1,
+    description: t.description ?? '',
+    children: Array.isArray(t.children) ? t.children.map((c: any) => ({ ...c, id: genId('task') })) : []
+  })) as TaskNode[]
+
+  // 交付件：name↔deliverableName, type↔deliverableType, required↔mandatory, signOffRole↔approverRole
+  deliverables.value = ((snap.deliverables ?? []) as any[]).map((d: any) => ({
+    id: genId('delv'),
+    name: d.name ?? d.deliverableName ?? '',
+    type: d.type ?? d.deliverableType ?? 'DOCUMENT',
+    required: d.required ?? d.mandatory ?? true,
+    signOffRole: d.signOffRole ?? d.approverRole ?? '',
+    phaseCode: d.phaseCode ?? ''
+  })) as DeliverableNode[]
+
+  // 依赖：fromTaskCode↔predecessorTaskName, toTaskCode↔successorTaskName, type↔dependencyType
+  dependencies.value = ((snap.dependencies ?? []) as any[]).map((dep: any) => ({
+    id: genId('dep'),
+    fromTaskCode: dep.fromTaskCode ?? dep.predecessorTaskName ?? '',
+    toTaskCode: dep.toTaskCode ?? dep.successorTaskName ?? '',
+    type: dep.type ?? dep.dependencyType ?? 'FINISH_TO_START'
+  })) as DependencyNode[]
+
+  // 审批计划：name↔approvalType, approverRole↔approverRoles[0], trigger↔triggerPhaseCode/phaseCode
+  approvalPlans.value = ((snap.approvalPlans ?? []) as any[]).map((a: any) => ({
+    id: genId('appr'),
+    name: a.name ?? a.approvalType ?? '',
+    phaseCode: a.phaseCode ?? a.triggerPhaseCode ?? '',
+    approverRole: a.approverRole ?? (Array.isArray(a.approverRoles) ? (a.approverRoles[0] ?? '') : ''),
+    trigger: a.trigger ?? 'PHASE_EXIT'
+  })) as ApprovalPlanNode[]
+
+  // 里程碑：name↔milestoneName, plannedDate/description 后端无对应字段
+  milestones.value = ((snap.milestones ?? []) as any[]).map((m: any) => ({
+    id: genId('ms'),
+    name: m.name ?? m.milestoneName ?? '',
+    phaseCode: m.phaseCode ?? '',
+    plannedDate: m.plannedDate ?? '',
+    description: m.description ?? ''
+  })) as MilestoneNode[]
+}
+
 async function loadTemplate(id: number) {
   loading.value = true
   try {
     const res = await getTemplate(id)
     Object.assign(form, res)
-    // 当前 form 不携带 snapshot 字段，加载版本快照需另调 listTemplateVersions；
-    // 这里保持简单：编辑模式只编辑基础信息 + 阶段（如有），其余配置进入页面后由用户重建。
-    // 若需要从最新已发布版本回填，可后续扩展。
+    // 加载最新已发布版本的快照数据，回显到 6 个 ref
+    try {
+      const published = await getPublishedVersion(id)
+      applySnapshot(published?.snapshotJson)
+    } catch {
+      /* 已发布版本不存在（如纯草稿模板），保持 ref 为空即可 */
+    }
   } catch {
     /* handled by interceptor */
   } finally {
     loading.value = false
+  }
+}
+
+async function loadRoles() {
+  try {
+    roles.value = await getAllRoles()
+  } catch {
+    roles.value = []
   }
 }
 
@@ -287,6 +363,7 @@ async function handleSaveDraft() {
   }
   submitting.value = true
   try {
+    form.status = 'DRAFT'
     if (form.id) {
       await updateTemplate(form)
       ElMessage.success('草稿已保存')
@@ -320,6 +397,7 @@ async function handleSave() {
   }
   submitting.value = true
   try {
+    form.status = 'DRAFT'
     if (form.id) {
       await updateTemplate(form)
       ElMessage.success('保存成功')
@@ -360,6 +438,8 @@ async function handlePublish() {
     publishDialogVisible.value = false
     publishForm.version = ''
     publishForm.changeLog = ''
+    // 重新加载模板，让 form.status 同步为 'PUBLISHED'
+    await loadTemplate(form.id)
   } finally {
     publishing.value = false
   }
@@ -381,6 +461,7 @@ function handlePrev() {
 }
 
 onMounted(() => {
+  loadRoles()
   const id = route.params.id as string | undefined
   if (id) loadTemplate(Number(id))
 })
@@ -517,7 +598,16 @@ onMounted(() => {
               >
                 <el-option v-for="p in phases" :key="p.phaseCode" :label="p.phaseName" :value="p.phaseCode" />
               </el-select>
-              <el-input v-model="data.assigneeRole" size="small" placeholder="负责角色" style="width: 140px" />
+              <el-select
+                v-model="data.assigneeRole"
+                size="small"
+                filterable
+                clearable
+                placeholder="请选择负责角色"
+                style="width: 160px"
+              >
+                <el-option v-for="r in roles" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
+              </el-select>
               <el-input-number
                 v-model="data.plannedHours"
                 :min="0"
@@ -574,9 +664,11 @@ onMounted(() => {
               <el-switch v-model="row.required" />
             </template>
           </el-table-column>
-          <el-table-column label="签核角色" width="140">
+          <el-table-column label="签核角色" width="160">
             <template #default="{ row }">
-              <el-input v-model="row.signOffRole" size="small" placeholder="如 PM / QA" />
+              <el-select v-model="row.signOffRole" size="small" filterable clearable placeholder="请选择签核角色">
+                <el-option v-for="r in roles" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
+              </el-select>
             </template>
           </el-table-column>
           <el-table-column label="操作" width="80" fixed="right">
@@ -652,9 +744,11 @@ onMounted(() => {
               </el-select>
             </template>
           </el-table-column>
-          <el-table-column label="审批角色" width="160">
+          <el-table-column label="审批角色" width="180">
             <template #default="{ row }">
-              <el-input v-model="row.approverRole" size="small" placeholder="如 PM / QA Lead" />
+              <el-select v-model="row.approverRole" size="small" filterable clearable placeholder="请选择审批角色">
+                <el-option v-for="r in roles" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
+              </el-select>
             </template>
           </el-table-column>
           <el-table-column label="操作" width="80" fixed="right">

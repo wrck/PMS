@@ -12,7 +12,7 @@
 // - 工具栏：放大/缩小/适配/导出 PNG
 // - 加载中 skeleton + 空状态 EmptyState
 // =============================================================================
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
 import { Graph, type EdgeData, type NodeData } from '@antv/g6'
 import { ElMessage } from 'element-plus'
 import {
@@ -146,7 +146,7 @@ function getTaskColor(task: ImplTask) {
 function getTaskWidth(task: ImplTask): number {
   if (isMilestone(task)) return 24
   const days = getDurationDays(task)
-  return Math.max(60, days * DAY_WIDTH[viewMode.value])
+  return Math.min(800, Math.max(60, days * DAY_WIDTH[viewMode.value]))
 }
 
 /** 基线快照查找表 */
@@ -174,9 +174,9 @@ function buildNodes(): NodeData[] {
         : ''
     return {
       id: String(task.id),
+      type: milestone ? 'diamond' : 'rect',
       data: { ...task },
       style: {
-        type: milestone ? 'diamond' : 'rect',
         size: milestone ? 24 : [width, 32],
         fill: color.fill,
         stroke: getTaskStroke(task),
@@ -206,9 +206,9 @@ function buildEdges(): EdgeData[] {
       id: `${s}-${t}`,
       source: s,
       target: t,
+      type: 'line',
       data: { ...dep },
       style: {
-        type: 'line',
         stroke: '#94a3b8',
         lineWidth: 1.5,
         lineDash: style.lineDash,
@@ -365,7 +365,7 @@ function initGraph() {
 
   // 节点点击 → emit
   graph.on('node:click', (evt: any) => {
-    const id = evt.target?.id ?? evt.itemId
+    const id = evt.target?.id
     if (id == null) return
     const task = tasks.value.find((t) => String(t.id) === String(id))
     if (task) emit('task-click', task)
@@ -373,7 +373,7 @@ function initGraph() {
 
   // hover tooltip
   graph.on('node:mouseenter', (evt: any) => {
-    const id = evt.target?.id ?? evt.itemId
+    const id = evt.target?.id
     if (id == null) return
     const task = tasks.value.find((t) => String(t.id) === String(id))
     if (task) {
@@ -438,19 +438,13 @@ function escapeHtml(s: string): string {
 }
 
 // ============ 渲染 ============
-function renderGraph() {
+async function renderGraph() {
   if (!graph) return
   const nodes = buildNodes()
   const edges = buildEdges()
   graph.setData({ nodes, edges })
-  graph.render()
-  // G6 v5 渲染后需显式 fitView 才能将所有节点适配到可视区域
-  // （autoFit: 'view' 仅首次创建时生效，setData/render 后需手动调用）
-  try {
-    graph.fitView({ when: 'always', direction: 'both' })
-  } catch {
-    /* fitView 失败时忽略，不影响渲染 */
-  }
+  // G6 v5：autoFit: 'view' 在每次 render() 时都会自动触发，无需手动 fitView
+  await graph.render()
   // 重新渲染后重新应用关键路径
   prevCriticalNodeIds = []
   prevCriticalEdgeIds = []
@@ -492,11 +486,7 @@ async function exportPng() {
 function handleResize() {
   if (graph && containerRef.value) {
     const w = containerRef.value.clientWidth
-    if (typeof (graph as any).resize === 'function') {
-      ;(graph as any).resize(w, 560)
-    } else if (typeof (graph as any).changeSize === 'function') {
-      ;(graph as any).changeSize(w, 560)
-    }
+    graph.resize(w, 560)
   }
 }
 
@@ -526,20 +516,27 @@ async function loadData() {
       baseline.value = null
     }
     criticalPath.value = computeCriticalPath()
-    renderGraph()
   } finally {
     loading.value = false
   }
+  // 等待 canvas 变为可见后再初始化/渲染（修复 v-show 时序问题：
+  // canvas 由 v-show="!loading && !isEmpty" 控制，loading 初始为 true 时被隐藏，
+  // 必须等 loading=false 触发 DOM 更新后才能初始化 G6，否则 canvas 宽高为 0）
+  await nextTick()
+  if (tasks.value.length === 0) return // 空状态由 template 渲染，无需初始化
+  if (!graph) {
+    initGraph()
+  }
+  renderGraph()
 }
 
 // ============ 生命周期 ============
 onMounted(() => {
-  initGraph()
   loadData()
   window.addEventListener('resize', handleResize)
 })
 
-onBeforeUnmount(() => {
+onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
   hideTooltip()
   graph?.destroy()

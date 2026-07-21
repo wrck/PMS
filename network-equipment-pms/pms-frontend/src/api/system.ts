@@ -86,17 +86,19 @@ export function deleteUser(id: number): Promise<void> {
 
 export interface SysRole {
   id?: number
-  name: string
-  code: string
-  sort?: number
-  status?: number
-  menuIds?: number[]
-  dataScope?: number
-  remark?: string
+  roleName: string
+  roleCode: string
+  description?: string
+  status?: string
   createTime?: string
+  updateTime?: string
+  createBy?: string
+  updateBy?: string
+  menuIds?: number[]
+  dataScope?: string
 }
 
-export function getRolePage(params: PageQuery): Promise<PageResult<SysRole>> {
+export function getRolePage(params: { page: number; size: number; roleName?: string }): Promise<PageResult<SysRole>> {
   return get<PageResult<SysRole>>('/api/system/role/page', params)
 }
 
@@ -177,24 +179,27 @@ export function deleteMenu(id: number): Promise<void> {
 
 export interface SysDict {
   id?: number
-  code: string
-  name: string
-  status?: number
-  remark?: string
+  dictType: string
+  dictName: string
+  status?: string
   createTime?: string
+  updateTime?: string
+  createBy?: string
+  updateBy?: string
 }
 
 export interface SysDictItem {
   id?: number
   dictId: number
-  label: string
-  value: string
-  sort?: number
-  status?: number
-  remark?: string
+  itemText: string
+  itemValue: string
+  sortOrder?: number
+  status?: string
+  createTime?: string
+  updateTime?: string
 }
 
-export function getDictPage(params: PageQuery): Promise<PageResult<SysDict>> {
+export function getDictPage(params: { page: number; size: number; dictName?: string }): Promise<PageResult<SysDict>> {
   return get<PageResult<SysDict>>('/api/system/dict/page', params)
 }
 

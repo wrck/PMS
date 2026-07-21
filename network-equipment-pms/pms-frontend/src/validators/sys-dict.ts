@@ -11,6 +11,10 @@
  * `code/name`，与后端 `dictType/dictName` 不一致，导致 `POST /api/system/dict`
  * 触发 400 校验失败。本 validator 通过 `fieldMapping` 提供旧字段名→新字段名
  * 的自动映射，在不破坏现有 view 代码的前提下保证出站请求体字段名正确。
+ *
+ * 现状：前端 `api/system.ts` 的 `SysDict` interface 已对齐后端字段名
+ * （`dictType/dictName`），view 代码亦已迁移，`fieldMapping` 已废弃为空对象，
+ * 仅为兼容 registry 注册流程保留。
  * ===========================================================================
  */
 import {
@@ -51,18 +55,13 @@ export const sysDictSchema: Schema = defineSchema({
 /**
  * 旧字段名 → 后端字段名映射。
  *
- * 用于兼容历史代码：当前端代码仍使用 `code/name` 时，
- * validator 会自动映射到 `dictType/dictName`。
- *
- * 注：前端 `remark` 为前端独有字段，后端 SysDict 未定义，
- *     会被 schema 白名单过滤剥离，不参与映射。
+ * 已废弃：前端 `api/system.ts` 的 `SysDict` interface 已对齐后端字段名
+ * （`dictType/dictName`），不再使用 `code/name` 短名。保留为空对象仅为
+ * 兼容 `createValidatorWithMapping` 的入参签名。
  */
-export const sysDictFieldMapping = {
-  code: 'dictType',
-  name: 'dictName'
-} as const
+export const sysDictFieldMapping: Record<string, string> = {}
 
-/** SysDict 请求体 validator（带旧字段名兼容映射） */
+/** SysDict 请求体 validator（fieldMapping 已废弃为空，请求体字段名直接与后端对齐） */
 export const sysDictRequestValidator = createValidatorWithMapping(
   sysDictSchema,
   sysDictFieldMapping

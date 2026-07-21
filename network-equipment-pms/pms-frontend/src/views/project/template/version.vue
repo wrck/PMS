@@ -14,6 +14,7 @@ import {
   listTemplateVersions,
   publishVersion,
   getTemplate,
+  getPublishedVersion,
   type ProjectTemplate,
   type ProjectTemplateVersion,
   type TemplateSnapshot
@@ -262,10 +263,12 @@ async function handlePublish() {
   }
   publishing.value = true
   try {
-    // 发布当前模板（基础信息 + 空快照，实际快照由 form.vue 编辑产生）
+    // 以当前最新已发布版本的快照为基础发布新版本，避免空快照覆盖既有配置
+    const currentPublished = await getPublishedVersion(templateId).catch(() => undefined)
+    const snapshot = currentPublished?.snapshotJson ?? {}
     await publishVersion(templateId, {
       version: publishForm.version,
-      snapshot: {},
+      snapshot,
       changeLog: publishForm.changeLog
     })
     ElMessage.success('版本已发布')
