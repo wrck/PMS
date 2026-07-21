@@ -11,22 +11,92 @@ export interface ProjectTemplate {
   updateTime?: string
 }
 
+/** 阶段进入条件（对齐后端 com.dp.plat.common.dto.PhaseCriteria） */
+export interface PhaseCriteria {
+  requirePreviousPhaseComplete?: boolean
+  requireApproval?: boolean
+}
+
+/** 阶段退出条件（对齐后端 com.dp.plat.common.dto.PhaseExitGate） */
+export interface PhaseExitGate {
+  requiredDeliverables?: Array<{
+    deliverableId?: number
+    deliverableName?: string
+    requiredStatus?: string
+  }>
+  requiredTasks?: Array<{
+    phaseId?: number
+    allCompleted?: boolean
+  }>
+  requiredMilestones?: Array<{
+    milestoneId?: number
+    mustReached?: boolean
+  }>
+  requiredApprovals?: Array<{
+    approvalType?: string
+    mustApproved?: boolean
+  }>
+}
+
 export interface PhaseDef {
   phaseCode: string
   phaseName: string
   sortOrder: number
-  entryCriteria?: any
-  exitCriteria?: any
+  entryCriteria?: PhaseCriteria
+  exitCriteria?: PhaseExitGate
+}
+
+/** 任务定义（对齐后端 TemplateSnapshot.TaskDef） */
+export interface TaskDef {
+  taskName: string
+  taskType?: string
+  parentTaskName?: string
+  phaseCode?: string
+  plannedHours?: number
+  priority?: string
+  sortOrder?: number
+}
+
+/** 交付件定义（对齐后端 TemplateSnapshot.DeliverableDef） */
+export interface DeliverableDef {
+  deliverableName: string
+  deliverableType?: string
+  phaseCode?: string
+  mandatory?: boolean
+  approverRole?: string
+}
+
+/** 依赖定义（对齐后端 TemplateSnapshot.DependencyDef） */
+export interface DependencyDef {
+  predecessorTaskName: string
+  successorTaskName: string
+  dependencyType?: string
+  lagDays?: number
+}
+
+/** 审批计划定义（对齐后端 TemplateSnapshot.ApprovalPlanDef） */
+export interface ApprovalPlanDef {
+  approvalType: string
+  triggerPhaseCode?: string
+  approverRoles?: string[]
+}
+
+/** 里程碑定义（对齐后端 TemplateSnapshot.MilestoneDef） */
+export interface MilestoneDef {
+  milestoneName: string
+  milestoneType?: string
+  phaseCode?: string
+  sortOrder?: number
 }
 
 export interface TemplateSnapshot {
   phases?: PhaseDef[]
-  tasks?: any[]
-  milestones?: any[]
-  deliverables?: any[]
-  dependencies?: any[]
-  approvalPlans?: any[]
-  assigneeRules?: any[]
+  tasks?: TaskDef[]
+  milestones?: MilestoneDef[]
+  deliverables?: DeliverableDef[]
+  dependencies?: DependencyDef[]
+  approvalPlans?: ApprovalPlanDef[]
+  assigneeRules?: Array<{ taskNamePattern?: string; role?: string }>
 }
 
 export interface ProjectTemplateVersion {

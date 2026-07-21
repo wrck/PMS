@@ -20,11 +20,15 @@ import {
   updateTemplate,
   publishVersion,
   type PhaseDef,
+  type PhaseCriteria,
+  type PhaseExitGate,
   type ProjectTemplate,
+  type TaskDef,
   type TemplateSnapshot
 } from '@/api/project-template'
 import { getAllRoles, type RoleOption } from '@/api/system'
 import PageHeader from '@/components/common/PageHeader.vue'
+import PhaseExitGateEditor from '@/components/PhaseExitGateEditor.vue'
 
 defineOptions({ name: 'ProjectTemplateForm' })
 
@@ -136,8 +140,8 @@ function addPhase() {
     phaseCode: '',
     phaseName: '',
     sortOrder: phases.value.length + 1,
-    entryCriteria: '',
-    exitCriteria: ''
+    entryCriteria: { requirePreviousPhaseComplete: false, requireApproval: false },
+    exitCriteria: { requiredDeliverables: [], requiredTasks: [], requiredMilestones: [], requiredApprovals: [] }
   } as PhaseDef)
 }
 
@@ -152,6 +156,17 @@ function movePhase(idx: number, direction: 'up' | 'down') {
   ;[list[idx], list[target]] = [list[target], list[idx]]
   // 重新计算 sortOrder
   list.forEach((p, i) => (p.sortOrder = i + 1))
+}
+
+/** 更新阶段进入条件（结构化对象） */
+function updateEntryCriteria(phase: PhaseDef, key: 'requirePreviousPhaseComplete' | 'requireApproval', value: boolean) {
+  const current = phase.entryCriteria ?? { requirePreviousPhaseComplete: false, requireApproval: false }
+  phase.entryCriteria = { ...current, [key]: value }
+}
+
+/** 更新阶段退出条件（结构化对象，由 PhaseExitGateEditor 触发） */
+function updateExitCriteria(phase: PhaseDef, value: PhaseExitGate) {
+  phase.exitCriteria = value
 }
 
 // ============== 任务操作 ==============
@@ -266,8 +281,39 @@ function removeMilestone(idx: number) {
  */
 function applySnapshot(snap?: TemplateSnapshot) {
   if (!snap) return
-  // 阶段：字段名一致
-  phases.value = (snap.phases ?? []) as PhaseDef[]
+  // 阶段：字段名一致，但需规范化 entryCriteria / exitCriteria 结构化对象
+  // 历史数据可能存在 entryCriteria 为字符串/undefined 的情况，统一转为对象
+  phases.value = ((snap.phases ?? []) as any[]).map((p: any): PhaseDef => {
+    let entryCriteria: PhaseCriteria
+    if (p.entryCriteria && typeof p.entryCriteria === 'object') {
+      entryCriteria = {
+        requirePreviousPhaseComplete: Boolean(p.entryCriteria.requirePreviousPhaseComplete),
+        requireApproval: Boolean(p.entryCriteria.requireApproval)
+      }
+    } else {
+      entryCriteria = { requirePreviousPhaseComplete: false, requireApproval: false }
+    }
+
+    let exitCriteria: PhaseExitGate
+    if (p.exitCriteria && typeof p.exitCriteria === 'object') {
+      exitCriteria = {
+        requiredDeliverables: Array.isArray(p.exitCriteria.requiredDeliverables) ? p.exitCriteria.requiredDeliverables : [],
+        requiredTasks: Array.isArray(p.exitCriteria.requiredTasks) ? p.exitCriteria.requiredTasks : [],
+        requiredMilestones: Array.isArray(p.exitCriteria.requiredMilestones) ? p.exitCriteria.requiredMilestones : [],
+        requiredApprovals: Array.isArray(p.exitCriteria.requiredApprovals) ? p.exitCriteria.requiredApprovals : []
+      }
+    } else {
+      exitCriteria = { requiredDeliverables: [], requiredTasks: [], requiredMilestones: [], requiredApprovals: [] }
+    }
+
+    return {
+      phaseCode: p.phaseCode ?? '',
+      phaseName: p.phaseName ?? '',
+      sortOrder: p.sortOrder ?? 1,
+      entryCriteria,
+      exitCriteria
+    }
+  })
 
   // 任务：字段名一致（id/children 等前端字段在加载时缺失，由 addTask 等生成）
   tasks.value = ((snap.tasks ?? []) as any[]).map((t: any) => ({
@@ -378,14 +424,61 @@ async function handleSaveDraft() {
 }
 
 function buildSnapshot(): TemplateSnapshot {
+  // 前端短名 → 后端 DTO 长名映射（对齐 com.dp.plat.common.dto.TemplateSnapshot）
   return {
-    phases: phases.value,
-    tasks: tasks.value,
-    deliverables: deliverables.value,
-    dependencies: dependencies.value,
-    approvalPlans: approvalPlans.value,
-    milestones: milestones.value
+    phases: phases.value.map((p) => ({
+      phaseCode: p.phaseCode,
+      phaseName: p.phaseName,
+      sortOrder: p.sortOrder,
+      entryCriteria: p.entryCriteria ?? { requirePreviousPhaseComplete: false, requireApproval: false },
+      exitCriteria: p.exitCriteria ?? { requiredDeliverables: [], requiredTasks: [], requiredMilestones: [], requiredApprovals: [] }
+    })),
+    // 任务：taskCode 在后端 DTO 中不存在，转成 parentTaskName 由后端处理；保留前端 id/children 内部字段后端会忽略
+    tasks: flattenTasks(tasks.value),
+    // 交付件：name→deliverableName, type→deliverableType, required→mandatory, signOffRole→approverRole
+    deliverables: deliverables.value.map((d) => ({
+      deliverableName: d.name,
+      deliverableType: d.type,
+      phaseCode: d.phaseCode,
+      mandatory: d.required,
+      approverRole: d.signOffRole
+    })),
+    // 依赖：fromTaskCode→predecessorTaskName, toTaskCode→successorTaskName, type→dependencyType
+    dependencies: dependencies.value.map((dep) => ({
+      predecessorTaskName: dep.fromTaskCode,
+      successorTaskName: dep.toTaskCode,
+      dependencyType: dep.type
+    })),
+    // 审批计划：name→approvalType, approverRole→approverRoles[0], trigger 不属于后端 DTO，phaseCode→triggerPhaseCode
+    approvalPlans: approvalPlans.value.map((a) => ({
+      approvalType: a.name,
+      triggerPhaseCode: a.phaseCode,
+      approverRoles: a.approverRole ? [a.approverRole] : []
+    })),
+    // 里程碑：name→milestoneName；plannedDate/description 后端 DTO 无对应字段，保留会被忽略
+    milestones: milestones.value.map((m, idx) => ({
+      milestoneName: m.name,
+      phaseCode: m.phaseCode,
+      sortOrder: idx + 1
+    }))
   }
+}
+
+/** 将任务树扁平化为后端 TaskDef 列表（parentTaskName 关联父节点） */
+function flattenTasks(nodes: TaskNode[], parent?: TaskNode): TaskDef[] {
+  const result: TaskDef[] = []
+  for (const n of nodes) {
+    result.push({
+      taskName: n.taskName,
+      parentTaskName: parent?.taskName,
+      phaseCode: n.phaseCode,
+      plannedHours: n.plannedHours
+    })
+    if (n.children && n.children.length > 0) {
+      result.push(...flattenTasks(n.children, n))
+    }
+  }
+  return result
 }
 
 async function handleSave() {
@@ -547,8 +640,6 @@ onMounted(() => {
           <div class="phase-fields">
             <el-input v-model="phase.phaseCode" placeholder="阶段编码 PREPARE" style="width: 180px" />
             <el-input v-model="phase.phaseName" placeholder="阶段名称" style="width: 200px" />
-            <el-input v-model="phase.entryCriteria" placeholder="进入条件" style="width: 240px" />
-            <el-input v-model="phase.exitCriteria" placeholder="退出条件" style="width: 240px" />
           </div>
           <div class="phase-actions">
             <el-button
@@ -564,6 +655,34 @@ onMounted(() => {
               @click="movePhase(idx, 'down')"
             />
             <el-button link type="danger" :icon="Delete" @click="removePhase(idx)" />
+          </div>
+          <div class="phase-criteria-block">
+            <div class="criteria-group">
+              <div class="criteria-title">进入条件</div>
+              <div class="criteria-body">
+                <el-checkbox
+                  :model-value="phase.entryCriteria?.requirePreviousPhaseComplete ?? false"
+                  @update:model-value="(v: boolean | string | number | undefined) => updateEntryCriteria(phase, 'requirePreviousPhaseComplete', Boolean(v))"
+                >
+                  需要前置阶段完成
+                </el-checkbox>
+                <el-checkbox
+                  :model-value="phase.entryCriteria?.requireApproval ?? false"
+                  @update:model-value="(v: boolean | string | number | undefined) => updateEntryCriteria(phase, 'requireApproval', Boolean(v))"
+                >
+                  需要审批通过
+                </el-checkbox>
+              </div>
+            </div>
+            <div class="criteria-group">
+              <div class="criteria-title">退出条件</div>
+              <div class="criteria-body">
+                <PhaseExitGateEditor
+                  :model-value="phase.exitCriteria"
+                  @update:model-value="(v: PhaseExitGate) => updateExitCriteria(phase, v)"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -865,12 +984,13 @@ onMounted(() => {
 
 .phase-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 12px;
   background: var(--pms-color-bg-page);
   border-radius: var(--pms-radius-md);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 .phase-order {
   width: 28px;
@@ -884,18 +1004,47 @@ onMounted(() => {
   font-size: 13px;
   font-weight: 600;
   flex-shrink: 0;
+  margin-top: 4px;
 }
 .phase-fields {
   display: flex;
   gap: 8px;
   flex: 1;
   flex-wrap: wrap;
+  align-items: center;
+  min-width: 0;
 }
 .phase-actions {
   display: flex;
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
+}
+.phase-criteria-block {
+  flex-basis: 100%;
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.criteria-group {
+  flex: 1;
+  min-width: 320px;
+  background: #fff;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: var(--pms-radius-sm);
+  padding: 10px 12px;
+}
+.criteria-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pms-color-text-primary);
+  margin-bottom: 8px;
+}
+.criteria-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .task-node {
