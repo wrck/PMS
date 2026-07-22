@@ -11,6 +11,7 @@ pms-app.log
 # Maven 构建产物
 target/
 *.class
+.flattened-pom.xml
 
 # IDE 文件
 .idea/

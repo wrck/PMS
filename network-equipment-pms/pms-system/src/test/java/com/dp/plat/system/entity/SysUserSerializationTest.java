@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -78,19 +76,6 @@ class SysUserSerializationTest {
 
         assertThat(node.has("password"))
                 .as("password 为 null 时序列化结果也不应包含 password 字段")
-                .isFalse();
-    }
-
-    @Test
-    @DisplayName("LoginResponse 不应包含 password 字段")
-    void loginResponseShouldNotContainPassword() throws Exception {
-        // LoginResponse 仅含 token/userId/username/realName，无敏感字段
-        Class<?> loginResponseClass = Class.forName("com.dp.plat.system.dto.LoginResponse");
-        boolean hasPasswordField = Arrays.stream(loginResponseClass.getDeclaredFields())
-                .anyMatch(f -> "password".equalsIgnoreCase(f.getName()));
-
-        assertThat(hasPasswordField)
-                .as("LoginResponse 不应声明 password 字段")
                 .isFalse();
     }
 }

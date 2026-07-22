@@ -7,7 +7,6 @@ import com.dp.plat.system.entity.SysRole;
 import com.dp.plat.system.entity.SysRoleMenu;
 import com.dp.plat.system.mapper.SysRoleMapper;
 import com.dp.plat.system.mapper.SysRoleMenuMapper;
-import com.dp.plat.system.security.UserAuthorityService;
 import com.dp.plat.system.service.ISysRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -20,13 +19,15 @@ import java.util.List;
 
 /**
  * Implementation of {@link ISysRoleService}.
+ *
+ * <p>角色权限缓存清理由 yudao-spring-boot-starter-security 的权限体系统一管理，
+ * 原 {@code UserAuthorityService.evictAll()} 已随 PMS 自建安全体系一并移除。</p>
  */
 @Service
 @RequiredArgsConstructor
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements ISysRoleService {
 
     private final SysRoleMenuMapper sysRoleMenuMapper;
-    private final UserAuthorityService userAuthorityService;
 
     @Override
     @Cacheable(value = "sysRole", key = "#roleCode")
@@ -42,7 +43,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         sysRoleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>()
                 .eq(SysRoleMenu::getRoleId, roleId));
         if (menuIds == null || menuIds.isEmpty()) {
-            userAuthorityService.evictAll();
             return;
         }
         String currentUser = SecurityUtils.getCurrentUsername();
@@ -59,7 +59,5 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             rm.setDeleted(0);
             sysRoleMenuMapper.insert(rm);
         }
-        // Permission change invalidates all cached authorities.
-        userAuthorityService.evictAll();
     }
 }

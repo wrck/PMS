@@ -16,6 +16,18 @@
     <description>Spring Boot Application startup module</description>
 
     <dependencies>
+        <!-- yudao framework 系统管理与基础设施模块（底层迁移） -->
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-module-system</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-module-infra</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.dp.plat</groupId>
             <artifactId>pms-common</artifactId>
