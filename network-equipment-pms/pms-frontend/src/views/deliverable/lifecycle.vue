@@ -22,14 +22,17 @@ import {
   DELIVERABLE_STATUS_LABELS,
   DELIVERABLE_STATUS_ORDER,
   listFullDeliverables,
+  loadDeliverableTypes,
   publishDeliverable,
   reviewDeliverable,
   reviseDeliverable,
   signDeliverable,
   submitDeliverable,
+  translateDeliverableType,
   type Deliverable,
   type DeliverableStatus,
-  type ReviseRequest
+  type ReviseRequest,
+  type SysDictItem
 } from '@/api/deliverable'
 import { getProject, listProjects, type Project } from '@/api/project'
 import { listPhasesByProjectId, type ProjectPhase } from '@/api/project-phase'
@@ -37,6 +40,7 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import DeliverableStatusBadge from '@/components/common/DeliverableStatusBadge.vue'
+import DeliverableRefEntitySelector from '@/components/DeliverableRefEntitySelector.vue'
 
 defineOptions({ name: 'DeliverableLifecycle' })
 
@@ -89,16 +93,25 @@ const statusColumns = DELIVERABLE_STATUS_ORDER.map((s) => ({
   label: DELIVERABLE_STATUS_LABELS[s]
 }))
 
-// ============ 类型选项 ============
-const typeOptions = [
-  { label: '文档', value: 'DOCUMENT' },
-  { label: '配置', value: 'CONFIG' },
-  { label: '报告', value: 'REPORT' },
-  { label: '其他', value: 'OTHER' }
-]
+// ============ 类型选项（字典驱动） ============
+const typeOptions = ref<SysDictItem[]>([])
+
+async function loadTypeOptions() {
+  try {
+    typeOptions.value = await loadDeliverableTypes()
+  } catch {
+    typeOptions.value = []
+  }
+}
 
 function typeLabel(t?: string): string {
-  return typeOptions.find((x) => x.value === t)?.label ?? t ?? '-'
+  return translateDeliverableType(t)
+}
+
+/** 当前新建表单选中的类型是否需要文件路径输入（文档/代码/配置/模型/数据） */
+function needsFilePath(t?: string): boolean {
+  if (!t) return false
+  return ['DOCUMENT', 'CODE', 'CONFIG', 'MODEL', 'DATA'].includes(t)
 }
 
 function formatDateTime(dt?: string): string {
@@ -240,7 +253,9 @@ const createForm = ref<Deliverable>({
   filePath: '',
   mandatory: false,
   phaseId: undefined,
-  approverRole: ''
+  approverRole: '',
+  refEntityType: undefined,
+  refEntityId: undefined
 })
 
 function openCreate() {
@@ -251,9 +266,25 @@ function openCreate() {
     filePath: '',
     mandatory: false,
     phaseId: undefined,
-    approverRole: ''
+    approverRole: '',
+    refEntityType: undefined,
+    refEntityId: undefined
   }
   createVisible.value = true
+}
+
+/** 切换类型时清理不相关字段，确保后端校验通过 */
+function onTypeChangeCreate(t: string) {
+  createForm.value.deliverableType = t
+  // 非 ENTITY_REF 类型清空引用字段
+  if (t !== 'ENTITY_REF') {
+    createForm.value.refEntityType = undefined
+    createForm.value.refEntityId = undefined
+  }
+  // 非文件类类型清空文件路径
+  if (!needsFilePath(t)) {
+    createForm.value.filePath = ''
+  }
 }
 
 async function handleCreate() {
@@ -263,6 +294,14 @@ async function handleCreate() {
   }
   if (!createForm.value.projectId) {
     ElMessage.warning('请先选择项目')
+    return
+  }
+  // ENTITY_REF 类型需校验引用字段
+  if (
+    createForm.value.deliverableType === 'ENTITY_REF' &&
+    (!createForm.value.refEntityType || !createForm.value.refEntityId)
+  ) {
+    ElMessage.warning('实体引用类交付件需选择引用实体类型和具体实体')
     return
   }
   try {
@@ -459,8 +498,7 @@ watch(
 
 onMounted(async () => {
   query.projectId = currentProjectId.value
-  await loadProjectOptions()
-  await loadProjectMeta()
+  await Promise.all([loadProjectOptions(), loadProjectMeta(), loadTypeOptions()])
   loadData()
 })
 </script>
@@ -504,7 +542,7 @@ onMounted(async () => {
         />
       </el-select>
       <el-select v-model="query.type" placeholder="类型" clearable style="width: 120px">
-        <el-option v-for="t in typeOptions" :key="t.value" :label="t.label" :value="t.value" />
+        <el-option v-for="t in typeOptions" :key="t.itemValue" :label="t.itemText" :value="t.itemValue" />
       </el-select>
       <el-input
         v-model="query.keyword"
@@ -661,24 +699,56 @@ onMounted(async () => {
     </template>
 
     <!-- 新建弹窗 -->
-    <el-dialog v-model="createVisible" title="新建交付件" width="520px" destroy-on-close>
+    <el-dialog v-model="createVisible" title="新建交付件" width="560px" destroy-on-close>
       <el-form :model="createForm" label-width="100px">
         <el-form-item label="交付件名称" required>
           <el-input v-model="createForm.deliverableName" placeholder="请输入交付件名称" />
         </el-form-item>
-        <el-form-item label="类型">
-          <el-select v-model="createForm.deliverableType" style="width: 100%">
-            <el-option v-for="t in typeOptions" :key="t.value" :label="t.label" :value="t.value" />
+        <el-form-item label="交付件类型" required>
+          <el-select
+            :model-value="createForm.deliverableType"
+            placeholder="请选择类型"
+            style="width: 100%"
+            @change="(val: string) => onTypeChangeCreate(val)"
+          >
+            <el-option v-for="t in typeOptions" :key="t.itemValue" :label="t.itemText" :value="t.itemValue" />
           </el-select>
+          <div class="hint-block">
+            <span v-if="createForm.deliverableType === 'DOCUMENT'">文档类：直接上传文件</span>
+            <span v-else-if="createForm.deliverableType === 'CODE'">代码类：上传代码包或填写仓库路径</span>
+            <span v-else-if="createForm.deliverableType === 'ENTITY_REF'">实体引用类：选择已存在的实体或新建实体</span>
+            <span v-else-if="createForm.deliverableType === 'MODEL'">模型类：上传模型文件</span>
+            <span v-else-if="createForm.deliverableType === 'CONFIG'">配置类：上传配置文件</span>
+            <span v-else-if="createForm.deliverableType === 'DATA'">数据类：上传数据文件</span>
+            <span v-else-if="createForm.deliverableType === 'OTHER'">其他类：填写描述或路径</span>
+          </div>
         </el-form-item>
         <el-form-item label="阶段">
           <el-select v-model="createForm.phaseId" placeholder="可选" clearable style="width: 100%">
             <el-option v-for="ph in phaseOptions" :key="ph.id" :label="ph.phaseName" :value="ph.id!" />
           </el-select>
         </el-form-item>
-        <el-form-item label="文件路径">
-          <el-input v-model="createForm.filePath" placeholder="可留空，后续修订时上传" />
+
+        <!-- 文件路径输入：仅文档/代码/配置/模型/数据类型显示 -->
+        <el-form-item v-if="needsFilePath(createForm.deliverableType)" label="文件路径">
+          <el-input
+            v-model="createForm.filePath"
+            placeholder="可留空，后续修订时上传；或填写文件路径/仓库地址"
+          />
         </el-form-item>
+
+        <!-- 引用实体选择器：仅实体引用类型显示 -->
+        <el-form-item v-if="createForm.deliverableType === 'ENTITY_REF'" label="引用实体" required>
+          <DeliverableRefEntitySelector
+            v-model:refEntityType="createForm.refEntityType"
+            v-model:refEntityId="createForm.refEntityId"
+            :project-id="currentProjectId"
+          />
+          <div class="hint-block">
+            选择需要引用的业务实体；支持「新建」跳转到对应模块创建后回选
+          </div>
+        </el-form-item>
+
         <el-form-item label="签核角色">
           <el-input v-model="createForm.approverRole" placeholder="如：技术负责人" />
         </el-form-item>
@@ -748,6 +818,13 @@ onMounted(async () => {
   margin-left: 8px;
   color: #909399;
   font-size: 12px;
+}
+
+.hint-block {
+  margin-top: 4px;
+  color: #909399;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .revise-tip {

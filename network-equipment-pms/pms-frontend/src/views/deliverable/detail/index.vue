@@ -17,6 +17,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Loading } from '@element-plus/icons-vue'
 import {
   addDeliverableReference,
   addDeliverableSignature,
@@ -25,6 +26,7 @@ import {
   DELIVERABLE_STATUS_ORDER,
   deleteDeliverable,
   getDeliverable,
+  getReferencedEntitySummary,
   listDeliverableReferences,
   listDeliverableSignatures,
   listDeliverableVersions,
@@ -33,11 +35,14 @@ import {
   reviseDeliverable,
   signDeliverable,
   submitDeliverable,
+  translateDeliverableType,
+  translateRefEntityType,
   type Deliverable,
   type DeliverableReference,
   type DeliverableSignature,
   type DeliverableStatus,
   type DeliverableVersion,
+  type ReferencedEntitySummary,
   type ReviseRequest
 } from '@/api/deliverable'
 import { getProject, type Project } from '@/api/project'
@@ -62,20 +67,19 @@ const signatures = ref<DeliverableSignature[]>([])
 const references = ref<DeliverableReference[]>([])
 const projectInfo = ref<Project | null>(null)
 const phaseOptions = ref<ProjectPhase[]>([])
+const refEntitySummary = ref<ReferencedEntitySummary | null>(null)
+const refEntityLoading = ref(false)
 
 const versionListRef = ref<InstanceType<typeof DeliverableVersionList> | null>(null)
 
-// ============ 类型选项 ============
-const typeOptions = [
-  { label: '文档', value: 'DOCUMENT' },
-  { label: '配置', value: 'CONFIG' },
-  { label: '报告', value: 'REPORT' },
-  { label: '其他', value: 'OTHER' }
-]
-
 function typeLabel(t?: string): string {
-  return typeOptions.find((x) => x.value === t)?.label ?? t ?? '-'
+  return translateDeliverableType(t)
 }
+
+/** 当前交付件是否为实体引用类 */
+const isEntityRef = computed(
+  () => deliverable.value?.deliverableType === 'ENTITY_REF'
+)
 
 function formatDateTime(dt?: string): string {
   if (!dt) return '-'
@@ -263,9 +267,41 @@ async function loadReferences() {
   }
 }
 
+/** 加载被引用实体的概要信息（仅 ENTITY_REF 类型触发） */
+async function loadRefEntitySummary() {
+  const d = deliverable.value
+  if (!d || d.deliverableType !== 'ENTITY_REF' || !d.refEntityType || !d.refEntityId) {
+    refEntitySummary.value = null
+    return
+  }
+  refEntityLoading.value = true
+  try {
+    refEntitySummary.value = await getReferencedEntitySummary(d.refEntityType, d.refEntityId)
+  } catch {
+    refEntitySummary.value = null
+  } finally {
+    refEntityLoading.value = false
+  }
+}
+
+/** 跳转到被引用实体详情页 */
+function goRefEntityDetail() {
+  const summary = refEntitySummary.value
+  if (summary?.detailUrl) {
+    window.open(summary.detailUrl, '_blank')
+  } else {
+    ElMessage.info('该实体暂无详情页地址')
+  }
+}
+
 async function loadAll() {
   await loadDetail()
-  await Promise.all([loadVersions(), loadSignatures(), loadReferences()])
+  await Promise.all([
+    loadVersions(),
+    loadSignatures(),
+    loadReferences(),
+    loadRefEntitySummary()
+  ])
   // 同步刷新子组件版本列表
   versionListRef.value?.refresh?.()
 }
@@ -523,8 +559,54 @@ onMounted(loadAll)
               <el-descriptions-item label="负责人">{{ deliverable.updateBy || deliverable.createBy || '-' }}</el-descriptions-item>
               <el-descriptions-item label="创建时间">{{ formatDateTime(deliverable.createTime) }}</el-descriptions-item>
               <el-descriptions-item label="最后修改时间">{{ formatDateTime(deliverable.updateTime) }}</el-descriptions-item>
-              <el-descriptions-item label="文件路径">{{ deliverable.filePath ?? '-' }}</el-descriptions-item>
+              <el-descriptions-item v-if="isEntityRef" label="引用实体类型">
+                <el-tag size="small" type="warning">{{ translateRefEntityType(deliverable.refEntityType) }}</el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item v-if="isEntityRef" label="引用实体ID">
+                #{{ deliverable.refEntityId ?? '-' }}
+              </el-descriptions-item>
+              <el-descriptions-item v-else label="文件路径">{{ deliverable.filePath ?? '-' }}</el-descriptions-item>
             </el-descriptions>
+          </el-card>
+
+          <!-- 引用实体概要（仅 ENTITY_REF 类型显示） -->
+          <el-card v-if="isEntityRef" shadow="never" class="section-card">
+            <template #header>
+              <div class="section-header">
+                <span class="section-title">引用实体概要</span>
+                <el-button
+                  v-if="refEntitySummary?.detailUrl"
+                  type="primary"
+                  size="small"
+                  @click="goRefEntityDetail"
+                >查看实体详情</el-button>
+              </div>
+            </template>
+            <div v-if="refEntityLoading" class="ref-entity-loading">
+              <el-icon class="is-loading"><Loading /></el-icon>
+              <span>加载引用实体信息...</span>
+            </div>
+            <el-descriptions v-else-if="refEntitySummary" :column="2" border>
+              <el-descriptions-item label="实体类型">
+                <el-tag size="small" type="warning">{{ translateRefEntityType(refEntitySummary.refEntityType) }}</el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="实体ID">#{{ refEntitySummary.refEntityId }}</el-descriptions-item>
+              <el-descriptions-item label="实体名称" :span="2">
+                {{ refEntitySummary.name ?? '-' }}
+              </el-descriptions-item>
+              <el-descriptions-item v-if="refEntitySummary.projectId" label="所属项目">
+                #{{ refEntitySummary.projectId }}
+              </el-descriptions-item>
+              <el-descriptions-item v-if="refEntitySummary.hostname" label="主机名">
+                {{ refEntitySummary.hostname }}
+              </el-descriptions-item>
+              <el-descriptions-item v-if="refEntitySummary.detailUrl" label="详情地址" :span="2">
+                <el-link type="primary" :href="refEntitySummary.detailUrl" target="_blank">
+                  {{ refEntitySummary.detailUrl }}
+                </el-link>
+              </el-descriptions-item>
+            </el-descriptions>
+            <el-empty v-else description="无法加载引用实体信息，可能该实体已被删除" />
           </el-card>
 
           <!-- 当前版本 -->
@@ -903,6 +985,15 @@ onMounted(loadAll)
 .ref-tip {
   background: #fdf6ec;
   color: #e6a23c;
+}
+
+.ref-entity-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+  color: var(--pms-color-text-secondary, #909399);
+  font-size: 13px;
 }
 
 /* 响应式 */

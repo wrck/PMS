@@ -74,6 +74,7 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
             throw new BusinessException("交付件名称不能为空");
         }
         validatePhaseOwnership(deliverable.getProjectId(), deliverable.getPhaseId());
+        validateRefEntity(deliverable);
         // 默认值：DRAFT / currentVersion=1 / mandatory=false
         if (deliverable.getStatus() == null || deliverable.getStatus().isBlank()) {
             deliverable.setStatus(DeliverableStatus.DRAFT.code());
@@ -83,6 +84,9 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
         }
         if (deliverable.getMandatory() == null) {
             deliverable.setMandatory(Boolean.FALSE);
+        }
+        if (deliverable.getTemplateInherited() == null) {
+            deliverable.setTemplateInherited(Boolean.FALSE);
         }
         save(deliverable);
 
@@ -114,6 +118,9 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
         current.setDeliverableType(patch.getDeliverableType());
         current.setMandatory(patch.getMandatory());
         current.setApproverRole(patch.getApproverRole());
+        current.setRefEntityType(patch.getRefEntityType());
+        current.setRefEntityId(patch.getRefEntityId());
+        validateRefEntity(current);
         updateById(current);
         return current;
     }
@@ -127,6 +134,37 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
         if (!phaseProjectId.equals(projectId)) {
             throw new BusinessException("所属阶段不属于当前项目");
         }
+    }
+
+    /**
+     * 校验实体引用类交付件的引用字段完整性。
+     *
+     * <p>当 deliverableType=ENTITY_REF 时，refEntityType 和 refEntityId 必须同时非空；
+     * refEntityType 必须为合法值（TASK/ASSET/PHASE/PROJECT/DELIVERABLE/REPORT）。
+     * 实体存在性校验由前端选择器保证，后端只做字段完整性校验（避免跨模块依赖）。</p>
+     */
+    private void validateRefEntity(Deliverable deliverable) {
+        String type = deliverable.getDeliverableType();
+        if (!"ENTITY_REF".equals(type)) {
+            return;
+        }
+        String refType = deliverable.getRefEntityType();
+        Long refId = deliverable.getRefEntityId();
+        if (refType == null || refType.isBlank()) {
+            throw new BusinessException("实体引用类交付件必须指定引用实体类型（refEntityType）");
+        }
+        if (refId == null) {
+            throw new BusinessException("实体引用类交付件必须指定引用实体ID（refEntityId）");
+        }
+        if (!isValidRefEntityType(refType)) {
+            throw new BusinessException("不支持的引用实体类型：" + refType
+                    + "（合法值：TASK/ASSET/PHASE/PROJECT/DELIVERABLE/REPORT）");
+        }
+    }
+
+    private boolean isValidRefEntityType(String refType) {
+        return "TASK".equals(refType) || "ASSET".equals(refType) || "PHASE".equals(refType)
+                || "PROJECT".equals(refType) || "DELIVERABLE".equals(refType) || "REPORT".equals(refType);
     }
 
     @Override

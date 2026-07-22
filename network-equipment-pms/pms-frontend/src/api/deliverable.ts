@@ -407,3 +407,53 @@ export function addDeliverableReference(id: number, body: Partial<DeliverableRef
 export function validateMandatoryDeliverables(phaseId: number): Promise<MandatoryDeliverableValidationResult> {
   return get<MandatoryDeliverableValidationResult>(`/api/deliverable/phase/${phaseId}/validate`)
 }
+
+// -------------------- 引用实体查询 --------------------
+
+/** 引用实体概要信息 */
+export interface ReferencedEntitySummary {
+  refEntityType: string
+  refEntityId: number
+  name?: string
+  projectId?: number
+  hostname?: string
+  detailUrl?: string
+}
+
+/** 可选引用实体列表项 */
+export interface RefEntityOption {
+  id: number
+  name: string
+}
+
+/** 查询引用实体概要信息 */
+export function getReferencedEntitySummary(
+  refEntityType: string,
+  refEntityId: number
+): Promise<ReferencedEntitySummary> {
+  return get<ReferencedEntitySummary>(`/api/deliverable/ref-entity/${refEntityType}/${refEntityId}`)
+}
+
+/** 查询可选引用实体列表（用于实体选择器下拉） */
+export function listReferencedEntities(
+  refEntityType: string,
+  projectId?: number
+): Promise<RefEntityOption[]> {
+  const params: { refEntityType: string; projectId?: number } = { refEntityType }
+  if (projectId != null) params.projectId = projectId
+  return get<RefEntityOption[]>('/api/deliverable/ref-entity/list', params)
+}
+
+/** 翻译引用实体类型为中文标签 */
+export function translateRefEntityType(value?: string): string {
+  if (!value) return '-'
+  const labels: Record<string, string> = {
+    TASK: '任务',
+    ASSET: '资产',
+    PHASE: '阶段',
+    PROJECT: '项目',
+    DELIVERABLE: '交付件',
+    REPORT: '报告'
+  }
+  return labels[value] ?? value
+}
