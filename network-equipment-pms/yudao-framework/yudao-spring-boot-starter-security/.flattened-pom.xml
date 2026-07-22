@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>cn.iocoder.boot</groupId>
   <artifactId>yudao-spring-boot-starter-security</artifactId>
-  <version>2026.06-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <name>yudao-spring-boot-starter-security</name>
   <description>1. security：用户的认证、权限的校验，实现「谁」可以做「什么事」
         2. operatelog：操作日志，实现「谁」在「什么时间」对「什么」做了「什么事」</description>
@@ -13,7 +13,7 @@
     <dependency>
       <groupId>cn.iocoder.boot</groupId>
       <artifactId>yudao-common</artifactId>
-      <version>2026.06-SNAPSHOT</version>
+      <version>2.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -25,7 +25,7 @@
     <dependency>
       <groupId>cn.iocoder.boot</groupId>
       <artifactId>yudao-spring-boot-starter-web</artifactId>
-      <version>2026.06-SNAPSHOT</version>
+      <version>2.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

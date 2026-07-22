@@ -67,7 +67,7 @@ public final class JsonTypeHandlers {
         }
 
         @Override
-        protected Object parse(String json) {
+        public Object parse(String json) {
             try {
                 return MAPPER.readValue(json, TYPE_REF);
             } catch (Exception e) {
@@ -103,7 +103,7 @@ public final class JsonTypeHandlers {
         }
 
         @Override
-        protected Object parse(String json) {
+        public Object parse(String json) {
             try {
                 return MAPPER.readValue(json, TYPE_REF);
             } catch (Exception e) {

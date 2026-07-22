@@ -4,25 +4,43 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cn.iocoder.boot</groupId>
-    <artifactId>yudao</artifactId>
+    <groupId>com.dp.plat</groupId>
+    <artifactId>network-equipment-pms</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
     <name>${project.artifactId}</name>
-    <description>芋道项目基础脚手架 + PMS 业务模块</description>
-    <url>https://github.com/YunaiV/ruoyi-vue-pro</url>
+    <description>PMS 项目管理平台 - 基于 yudao-boot-mini 底层 framework</description>
+
+    <properties>
+        <!-- 统一版本号：yudao 模块和业务模块共用 -->
+        <revision>2.0.0-SNAPSHOT</revision>
+        <!-- Maven 相关 -->
+        <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
+        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+        <flatten-maven-plugin.version>1.7.2</flatten-maven-plugin.version>
+        <lombok.version>1.18.42</lombok.version>
+        <spring.boot.version>3.5.15</spring.boot.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <!-- 第三方依赖版本补充（yudao BOM 未覆盖） -->
+        <easyexcel.version>3.3.4</easyexcel.version>
+        <jjwt.version>0.12.6</jjwt.version>
+        <flowable.version>8.0.0</flowable.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <modules>
+        <!-- yudao 底层 framework（直接复用，不自建） -->
         <module>yudao-dependencies</module>
         <module>yudao-framework</module>
-        <!-- Server 主项目 -->
-        <module>yudao-server</module>
-        <!-- 各种 module 拓展 -->
         <module>yudao-module-infra</module>
         <module>yudao-module-system</module>
+        <module>yudao-server</module>
 
-        <!-- PMS 业务模块（暂时排除，待 yudao 框架验证通过后集成） -->
-        <!--
+        <!-- PMS 业务模块 -->
+        <module>pms-common</module>
         <module>pms-project</module>
         <module>pms-asset</module>
         <module>pms-implementation</module>
@@ -35,26 +53,12 @@
         <module>pms-baseline</module>
         <module>pms-deliverable</module>
         <module>pms-admin</module>
-        -->
+        <module>pms-system</module>
     </modules>
-
-    <properties>
-        <revision>2026.06-SNAPSHOT</revision>
-        <!-- Maven 相关 -->
-        <java.version>17</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
-        <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
-        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
-        <flatten-maven-plugin.version>1.7.2</flatten-maven-plugin.version>
-        <lombok.version>1.18.42</lombok.version>
-        <spring.boot.version>3.5.15</spring.boot.version>
-        <mapstruct.version>1.6.3</mapstruct.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- yudao BOM 依赖管理 -->
             <dependency>
                 <groupId>cn.iocoder.boot</groupId>
                 <artifactId>yudao-dependencies</artifactId>
@@ -63,7 +67,46 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- 第三方依赖版本补充（yudao BOM 未覆盖的部分） -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>easyexcel</artifactId>
+                <version>${easyexcel.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.flowable</groupId>
+                <artifactId>flowable-spring-boot-starter</artifactId>
+                <version>${flowable.version}</version>
+            </dependency>
+
+            <!-- PMS 旧模块（过渡期保留，后续适配 yudao-module-system 后删除） -->
+            <dependency>
+                <groupId>com.dp.plat</groupId>
+                <artifactId>pms-system</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
             <!-- PMS 业务模块内部依赖管理 -->
+            <dependency>
+                <groupId>com.dp.plat</groupId>
+                <artifactId>pms-common</artifactId>
+                <version>${revision}</version>
+            </dependency>
             <dependency>
                 <groupId>com.dp.plat</groupId>
                 <artifactId>pms-project</artifactId>

@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>cn.iocoder.boot</groupId>
   <artifactId>yudao-spring-boot-starter-mq</artifactId>
-  <version>2026.06-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <name>yudao-spring-boot-starter-mq</name>
   <description>消息队列，支持 Redis、RocketMQ、RabbitMQ、Kafka 四种</description>
   <url>https://github.com/YunaiV/ruoyi-vue-pro</url>
@@ -12,7 +12,7 @@
     <dependency>
       <groupId>cn.iocoder.boot</groupId>
       <artifactId>yudao-spring-boot-starter-redis</artifactId>
-      <version>2026.06-SNAPSHOT</version>
+      <version>2.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

@@ -4,10 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>yudao</artifactId>
-        <groupId>cn.iocoder.boot</groupId>
+        <artifactId>network-equipment-pms</artifactId>
+        <groupId>com.dp.plat</groupId>
         <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
+    <groupId>cn.iocoder.boot</groupId>
+    <artifactId>yudao-framework</artifactId>
     <packaging>pom</packaging>
     <modules>
         <module>yudao-common</module>
@@ -29,7 +32,6 @@
         <module>yudao-spring-boot-starter-biz-ip</module>
     </modules>
 
-    <artifactId>yudao-framework</artifactId>
     <description>
         该包是技术组件，每个子包，代表一个组件。每个组件包括两部分：
             1. core 包：是该组件的核心封装
