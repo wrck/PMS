@@ -15,6 +15,9 @@ import {
 import {
   listTemplates,
   deleteTemplate,
+  deprecateTemplate,
+  enableTemplate,
+  copyTemplate,
   type ProjectTemplate
 } from '@/api/project-template'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -105,12 +108,69 @@ function goVersion(id?: number) {
   router.push(`/project/template/version/${id}`)
 }
 
-async function handleCopy(tpl: ProjectTemplate) {
-  // 复制：基于当前模板打开新建表单（通过 router state 传递来源）
-  router.push({
-    path: '/project/template/form',
-    state: { copyFrom: tpl.id }
-  })
+// 复制对话框
+const copyDialogVisible = ref(false)
+const copyForm = reactive({ sourceId: 0, templateCode: '', templateName: '' })
+const copying = ref(false)
+
+function handleCopy(tpl: ProjectTemplate) {
+  copyForm.sourceId = tpl.id!
+  copyForm.templateCode = tpl.templateCode + '-COPY'
+  copyForm.templateName = tpl.templateName + ' (副本)'
+  copyDialogVisible.value = true
+}
+
+async function handleCopySubmit() {
+  if (!copyForm.templateCode.trim()) {
+    ElMessage.warning('请输入新模板编码')
+    return
+  }
+  if (!copyForm.templateName.trim()) {
+    ElMessage.warning('请输入新模板名称')
+    return
+  }
+  copying.value = true
+  try {
+    await copyTemplate(copyForm.sourceId, {
+      templateCode: copyForm.templateCode.trim(),
+      templateName: copyForm.templateName.trim()
+    })
+    ElMessage.success('复制成功')
+    copyDialogVisible.value = false
+    loadData()
+  } finally {
+    copying.value = false
+  }
+}
+
+// 废弃模板
+function handleDeprecate(tpl: ProjectTemplate) {
+  ElMessageBox.confirm(
+    `确认废弃模板「${tpl.templateName}」吗？废弃后不可用于创建新项目，但可重新启用。`,
+    '废弃确认',
+    { type: 'warning' }
+  )
+    .then(async () => {
+      await deprecateTemplate(tpl.id!)
+      ElMessage.success('模板已废弃')
+      loadData()
+    })
+    .catch(() => {})
+}
+
+// 启用模板
+function handleEnable(tpl: ProjectTemplate) {
+  ElMessageBox.confirm(
+    `确认重新启用模板「${tpl.templateName}」吗？启用后可用于创建新项目。`,
+    '启用确认',
+    { type: 'info' }
+  )
+    .then(async () => {
+      await enableTemplate(tpl.id!)
+      ElMessage.success('模板已启用')
+      loadData()
+    })
+    .catch(() => {})
 }
 
 function handleDelete(tpl: ProjectTemplate) {
@@ -218,12 +278,48 @@ onMounted(loadData)
           <el-button v-permission="'project:template:add'" text size="small" :icon="Edit" @click="goEdit(tpl.id)">编辑</el-button>
           <el-button text size="small" :icon="Clock" @click="goVersion(tpl.id)">版本</el-button>
           <el-button v-permission="'project:template:add'" text size="small" :icon="CopyDocument" @click="handleCopy(tpl)">复制</el-button>
+          <el-button
+            v-if="tpl.status === 'PUBLISHED'"
+            v-permission="'project:template:publish'"
+            text
+            size="small"
+            type="warning"
+            @click="handleDeprecate(tpl)"
+          >
+            废弃
+          </el-button>
+          <el-button
+            v-if="tpl.status === 'DEPRECATED'"
+            v-permission="'project:template:publish'"
+            text
+            size="small"
+            type="success"
+            @click="handleEnable(tpl)"
+          >
+            启用
+          </el-button>
           <el-button v-permission="'project:template:add'" text size="small" type="danger" :icon="Delete" @click="handleDelete(tpl)">
             删除
           </el-button>
         </div>
       </el-card>
     </div>
+
+    <!-- 复制对话框 -->
+    <el-dialog v-model="copyDialogVisible" title="复制模板" width="480px">
+      <el-form :model="copyForm" label-width="100px">
+        <el-form-item label="新模板编码" required>
+          <el-input v-model="copyForm.templateCode" placeholder="请输入新模板编码（须唯一）" />
+        </el-form-item>
+        <el-form-item label="新模板名称" required>
+          <el-input v-model="copyForm.templateName" placeholder="请输入新模板名称" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="copyDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="copying" @click="handleCopySubmit">复制</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 

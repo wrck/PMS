@@ -111,11 +111,47 @@ public class ProjectTemplateController {
         return Result.ok(templateService.createProjectFromTemplate(dto));
     }
 
+    /**
+     * 废弃模板（PUBLISHED → DEPRECATED）。
+     */
+    @PutMapping("/{id}/deprecate")
+    @PreAuthorize("hasAuthority('project:template:publish')")
+    public Result<ProjectTemplate> deprecate(@PathVariable Long id) {
+        return Result.ok(templateService.deprecate(id));
+    }
+
+    /**
+     * 重新启用模板（DEPRECATED → PUBLISHED）。
+     */
+    @PutMapping("/{id}/enable")
+    @PreAuthorize("hasAuthority('project:template:publish')")
+    public Result<ProjectTemplate> enable(@PathVariable Long id) {
+        return Result.ok(templateService.enable(id));
+    }
+
+    /**
+     * 复制模板（深拷贝源模板快照到新模板，新模板状态为 DRAFT）。
+     */
+    @PostMapping("/{id}/copy")
+    @PreAuthorize("hasAuthority('project:template:add')")
+    public Result<ProjectTemplate> copyTemplate(
+            @PathVariable Long id,
+            @RequestBody CopyTemplateRequest request) {
+        return Result.ok(templateService.copyTemplate(id, request.getTemplateCode(), request.getTemplateName()));
+    }
+
     /** 发布版本请求体 */
     @lombok.Data
     public static class PublishVersionRequest {
         private String version;
         private TemplateSnapshot snapshot;
         private String changeLog;
+    }
+
+    /** 复制模板请求体 */
+    @lombok.Data
+    public static class CopyTemplateRequest {
+        private String templateCode;
+        private String templateName;
     }
 }

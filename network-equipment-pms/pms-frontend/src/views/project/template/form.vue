@@ -21,10 +21,12 @@ import {
   updateTemplate,
   publishVersion,
   saveDraftSnapshot,
+  listTemplateVersions,
   type PhaseDef,
   type PhaseCriteria,
   type PhaseExitGate,
   type ProjectTemplate,
+  type ProjectTemplateVersion,
   type TaskDef,
   type TemplateSnapshot
 } from '@/api/project-template'
@@ -84,6 +86,7 @@ interface TaskNode {
   assigneeRole?: string
   plannedHours?: number
   weight?: number
+  priority?: string
   description?: string
   children?: TaskNode[]
 }
@@ -100,11 +103,11 @@ interface DeliverableNode {
 }
 const deliverables = ref<DeliverableNode[]>([])
 
-// 依赖关系
+// 依赖关系（前后置任务通过 taskName 关联，对齐后端 DependencyDef.predecessorTaskName/successorTaskName）
 interface DependencyNode {
   id: string
-  fromTaskCode: string
-  toTaskCode: string
+  fromTaskName: string
+  toTaskName: string
   type: string // FINISH_TO_START / START_TO_START / FINISH_TO_FINISH / START_TO_FINISH
 }
 const dependencies = ref<DependencyNode[]>([])
@@ -140,6 +143,62 @@ const publishForm = reactive({ version: '', changeLog: '' })
 
 function genId(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+}
+
+/** 扁平化所有任务名（供依赖关系选择） */
+const allTaskNames = computed(() => {
+  const names: string[] = []
+  function collect(nodes: TaskNode[]) {
+    for (const n of nodes) {
+      if (n.taskName) names.push(n.taskName)
+      if (n.children) collect(n.children)
+    }
+  }
+  collect(tasks.value)
+  return names
+})
+
+/** 阶段编码重复校验，返回重复的编码列表 */
+function findDuplicatePhaseCodes(): string[] {
+  const seen = new Set<string>()
+  const dups = new Set<string>()
+  for (const p of phases.value) {
+    const code = p.phaseCode?.trim()
+    if (!code) continue
+    if (seen.has(code)) dups.add(code)
+    else seen.add(code)
+  }
+  return [...dups]
+}
+
+/** 基于已有版本号生成下一个建议版本号 */
+async function suggestNextVersion(): Promise<string> {
+  if (!form.id) return 'v1.0.0'
+  try {
+    const res = await listTemplateVersions(form.id, 1, 200)
+    const versions = res?.records ?? []
+    if (versions.length === 0) return 'v1.0.0'
+    // 取最大版本号递增
+    const sorted = [...versions].sort((a, b) => compareVersionDesc(b.version, a.version))
+    const latest = sorted[0]?.version ?? 'v1.0.0'
+    const parts = latest.replace(/^v/i, '').split('.').map((n) => parseInt(n, 10) || 0)
+    parts[parts.length - 1] = (parts[parts.length - 1] ?? 0) + 1
+    return 'v' + parts.join('.')
+  } catch {
+    return 'v1.0.0'
+  }
+}
+
+function compareVersionDesc(v1: string, v2: string): number {
+  const a = v1.replace(/^v/i, '').split('.').map((n) => parseInt(n, 10) || 0)
+  const b = v2.replace(/^v/i, '').split('.').map((n) => parseInt(n, 10) || 0)
+  const len = Math.max(a.length, b.length)
+  for (let i = 0; i < len; i++) {
+    const ai = a[i] ?? 0
+    const bi = b[i] ?? 0
+    if (ai !== bi) return ai - bi
+  }
+  return 0
 }
 
 // ============== 阶段操作 ==============
@@ -240,8 +299,8 @@ function removeDeliverable(idx: number) {
 function addDependency() {
   dependencies.value.push({
     id: genId('dep'),
-    fromTaskCode: '',
-    toTaskCode: '',
+    fromTaskName: '',
+    toTaskName: '',
     type: 'FINISH_TO_START'
   })
 }
@@ -352,6 +411,7 @@ function applySnapshot(snap?: TemplateSnapshot) {
     assigneeRole: t.assigneeRole ?? '',
     plannedHours: t.plannedHours ?? 0,
     weight: t.weight ?? 1,
+    priority: t.priority ?? 'NORMAL',
     description: t.description ?? '',
     children: Array.isArray(t.children) ? t.children.map((c: any) => ({ ...c, id: genId('task') })) : []
   })) as TaskNode[]
@@ -366,11 +426,11 @@ function applySnapshot(snap?: TemplateSnapshot) {
     phaseCode: d.phaseCode ?? ''
   })) as DeliverableNode[]
 
-  // 依赖：fromTaskCode↔predecessorTaskName, toTaskCode↔successorTaskName, type↔dependencyType
+  // 依赖：fromTaskName↔predecessorTaskName, toTaskName↔successorTaskName, type↔dependencyType
   dependencies.value = ((snap.dependencies ?? []) as any[]).map((dep: any) => ({
     id: genId('dep'),
-    fromTaskCode: dep.fromTaskCode ?? dep.predecessorTaskName ?? '',
-    toTaskCode: dep.toTaskCode ?? dep.successorTaskName ?? '',
+    fromTaskName: dep.fromTaskName ?? dep.predecessorTaskName ?? '',
+    toTaskName: dep.toTaskName ?? dep.successorTaskName ?? '',
     type: dep.type ?? dep.dependencyType ?? 'FINISH_TO_START'
   })) as DependencyNode[]
 
@@ -486,10 +546,10 @@ function buildSnapshot(): TemplateSnapshot {
       mandatory: d.required,
       approverRole: d.signOffRole
     })),
-    // 依赖：fromTaskCode→predecessorTaskName, toTaskCode→successorTaskName, type→dependencyType
+    // 依赖：fromTaskName→predecessorTaskName, toTaskName→successorTaskName, type→dependencyType
     dependencies: dependencies.value.map((dep) => ({
-      predecessorTaskName: dep.fromTaskCode,
-      successorTaskName: dep.toTaskCode,
+      predecessorTaskName: dep.fromTaskName,
+      successorTaskName: dep.toTaskName,
       dependencyType: dep.type
     })),
     // 审批计划：name→approvalType, approverRole→approverRoles[0], trigger 不属于后端 DTO，phaseCode→triggerPhaseCode
@@ -507,15 +567,21 @@ function buildSnapshot(): TemplateSnapshot {
   }
 }
 
-/** 将任务树扁平化为后端 TaskDef 列表（parentTaskName 关联父节点） */
+/** 将任务树扁平化为后端 TaskDef 列表（parentTaskName 关联父节点，补全所有字段） */
 function flattenTasks(nodes: TaskNode[], parent?: TaskNode): TaskDef[] {
   const result: TaskDef[] = []
+  let order = 1
   for (const n of nodes) {
     result.push({
       taskName: n.taskName,
       parentTaskName: parent?.taskName,
       phaseCode: n.phaseCode,
-      plannedHours: n.plannedHours
+      plannedHours: n.plannedHours,
+      assigneeRole: n.assigneeRole,
+      weight: n.weight,
+      priority: n.priority,
+      description: n.description,
+      sortOrder: order++
     })
     if (n.children && n.children.length > 0) {
       result.push(...flattenTasks(n.children, n))
@@ -559,12 +625,21 @@ async function handlePublish() {
     activeStep.value = 1
     return
   }
+  // 阶段编码重复校验
+  const dups = findDuplicatePhaseCodes()
+  if (dups.length > 0) {
+    ElMessage.warning(`阶段编码重复：${dups.join('、')}，请修改后重试`)
+    activeStep.value = 1
+    return
+  }
   if (!publishForm.version.trim()) {
     ElMessage.warning('请填写版本号')
     return
   }
   publishing.value = true
   try {
+    // 发布前先保存草稿快照，确保最新配置被持久化
+    await saveDraftSnapshot(form.id, buildSnapshot())
     const snapshot = buildSnapshot()
     await publishVersion(form.id, {
       version: publishForm.version,
@@ -580,6 +655,12 @@ async function handlePublish() {
   } finally {
     publishing.value = false
   }
+}
+
+/** 打开发布对话框时自动建议版本号 */
+async function openPublishDialog() {
+  publishForm.version = await suggestNextVersion()
+  publishDialogVisible.value = true
 }
 
 function handleNext() {
@@ -613,7 +694,7 @@ onMounted(() => {
       <template #actions>
         <el-button :icon="RefreshLeft" @click="router.back()">取消</el-button>
         <el-button v-permission="'project:template:add'" :icon="Check" :loading="submitting" @click="handleSaveDraft">保存草稿</el-button>
-        <el-button v-if="form.id" v-permission="'project:template:publish'" type="success" :icon="Promotion" @click="publishDialogVisible = true">
+        <el-button v-if="form.id" v-permission="'project:template:publish'" type="success" :icon="Promotion" @click="openPublishDialog">
           发布版本
         </el-button>
         <el-button v-permission="'project:template:add'" type="primary" :icon="Check" :loading="submitting" @click="handleSave">保存</el-button>
@@ -828,12 +909,26 @@ onMounted(() => {
         <el-table v-else :data="dependencies" border stripe>
           <el-table-column label="前置任务" min-width="180">
             <template #default="{ row }">
-              <el-input v-model="row.fromTaskCode" size="small" placeholder="任务编码" />
+              <el-select v-model="row.fromTaskName" size="small" filterable clearable placeholder="请选择前置任务">
+                <el-option
+                  v-for="t in allTaskNames"
+                  :key="t"
+                  :label="t"
+                  :value="t"
+                />
+              </el-select>
             </template>
           </el-table-column>
           <el-table-column label="后置任务" min-width="180">
             <template #default="{ row }">
-              <el-input v-model="row.toTaskCode" size="small" placeholder="任务编码" />
+              <el-select v-model="row.toTaskName" size="small" filterable clearable placeholder="请选择后置任务">
+                <el-option
+                  v-for="t in allTaskNames"
+                  :key="t"
+                  :label="t"
+                  :value="t"
+                />
+              </el-select>
             </template>
           </el-table-column>
           <el-table-column label="依赖类型" width="200">

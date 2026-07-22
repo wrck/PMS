@@ -14,6 +14,7 @@ import {
   listTemplateVersions,
   publishVersion,
   getTemplate,
+  getDraftVersion,
   getPublishedVersion,
   type ProjectTemplate,
   type ProjectTemplateVersion,
@@ -192,11 +193,11 @@ function computeDiff() {
 
   const categories: { key: keyof TemplateSnapshot; label: string; idField: string }[] = [
     { key: 'phases', label: '阶段', idField: 'phaseCode' },
-    { key: 'tasks', label: '任务', idField: 'taskCode' },
-    { key: 'deliverables', label: '交付件', idField: 'name' },
-    { key: 'dependencies', label: '依赖', idField: 'id' },
-    { key: 'approvalPlans', label: '审批计划', idField: 'name' },
-    { key: 'milestones', label: '里程碑', idField: 'name' }
+    { key: 'tasks', label: '任务', idField: 'taskName' },
+    { key: 'deliverables', label: '交付件', idField: 'deliverableName' },
+    { key: 'dependencies', label: '依赖', idField: 'predecessorTaskName' },
+    { key: 'approvalPlans', label: '审批计划', idField: 'approvalType' },
+    { key: 'milestones', label: '里程碑', idField: 'milestoneName' }
   ]
 
   for (const cat of categories) {
@@ -263,9 +264,17 @@ async function handlePublish() {
   }
   publishing.value = true
   try {
-    // 以当前最新已发布版本的快照为基础发布新版本，避免空快照覆盖既有配置
-    const currentPublished = await getPublishedVersion(templateId).catch(() => undefined)
-    const snapshot = currentPublished?.snapshotJson ?? {}
+    // 优先使用草稿版本快照（用户最新编辑），无草稿则回退到已发布版本快照
+    let snapshot: TemplateSnapshot = {}
+    const draft = await getDraftVersion(templateId).catch(() => undefined)
+    if (draft?.snapshotJson) {
+      snapshot = draft.snapshotJson
+    } else {
+      const currentPublished = await getPublishedVersion(templateId).catch(() => undefined)
+      if (currentPublished?.snapshotJson) {
+        snapshot = currentPublished.snapshotJson
+      }
+    }
     await publishVersion(templateId, {
       version: publishForm.version,
       snapshot,

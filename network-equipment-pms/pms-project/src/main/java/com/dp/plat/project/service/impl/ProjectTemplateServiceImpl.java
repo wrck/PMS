@@ -87,6 +87,14 @@ public class ProjectTemplateServiceImpl implements IProjectTemplateService {
     @Override
     @Transactional
     public ProjectTemplate create(ProjectTemplate template) {
+        // 校验模板编码唯一
+        if (StringUtils.hasText(template.getTemplateCode())) {
+            Long count = templateMapper.selectCount(new LambdaQueryWrapper<ProjectTemplate>()
+                .eq(ProjectTemplate::getTemplateCode, template.getTemplateCode()));
+            if (count > 0) {
+                throw new IllegalStateException("模板编码已存在: " + template.getTemplateCode());
+            }
+        }
         if (template.getStatus() == null) {
             template.setStatus("DRAFT");
         }
@@ -511,5 +519,78 @@ public class ProjectTemplateServiceImpl implements IProjectTemplateService {
         }
         approvalPlanBatchCreator.batchCreateApprovalPlans(projectId, phaseCodeToIdMap, approvalPlanDefs);
         log.info("模板深拷贝：审批计划深拷贝完成 projectId={} count={}", projectId, approvalPlanDefs.size());
+    }
+
+    @Override
+    @Transactional
+    public ProjectTemplate deprecate(Long id) {
+        ProjectTemplate template = templateMapper.selectById(id);
+        if (template == null) {
+            throw new IllegalArgumentException("模板不存在: " + id);
+        }
+        if (!"PUBLISHED".equals(template.getStatus())) {
+            throw new IllegalStateException("仅 PUBLISHED 状态模板可废弃，当前状态: " + template.getStatus());
+        }
+        template.setStatus("DEPRECATED");
+        templateMapper.updateById(template);
+        return template;
+    }
+
+    @Override
+    @Transactional
+    public ProjectTemplate enable(Long id) {
+        ProjectTemplate template = templateMapper.selectById(id);
+        if (template == null) {
+            throw new IllegalArgumentException("模板不存在: " + id);
+        }
+        if (!"DEPRECATED".equals(template.getStatus())) {
+            throw new IllegalStateException("仅 DEPRECATED 状态模板可重新启用，当前状态: " + template.getStatus());
+        }
+        template.setStatus("PUBLISHED");
+        templateMapper.updateById(template);
+        return template;
+    }
+
+    @Override
+    @Transactional
+    public ProjectTemplate copyTemplate(Long sourceId, String newTemplateCode, String newTemplateName) {
+        ProjectTemplate source = templateMapper.selectById(sourceId);
+        if (source == null) {
+            throw new IllegalArgumentException("源模板不存在: " + sourceId);
+        }
+        if (!StringUtils.hasText(newTemplateCode)) {
+            throw new IllegalArgumentException("新模板编码不能为空");
+        }
+        // 校验新编码唯一
+        Long count = templateMapper.selectCount(new LambdaQueryWrapper<ProjectTemplate>()
+            .eq(ProjectTemplate::getTemplateCode, newTemplateCode));
+        if (count > 0) {
+            throw new IllegalStateException("模板编码已存在: " + newTemplateCode);
+        }
+        // 创建新模板
+        ProjectTemplate newTemplate = new ProjectTemplate();
+        newTemplate.setTemplateCode(newTemplateCode);
+        newTemplate.setTemplateName(StringUtils.hasText(newTemplateName) ? newTemplateName : newTemplateCode);
+        newTemplate.setCategory(source.getCategory());
+        newTemplate.setDescription(source.getDescription());
+        newTemplate.setStatus("DRAFT");
+        templateMapper.insert(newTemplate);
+
+        // 深拷贝源模板最新快照（优先草稿，其次已发布）到新模板的草稿版本
+        TemplateSnapshot snapshot = null;
+        ProjectTemplateVersion sourceDraft = getDraftVersion(sourceId);
+        if (sourceDraft != null && sourceDraft.getSnapshotJson() != null) {
+            snapshot = sourceDraft.getSnapshotJson();
+        } else {
+            ProjectTemplateVersion sourcePublished = getPublishedVersion(sourceId);
+            if (sourcePublished != null) {
+                snapshot = sourcePublished.getSnapshotJson();
+            }
+        }
+        if (snapshot != null) {
+            saveDraftSnapshot(newTemplate.getId(), snapshot);
+        }
+        log.info("模板复制成功 sourceId={} newTemplateId={} newCode={}", sourceId, newTemplate.getId(), newTemplateCode);
+        return newTemplate;
     }
 }

@@ -207,3 +207,24 @@ export function getDraftVersion(id: number) {
 export function createProjectFromTemplate(data: ProjectCreateFromTemplateDTO) {
   return post('/api/project/template/create-project', data)
 }
+
+/**
+ * 废弃模板（PUBLISHED → DEPRECATED）。
+ */
+export function deprecateTemplate(id: number) {
+  return put<ProjectTemplate>(`/api/project/template/${id}/deprecate`)
+}
+
+/**
+ * 重新启用模板（DEPRECATED → PUBLISHED）。
+ */
+export function enableTemplate(id: number) {
+  return put<ProjectTemplate>(`/api/project/template/${id}/enable`)
+}
+
+/**
+ * 复制模板（深拷贝源模板快照到新模板，新模板状态为 DRAFT）。
+ */
+export function copyTemplate(id: number, data: { templateCode: string; templateName: string }) {
+  return post<ProjectTemplate>(`/api/project/template/${id}/copy`, data)
+}

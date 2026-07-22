@@ -68,4 +68,26 @@ public interface IProjectTemplateService {
      * 从模板创建项目（深拷贝 snapshot 到项目相关表）
      */
     Project createProjectFromTemplate(ProjectCreateFromTemplateDTO dto);
+
+    /**
+     * 废弃模板（PUBLISHED → DEPRECATED，不可再用于创建项目）。
+     * 仅 PUBLISHED 状态可废弃。
+     */
+    ProjectTemplate deprecate(Long id);
+
+    /**
+     * 重新启用模板（DEPRECATED → PUBLISHED，恢复使用）。
+     * 仅 DEPRECATED 状态可启用，恢复后沿用最近一次 PUBLISHED 版本。
+     */
+    ProjectTemplate enable(Long id);
+
+    /**
+     * 复制模板（深拷贝源模板的最新快照到新模板，新模板状态为 DRAFT）。
+     *
+     * @param sourceId 源模板 ID
+     * @param newTemplateCode 新模板编码（须唯一）
+     * @param newTemplateName 新模板名称
+     * @return 新建的模板（含草稿快照）
+     */
+    ProjectTemplate copyTemplate(Long sourceId, String newTemplateCode, String newTemplateName);
 }
