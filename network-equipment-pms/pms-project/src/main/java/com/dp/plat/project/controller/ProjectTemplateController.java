@@ -84,6 +84,27 @@ public class ProjectTemplateController {
         return Result.ok(templateService.getPublishedVersion(id));
     }
 
+    /**
+     * 保存草稿快照（新建/编辑模板时持久化阶段/任务/交付件等详细配置）。
+     * 创建或更新 DRAFT 状态版本记录，不影响模板发布状态。
+     */
+    @PutMapping("/{id}/draft-snapshot")
+    @PreAuthorize("hasAuthority('project:template:add')")
+    public Result<ProjectTemplateVersion> saveDraftSnapshot(
+            @PathVariable Long id,
+            @RequestBody TemplateSnapshot snapshot) {
+        return Result.ok(templateService.saveDraftSnapshot(id, snapshot));
+    }
+
+    /**
+     * 获取模板草稿版本（最新 DRAFT 状态版本，无则返回 null）。
+     */
+    @GetMapping("/{id}/draft-version")
+    @PreAuthorize("hasAuthority('project:template:list')")
+    public Result<ProjectTemplateVersion> getDraftVersion(@PathVariable Long id) {
+        return Result.ok(templateService.getDraftVersion(id));
+    }
+
     @PostMapping("/create-project")
     @PreAuthorize("hasAuthority('project:template:use')")
     public Result<Project> createProjectFromTemplate(@RequestBody ProjectCreateFromTemplateDTO dto) {

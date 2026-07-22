@@ -101,11 +101,66 @@ public class ProjectTemplateServiceImpl implements IProjectTemplateService {
         if (existing == null) {
             throw new IllegalArgumentException("模板不存在: " + template.getId());
         }
-        if (!"DRAFT".equals(existing.getStatus())) {
-            throw new IllegalStateException("仅 DRAFT 状态模板可编辑，当前状态: " + existing.getStatus());
+        if ("DEPRECATED".equals(existing.getStatus())) {
+            throw new IllegalStateException("DEPRECATED 状态模板不可编辑，当前状态: " + existing.getStatus());
         }
-        templateMapper.updateById(template);
-        return template;
+        // 仅更新可编辑字段，保留 id/templateCode/status 不被请求体覆盖
+        existing.setTemplateName(template.getTemplateName());
+        existing.setCategory(template.getCategory());
+        existing.setDescription(template.getDescription());
+        templateMapper.updateById(existing);
+        return existing;
+    }
+
+    @Override
+    @Transactional
+    public ProjectTemplateVersion saveDraftSnapshot(Long templateId, TemplateSnapshot snapshot) {
+        ProjectTemplate template = templateMapper.selectById(templateId);
+        if (template == null) {
+            throw new IllegalArgumentException("模板不存在: " + templateId);
+        }
+        if ("DEPRECATED".equals(template.getStatus())) {
+            throw new IllegalStateException("DEPRECATED 状态模板不可保存草稿，当前状态: " + template.getStatus());
+        }
+        // 查找现有 DRAFT 版本（每个模板至多一个草稿版本）
+        ProjectTemplateVersion draftVersion = versionMapper.selectOne(new LambdaQueryWrapper<ProjectTemplateVersion>()
+            .eq(ProjectTemplateVersion::getTemplateId, templateId)
+            .eq(ProjectTemplateVersion::getStatus, "DRAFT")
+            .orderByDesc(ProjectTemplateVersion::getCreateTime)
+            .last("LIMIT 1"));
+        if (draftVersion == null) {
+            draftVersion = new ProjectTemplateVersion();
+            draftVersion.setTemplateId(templateId);
+            draftVersion.setVersion(generateDraftVersionNumber(templateId));
+            draftVersion.setSnapshotJson(snapshot);
+            draftVersion.setChangeLog("草稿编辑");
+            draftVersion.setStatus("DRAFT");
+            versionMapper.insert(draftVersion);
+        } else {
+            draftVersion.setSnapshotJson(snapshot);
+            versionMapper.updateById(draftVersion);
+        }
+        return draftVersion;
+    }
+
+    @Override
+    public ProjectTemplateVersion getDraftVersion(Long templateId) {
+        return versionMapper.selectOne(new LambdaQueryWrapper<ProjectTemplateVersion>()
+            .eq(ProjectTemplateVersion::getTemplateId, templateId)
+            .eq(ProjectTemplateVersion::getStatus, "DRAFT")
+            .orderByDesc(ProjectTemplateVersion::getCreateTime)
+            .last("LIMIT 1"));
+    }
+
+    /**
+     * 生成草稿版本号：基于已发布版本递增，无已发布版本则使用 v0.1.0-draft。
+     */
+    private String generateDraftVersionNumber(Long templateId) {
+        ProjectTemplateVersion latestPublished = getPublishedVersion(templateId);
+        if (latestPublished != null && latestPublished.getVersion() != null) {
+            return latestPublished.getVersion() + "-draft";
+        }
+        return "v0.1.0-draft";
     }
 
     @Override
@@ -150,7 +205,16 @@ public class ProjectTemplateServiceImpl implements IProjectTemplateService {
             throw new IllegalStateException("版本号已存在: " + version);
         }
 
-        // 3. 创建版本记录
+        // 3. 归档既有 PUBLISHED 版本为 ARCHIVED（同一模板仅保留一个 PUBLISHED 版本）
+        List<ProjectTemplateVersion> previousPublished = versionMapper.selectList(new LambdaQueryWrapper<ProjectTemplateVersion>()
+            .eq(ProjectTemplateVersion::getTemplateId, templateId)
+            .eq(ProjectTemplateVersion::getStatus, "PUBLISHED"));
+        for (ProjectTemplateVersion prev : previousPublished) {
+            prev.setStatus("ARCHIVED");
+            versionMapper.updateById(prev);
+        }
+
+        // 4. 创建新版本记录
         ProjectTemplateVersion versionRecord = new ProjectTemplateVersion();
         versionRecord.setTemplateId(templateId);
         versionRecord.setVersion(version);
@@ -158,10 +222,18 @@ public class ProjectTemplateServiceImpl implements IProjectTemplateService {
         versionRecord.setChangeLog(changeLog);
         versionRecord.setStatus("PUBLISHED");
         versionRecord.setPublishedAt(LocalDateTime.now());
-        // publishedBy 由 Controller 层注入（从 SecurityContext）
+        versionRecord.setPublishedBy(com.dp.plat.common.util.SecurityUtils.getCurrentUserId());
         versionMapper.insert(versionRecord);
 
-        // 4. 更新模板状态为 PUBLISHED
+        // 5. 清理草稿版本（发布后草稿已并入正式版本）
+        List<ProjectTemplateVersion> draftVersions = versionMapper.selectList(new LambdaQueryWrapper<ProjectTemplateVersion>()
+            .eq(ProjectTemplateVersion::getTemplateId, templateId)
+            .eq(ProjectTemplateVersion::getStatus, "DRAFT"));
+        for (ProjectTemplateVersion draft : draftVersions) {
+            versionMapper.deleteById(draft.getId());
+        }
+
+        // 6. 更新模板状态为 PUBLISHED
         template.setStatus("PUBLISHED");
         templateMapper.updateById(template);
 

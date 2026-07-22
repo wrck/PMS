@@ -15,10 +15,12 @@ import {
 } from '@element-plus/icons-vue'
 import {
   getTemplate,
+  getDraftVersion,
   getPublishedVersion,
   createTemplate,
   updateTemplate,
   publishVersion,
+  saveDraftSnapshot,
   type PhaseDef,
   type PhaseCriteria,
   type PhaseExitGate,
@@ -377,13 +379,27 @@ async function loadTemplate(id: number) {
   try {
     const res = await getTemplate(id)
     Object.assign(form, res)
-    // 加载最新已发布版本的快照数据，回显到 6 个 ref
+    // 优先加载草稿版本（用户未发布的编辑），无草稿则回退到已发布版本
+    let snapshot: TemplateSnapshot | undefined
     try {
-      const published = await getPublishedVersion(id)
-      applySnapshot(published?.snapshotJson)
+      const draft = await getDraftVersion(id)
+      if (draft?.snapshotJson) {
+        snapshot = draft.snapshotJson
+      }
     } catch {
-      /* 已发布版本不存在（如纯草稿模板），保持 ref 为空即可 */
+      /* 草稿版本接口异常，忽略 */
     }
+    if (!snapshot) {
+      try {
+        const published = await getPublishedVersion(id)
+        if (published?.snapshotJson) {
+          snapshot = published.snapshotJson
+        }
+      } catch {
+        /* 已发布版本不存在（如纯草稿模板），保持 ref 为空即可 */
+      }
+    }
+    applySnapshot(snapshot)
   } catch {
     /* handled by interceptor */
   } finally {
@@ -417,14 +433,15 @@ async function handleSaveDraft() {
   submitting.value = true
   try {
     form.status = 'DRAFT'
-    if (form.id) {
-      await updateTemplate(form)
-      ElMessage.success('草稿已保存')
-    } else {
+    if (!form.id) {
       const created = await createTemplate(form)
       form.id = created.id
-      ElMessage.success('草稿已创建')
+    } else {
+      await updateTemplate(form)
     }
+    // 持久化阶段/任务/交付件等详细配置到草稿快照
+    await saveDraftSnapshot(form.id, buildSnapshot())
+    ElMessage.success('草稿已保存')
   } finally {
     submitting.value = false
   }
@@ -498,14 +515,15 @@ async function handleSave() {
   submitting.value = true
   try {
     form.status = 'DRAFT'
-    if (form.id) {
-      await updateTemplate(form)
-      ElMessage.success('保存成功')
-    } else {
+    if (!form.id) {
       const created = await createTemplate(form)
       form.id = created.id
-      ElMessage.success('创建成功')
+    } else {
+      await updateTemplate(form)
     }
+    // 持久化阶段/任务/交付件等详细配置到草稿快照
+    await saveDraftSnapshot(form.id, buildSnapshot())
+    ElMessage.success('保存成功')
     router.back()
   } finally {
     submitting.value = false

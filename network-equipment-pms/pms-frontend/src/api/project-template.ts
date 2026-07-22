@@ -182,6 +182,21 @@ export function getPublishedVersion(id: number) {
   return get<ProjectTemplateVersion>(`/api/project/template/${id}/published-version`)
 }
 
+/**
+ * 保存草稿快照（创建或更新 DRAFT 状态版本记录，不影响模板发布状态）。
+ * 用于新建/编辑模板时持久化阶段/任务/交付件等详细配置。
+ */
+export function saveDraftSnapshot(id: number, snapshot: TemplateSnapshot) {
+  return put<ProjectTemplateVersion>(`/api/project/template/${id}/draft-snapshot`, snapshot)
+}
+
+/**
+ * 获取模板草稿版本（最新 DRAFT 状态版本，无则返回 null）。
+ */
+export function getDraftVersion(id: number) {
+  return get<ProjectTemplateVersion | null>(`/api/project/template/${id}/draft-version`)
+}
+
 export function createProjectFromTemplate(data: ProjectCreateFromTemplateDTO) {
   return post('/api/project/template/create-project', data)
 }

@@ -29,9 +29,20 @@ public interface IProjectTemplateService {
     ProjectTemplate create(ProjectTemplate template);
 
     /**
-     * 更新模板（仅 DRAFT 状态可更新）
+     * 更新模板基本信息（DRAFT / PUBLISHED 状态可更新，DEPRECATED 不可更新）
      */
     ProjectTemplate update(ProjectTemplate template);
+
+    /**
+     * 保存草稿快照（创建或更新 DRAFT 状态的版本记录，不影响模板发布状态）。
+     * 用于新建/编辑模板时持久化阶段/任务/交付件等详细配置。
+     */
+    ProjectTemplateVersion saveDraftSnapshot(Long templateId, TemplateSnapshot snapshot);
+
+    /**
+     * 获取模板的草稿版本（最新 DRAFT 状态版本，无则返回 null）
+     */
+    ProjectTemplateVersion getDraftVersion(Long templateId);
 
     /**
      * 删除模板（仅 DRAFT 状态可删除）
