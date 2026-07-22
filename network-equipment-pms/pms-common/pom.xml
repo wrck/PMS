@@ -5,69 +5,65 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.dp.plat</groupId>
-        <artifactId>network-equipment-pms</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <groupId>cn.iocoder.boot</groupId>
+        <artifactId>yudao</artifactId>
+        <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
+    <groupId>com.dp.plat</groupId>
     <artifactId>pms-common</artifactId>
     <name>pms-common</name>
-    <description>Common module: Result, exceptions, enums, utils, config</description>
+    <description>PMS 业务公共模块：业务 SPI、DTO、Saga、注解等（基础设施复用 yudao framework）</description>
 
     <dependencies>
+        <!-- yudao framework 基础能力（直接复用，不自建） -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-spring-boot-starter-web</artifactId>
         </dependency>
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-spring-boot-starter-mybatis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-spring-boot-starter-redis</artifactId>
+        </dependency>
+
         <!-- AOP 支持：限流切面、字段加密切面等 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
-        <!-- Redis 支持：分布式限流 Bucket 存储、缓存等 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-        <!-- Hutool 工具类：yudao framework 复用所需（Assert/ObjUtil/StrUtil/MapUtil 等） -->
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-core</artifactId>
-        </dependency>
-        <!-- Micrometer 核心：业务指标采集（Counter/Gauge/DistributionSummary）。
-             MeterRegistry 实现由 pms-admin 的 spring-boot-starter-actuator +
-             micrometer-registry-prometheus 在运行时提供。版本由 Spring Boot BOM 管理。 -->
+
+        <!-- Micrometer 核心：业务指标采集 -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
         </dependency>
+
+        <!-- Excel 导入导出 -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>easyexcel</artifactId>
         </dependency>
-        <!-- Jsoup: 用于 XSS 过滤器清洗 HTML 标签 -->
+
+        <!-- Jsoup: XSS 过滤器清洗 HTML -->
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.17.2</version>
         </dependency>
-        <!-- Bucket4j 令牌桶限流：核心库 + Redis 分布式存储 -->
+
+        <!-- Bucket4j 令牌桶限流 -->
         <dependency>
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j-core</artifactId>
@@ -78,11 +74,7 @@
             <artifactId>bucket4j-redis</artifactId>
             <version>8.10.1</version>
         </dependency>
-        <!-- Micrometer: 慢 SQL 指标采集（Timer/Counter），版本由 spring-boot-dependencies BOM 管理 -->
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-core</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

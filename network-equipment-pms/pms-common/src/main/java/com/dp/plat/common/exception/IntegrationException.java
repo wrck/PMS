@@ -1,6 +1,5 @@
 package com.dp.plat.common.exception;
 
-import com.dp.plat.common.result.ResultCode;
 import lombok.Getter;
 
 import java.io.Serial;
@@ -10,7 +9,7 @@ import java.io.Serial;
  *
  * <ul>
  *   <li>Resilience4j 熔断器 OPEN 时，{@code @CircuitBreaker(fallbackMethod = ...)}
- *       的 fallback 方法包装本异常向上抛出，由 {@link GlobalExceptionHandler}
+ *       的 fallback 方法包装本异常向上抛出，由 yudao {@code GlobalExceptionHandler}
  *       统一转为 HTTP 503 响应。</li>
  *   <li>调用超时 / 连接失败 / OAuth2 token 获取失败等可重试场景。</li>
  *   <li>调用响应非预期，需要业务侧感知并触发补偿。</li>
@@ -18,24 +17,35 @@ import java.io.Serial;
  *
  * <p>携带 {@code systemName}（{@code d365} / {@code fp} / {@code oa}）便于
  * 告警与日志按系统集成维度聚合统计。</p>
+ *
+ * <p>注意：yudao 的 {@code ServiceException} 是 {@code final} 类无法被继承，
+ * 因此本异常直接继承 {@link RuntimeException}，并通过 {@link #code} 字段
+ * 保留业务错误码语义。</p>
  */
 @Getter
-public class IntegrationException extends BusinessException {
+public class IntegrationException extends RuntimeException {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 集成失败的统一业务错误码（HTTP 503 语义）。 */
+    private static final int INTEGRATION_FAILURE_CODE = 503;
+
     /** 触发异常的外部系统标识：{@code d365} / {@code fp} / {@code oa}。 */
     private final String systemName;
 
+    /** 业务错误码（与原 {@code ResultCode.INTEGRATION_FAILURE.getCode()} 等价）。 */
+    private final int code;
+
     public IntegrationException(String systemName, String message) {
-        super(ResultCode.INTEGRATION_FAILURE.getCode(), message);
+        super(message);
         this.systemName = systemName;
+        this.code = INTEGRATION_FAILURE_CODE;
     }
 
     public IntegrationException(String systemName, String message, Throwable cause) {
-        super(ResultCode.INTEGRATION_FAILURE.getCode(), message);
+        super(message, cause);
         this.systemName = systemName;
-        super.initCause(cause);
+        this.code = INTEGRATION_FAILURE_CODE;
     }
 }

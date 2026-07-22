@@ -1,8 +1,8 @@
 package com.dp.plat.common.aspect;
 
+import cn.iocoder.yudao.framework.common.exception.ServiceException;
+import cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils;
 import com.dp.plat.common.annotation.RateLimit;
-import com.dp.plat.common.exception.RateLimitExceededException;
-import com.dp.plat.common.util.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -33,9 +33,9 @@ import java.util.Optional;
  * 限流切面：基于 Bucket4j 令牌桶 + Redis 分布式存储。
  *
  * <p>拦截所有标注 {@link RateLimit} 的方法，根据限流 Key（支持 SpEL）
- * 在 Redis 中维护一个分布式令牌桶，超限则抛出 {@link RateLimitExceededException}
- * （携带 {@code ResultCode.TOO_MANY_REQUESTS}），由 {@code GlobalExceptionHandler}
- * 统一转换为 HTTP 429 + {@code Retry-After} 响应。</p>
+ * 在 Redis 中维护一个分布式令牌桶，超限则抛出 {@link ServiceException}
+ * （code=429），由 yudao {@code GlobalExceptionHandler}
+ * 统一转换为 HTTP 429 响应。</p>
  *
  * <p>设计要点：</p>
  * <ul>
@@ -76,7 +76,7 @@ public class RateLimitAspect {
      * @param joinPoint  AOP 连接点
      * @param rateLimit  限流注解
      * @return 原方法返回值
-     * @throws Throwable 原方法抛出的异常，或限流触发的 {@link RateLimitExceededException}
+     * @throws Throwable 原方法抛出的异常，或限流触发的 {@link ServiceException}
      */
     @Around("@annotation(rateLimit)")
     public Object around(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
@@ -104,7 +104,7 @@ public class RateLimitAspect {
         long retryAfterSeconds = computeRetryAfterSeconds(probe);
         log.warn("限流触发: key={}, remainingTokens={}, retryAfter={}s",
                 resolvedKey, probe.getRemainingTokens(), retryAfterSeconds);
-        throw new RateLimitExceededException(rateLimit.message(), retryAfterSeconds);
+        throw new ServiceException(429, rateLimit.message());
     }
 
     /**
@@ -143,11 +143,11 @@ public class RateLimitAspect {
             MethodBasedEvaluationContext context = new MethodBasedEvaluationContext(
                     joinPoint.getTarget(), method, joinPoint.getArgs(), nameDiscoverer);
             // 注入当前用户 ID 到 SpEL 上下文，便于使用 #userId
-            Long currentUserId = SecurityUtils.getCurrentUserId();
+            Long currentUserId = SecurityFrameworkUtils.getLoginUserId();
             if (currentUserId != null) {
                 context.setVariable("userId", currentUserId);
             }
-            String username = SecurityUtils.getCurrentUsername();
+            String username = SecurityFrameworkUtils.getLoginUserNickname();
             if (username != null) {
                 context.setVariable("username", username);
             }
@@ -158,7 +158,7 @@ public class RateLimitAspect {
         }
 
         // 默认 Key：方法签名 + 当前用户 + 参数哈希（按用户隔离 + 防重复提交）
-        String userId = Optional.ofNullable(SecurityUtils.getCurrentUserId())
+        String userId = Optional.ofNullable(SecurityFrameworkUtils.getLoginUserId())
                 .map(String::valueOf).orElse("anonymous");
         int argsHash = Arrays.deepHashCode(joinPoint.getArgs());
         return methodSignature + ":" + userId + ":" + Integer.toHexString(argsHash);

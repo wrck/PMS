@@ -22,8 +22,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * 读取请求头，本拦截器并非切面运行的必要条件，但提供了 attribute 形式的
  * 备用访问方式与日志追踪能力。</p>
  *
- * <p>注册方式：由 {@code WebMvcConfig} 通过
- * {@code registry.addInterceptor(new IdempotentKeyInterceptor()).addPathPatterns("/**")}
+ * <p>注册方式：由 Spring MVC 的 {@code WebMvcConfigurer}
+ * 通过 {@code registry.addInterceptor(new IdempotentKeyInterceptor()).addPathPatterns("/**")}
  * 注册到 Spring MVC。</p>
  */
 @Slf4j

@@ -1,8 +1,7 @@
 package com.dp.plat.common.aspect;
 
+import cn.iocoder.yudao.framework.common.exception.ServiceException;
 import com.dp.plat.common.annotation.Idempotent;
-import com.dp.plat.common.exception.BusinessException;
-import com.dp.plat.common.result.ResultCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +38,7 @@ import java.time.Duration;
  *       <li>抢占成功 → 执行业务方法；成功后按策略更新 Redis 值，异常时删除键允许重试</li>
  *       <li>抢占失败 → 命中幂等，按 {@link Idempotent.Policy} 处理：
  *         <ul>
- *           <li>{@code REJECT}：抛出 {@link BusinessException}（code=409）</li>
+ *           <li>{@code REJECT}：抛出 {@link ServiceException}（code=409）</li>
  *           <li>{@code RETURN_FIRST_RESULT}：从 Redis 读取首次结果 JSON 反序列化返回</li>
  *         </ul>
  *       </li>
@@ -98,7 +97,7 @@ public class IdempotentAspect {
      * @param joinPoint  AOP 连接点
      * @param idempotent 幂等注解
      * @return 原方法返回值（或 RETURN_FIRST_RESULT 策略下的缓存结果）
-     * @throws Throwable 原方法抛出的异常，或幂等冲突触发的 {@link BusinessException}
+     * @throws Throwable 原方法抛出的异常，或幂等冲突触发的 {@link ServiceException}
      */
     @Around("@annotation(idempotent)")
     public Object around(ProceedingJoinPoint joinPoint, Idempotent idempotent) throws Throwable {
@@ -159,10 +158,10 @@ public class IdempotentAspect {
      * @param idempotent 幂等注解
      * @param redisKey   Redis 完整键
      * @return RETURN_FIRST_RESULT 策略下返回首次结果；REJECT 策略下不会返回（抛异常）
-     * @throws BusinessException REJECT 策略或 RETURN_FIRST_RESULT 无法返回时抛出
+     * @throws ServiceException REJECT 策略或 RETURN_FIRST_RESULT 无法返回时抛出
      */
     private Object handleDuplicateRequest(ProceedingJoinPoint joinPoint, Idempotent idempotent,
-                                          String redisKey) throws BusinessException {
+                                          String redisKey) throws ServiceException {
         String existing = redisTemplate.opsForValue().get(redisKey);
 
         // RETURN_FIRST_RESULT 策略：仅当 Redis 中已有「首次结果」（非 PROCESSING）时复用
@@ -183,7 +182,7 @@ public class IdempotentAspect {
         // 默认/降级：REJECT 策略
         log.info("幂等命中（REJECT），拒绝重复请求: key={}, policy={}",
                 redisKey, idempotent.policy());
-        throw new BusinessException(ResultCode.CONFLICT.getCode(), idempotent.message());
+        throw new ServiceException(409, idempotent.message());
     }
 
     /**

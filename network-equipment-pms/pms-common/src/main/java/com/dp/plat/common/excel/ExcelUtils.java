@@ -1,9 +1,9 @@
 package com.dp.plat.common.excel;
 
+import cn.iocoder.yudao.framework.common.exception.ServiceException;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.read.listener.ReadListener;
-import com.dp.plat.common.exception.BusinessException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +49,7 @@ public class ExcelUtils {
             EasyExcel.write(out, head).sheet(sheetName).doWrite(data);
         } catch (IOException e) {
             log.error("Export excel failed: {}", fileName, e);
-            throw new BusinessException("导出 Excel 失败: " + e.getMessage());
+            throw new ServiceException(500, "导出 Excel 失败: " + e.getMessage());
         }
     }
 
@@ -77,7 +77,7 @@ public class ExcelUtils {
      */
     public static <T> List<T> importExcel(MultipartFile file, Class<T> head) {
         if (file == null || file.isEmpty()) {
-            throw new BusinessException("导入文件不能为空");
+            throw new ServiceException(500, "导入文件不能为空");
         }
         List<T> rows = new ArrayList<>();
         try (InputStream in = file.getInputStream()) {
@@ -94,7 +94,7 @@ public class ExcelUtils {
             }).sheet().doRead();
         } catch (IOException e) {
             log.error("Import excel failed", e);
-            throw new BusinessException("解析 Excel 失败: " + e.getMessage());
+            throw new ServiceException(500, "解析 Excel 失败: " + e.getMessage());
         }
         return rows;
     }
@@ -106,7 +106,7 @@ public class ExcelUtils {
      *
      * @param file      uploaded file
      * @param head      head class carrying EasyExcel annotations
-     * @param validator per-row validator; should throw a {@link BusinessException}
+     * @param validator per-row validator; should throw a {@link ServiceException}
      *                  (or any {@link RuntimeException}) carrying the failure reason
      * @param <T>       row type
      * @return aggregated success/error result

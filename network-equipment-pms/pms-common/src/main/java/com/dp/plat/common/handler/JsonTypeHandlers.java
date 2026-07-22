@@ -18,7 +18,7 @@ import java.util.List;
  * <p>使用方式（实体类）：
  * <pre>
  * {@literal @}TableName(value = "pms_project_template_version", autoResultMap = true)
- * public class ProjectTemplateVersion extends BaseEntity {
+ * public class ProjectTemplateVersion extends BaseDO {
  *     {@literal @}TableField(typeHandler = JsonTypeHandlers.TemplateSnapshotHandler.class)
  *     private TemplateSnapshot snapshotJson;
  * }
