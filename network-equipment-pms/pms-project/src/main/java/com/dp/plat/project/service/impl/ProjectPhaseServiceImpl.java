@@ -219,12 +219,13 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
             } else {
                 // Fallback 路径：本类内联集合判断（TD-P8-011 已修复）
                 for (PhaseExitGate.RequiredDeliverable req : gate.getRequiredDeliverables()) {
-                    Deliverable d = deliverableMapper.selectById(req.getDeliverableId());
+                    Long deliverableId = parseLongSafe(req.getDeliverableId());
+                    Deliverable d = deliverableId != null ? deliverableMapper.selectById(deliverableId) : null;
                     if (d == null) {
                         violations.add(PhaseExitGateViolation.builder()
                                 .gateType("DELIVERABLE")
                                 .message("必需交付件不存在")
-                                .businessId(req.getDeliverableId())
+                                .businessId(deliverableId)
                                 .businessName(req.getDeliverableName())
                                 .expectedStatus(req.getRequiredStatus())
                                 .actualStatus(null)
@@ -265,12 +266,13 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
                 if (!Boolean.TRUE.equals(req.getMustReached())) {
                     continue;
                 }
-                Milestone m = milestoneMapper.selectById(req.getMilestoneId());
+                Long milestoneId = parseLongSafe(req.getMilestoneId());
+                Milestone m = milestoneId != null ? milestoneMapper.selectById(milestoneId) : null;
                 if (m == null) {
                     violations.add(PhaseExitGateViolation.builder()
                             .gateType("MILESTONE")
                             .message("必需里程碑不存在")
-                            .businessId(req.getMilestoneId())
+                            .businessId(milestoneId)
                             .expectedStatus(PHASE_COMPLETED)
                             .actualStatus(null)
                             .build());
@@ -295,13 +297,18 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
                 if (!Boolean.TRUE.equals(req.getAllCompleted())) {
                     continue; // 不要求全部完成，跳过
                 }
+                Long phaseId = parseLongSafe(req.getPhaseId());
                 if (taskCompletionChecker == null) {
                     log.warn("TASK 退出条件校验跳过：TaskCompletionChecker SPI 未注入（pms-implementation 模块未加载），phaseId={}",
                             req.getPhaseId());
                     continue;
                 }
+                if (phaseId == null) {
+                    log.warn("TASK 退出条件校验跳过：phaseId 非法（{}），phaseId={}", req.getPhaseId(), req.getPhaseId());
+                    continue;
+                }
                 List<TaskCompletionViolation> taskViolations =
-                        taskCompletionChecker.findUncompletedTasks(req.getPhaseId());
+                        taskCompletionChecker.findUncompletedTasks(phaseId);
                 if (taskViolations != null) {
                     for (TaskCompletionViolation tv : taskViolations) {
                         violations.add(PhaseExitGateViolation.builder()
@@ -346,6 +353,27 @@ public class ProjectPhaseServiceImpl implements IProjectPhaseService {
             }
         }
         return violations;
+    }
+
+    /**
+     * 安全解析字符串 ID 为 Long。
+     *
+     * <p>用于 {@link PhaseExitGate} 中 ID 字段（String 承载，兼容模板态字符串引用与项目态数字 ID）
+     * 向数据库查询所需的 Long 转换。模板态残留的非数字 ID（如前端 genId 生成的 "delv_xxx"）
+     * 解析失败时返回 null，由调用方按"不存在"处理。</p>
+     *
+     * @param idVal 字符串 ID（可能为 null/空/非数字/数字）
+     * @return 解析后的 Long，或 null（输入为空或非数字）
+     */
+    private Long parseLongSafe(String idVal) {
+        if (idVal == null || idVal.isEmpty()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(idVal.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /** 查询下一阶段（同项目内 sortOrder 大于当前阶段的最小一个）。 */

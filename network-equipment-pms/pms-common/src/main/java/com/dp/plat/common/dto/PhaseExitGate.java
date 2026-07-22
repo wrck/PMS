@@ -27,7 +27,12 @@ public class PhaseExitGate implements Serializable {
     @Data
     public static class RequiredDeliverable implements Serializable {
         private static final long serialVersionUID = 1L;
-        private Long deliverableId;
+        /**
+         * 交付件标识。模板态为前端生成的字符串引用（无数据库实例）；
+         * 项目态为数据库 Long 主键。统一用 String 承载，避免 Jackson 反序列化
+         * 字符串 ID 到 Long 字段时抛类型错误。项目态校验时由调用方安全转为 Long。
+         */
+        private String deliverableId;
         private String deliverableName;
         private String requiredStatus; // PUBLISHED/REFERENCED/ARCHIVED
     }
@@ -35,14 +40,22 @@ public class PhaseExitGate implements Serializable {
     @Data
     public static class RequiredTask implements Serializable {
         private static final long serialVersionUID = 1L;
-        private Long phaseId;
+        /**
+         * 阶段标识。模板态为 phaseCode 字符串引用；项目态为数据库 Long 主键。
+         * 统一用 String 承载，避免类型错误。
+         */
+        private String phaseId;
         private Boolean allCompleted;
     }
 
     @Data
     public static class RequiredMilestone implements Serializable {
         private static final long serialVersionUID = 1L;
-        private Long milestoneId;
+        /**
+         * 里程碑标识。模板态为前端生成的字符串引用；项目态为数据库 Long 主键。
+         * 统一用 String 承载，避免类型错误。
+         */
+        private String milestoneId;
         private Boolean mustReached;
     }
 

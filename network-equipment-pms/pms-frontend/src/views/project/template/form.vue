@@ -285,6 +285,49 @@ function removeMilestone(idx: number) {
 // ============== 数据加载 ==============
 
 /**
+ * 规范化阶段进入条件字段类型（对齐后端 com.dp.plat.common.dto.PhaseCriteria）。
+ * 确保 requirePreviousPhaseComplete / requireApproval 为布尔值，防止
+ * undefined/字符串等脏数据导致后端 Jackson 反序列化或前端 v-model 类型异常。
+ */
+function normalizeEntryCriteria(raw: any): PhaseCriteria {
+  const obj = raw && typeof raw === 'object' ? raw : {}
+  return {
+    requirePreviousPhaseComplete: Boolean(obj.requirePreviousPhaseComplete),
+    requireApproval: Boolean(obj.requireApproval)
+  }
+}
+
+/**
+ * 规范化阶段退出条件字段类型（对齐后端 com.dp.plat.common.dto.PhaseExitGate）。
+ * - 4 类条件统一为非空数组
+ * - 内部对象 boolean 字段强制布尔化
+ * - ID 字段（deliverableId/phaseId/milestoneId）统一为 string，兼容模板态字符串引用与项目态数字 ID
+ *   后端 PhaseExitGate 已将 ID 字段改为 String，避免 Jackson 反序列化字符串到 Long 的类型错误。
+ */
+function normalizeExitCriteria(raw: any): PhaseExitGate {
+  const obj = raw && typeof raw === 'object' ? raw : {}
+  return {
+    requiredDeliverables: (Array.isArray(obj.requiredDeliverables) ? obj.requiredDeliverables : []).map((d: any) => ({
+      deliverableId: d.deliverableId != null ? String(d.deliverableId) : undefined,
+      deliverableName: d.deliverableName ?? '',
+      requiredStatus: d.requiredStatus ?? ''
+    })),
+    requiredTasks: (Array.isArray(obj.requiredTasks) ? obj.requiredTasks : []).map((t: any) => ({
+      phaseId: t.phaseId != null ? String(t.phaseId) : undefined,
+      allCompleted: Boolean(t.allCompleted)
+    })),
+    requiredMilestones: (Array.isArray(obj.requiredMilestones) ? obj.requiredMilestones : []).map((m: any) => ({
+      milestoneId: m.milestoneId != null ? String(m.milestoneId) : undefined,
+      mustReached: Boolean(m.mustReached)
+    })),
+    requiredApprovals: (Array.isArray(obj.requiredApprovals) ? obj.requiredApprovals : []).map((a: any) => ({
+      approvalType: a.approvalType ?? '',
+      mustApproved: Boolean(a.mustApproved)
+    }))
+  }
+}
+
+/**
  * 将后端 TemplateSnapshot 中的 DTO 字段映射到前端各 ref 节点。
  * 字段差异参考 com.dp.plat.common.dto.TemplateSnapshot。
  */
@@ -292,37 +335,13 @@ function applySnapshot(snap?: TemplateSnapshot) {
   if (!snap) return
   // 阶段：字段名一致，但需规范化 entryCriteria / exitCriteria 结构化对象
   // 历史数据可能存在 entryCriteria 为字符串/undefined 的情况，统一转为对象
-  phases.value = ((snap.phases ?? []) as any[]).map((p: any): PhaseDef => {
-    let entryCriteria: PhaseCriteria
-    if (p.entryCriteria && typeof p.entryCriteria === 'object') {
-      entryCriteria = {
-        requirePreviousPhaseComplete: Boolean(p.entryCriteria.requirePreviousPhaseComplete),
-        requireApproval: Boolean(p.entryCriteria.requireApproval)
-      }
-    } else {
-      entryCriteria = { requirePreviousPhaseComplete: false, requireApproval: false }
-    }
-
-    let exitCriteria: PhaseExitGate
-    if (p.exitCriteria && typeof p.exitCriteria === 'object') {
-      exitCriteria = {
-        requiredDeliverables: Array.isArray(p.exitCriteria.requiredDeliverables) ? p.exitCriteria.requiredDeliverables : [],
-        requiredTasks: Array.isArray(p.exitCriteria.requiredTasks) ? p.exitCriteria.requiredTasks : [],
-        requiredMilestones: Array.isArray(p.exitCriteria.requiredMilestones) ? p.exitCriteria.requiredMilestones : [],
-        requiredApprovals: Array.isArray(p.exitCriteria.requiredApprovals) ? p.exitCriteria.requiredApprovals : []
-      }
-    } else {
-      exitCriteria = { requiredDeliverables: [], requiredTasks: [], requiredMilestones: [], requiredApprovals: [] }
-    }
-
-    return {
-      phaseCode: p.phaseCode ?? '',
-      phaseName: p.phaseName ?? '',
-      sortOrder: p.sortOrder ?? 1,
-      entryCriteria,
-      exitCriteria
-    }
-  })
+  phases.value = ((snap.phases ?? []) as any[]).map((p: any): PhaseDef => ({
+    phaseCode: p.phaseCode ?? '',
+    phaseName: p.phaseName ?? '',
+    sortOrder: p.sortOrder ?? 1,
+    entryCriteria: normalizeEntryCriteria(p.entryCriteria),
+    exitCriteria: normalizeExitCriteria(p.exitCriteria)
+  }))
 
   // 任务：字段名一致（id/children 等前端字段在加载时缺失，由 addTask 等生成）
   tasks.value = ((snap.tasks ?? []) as any[]).map((t: any) => ({
@@ -454,8 +473,8 @@ function buildSnapshot(): TemplateSnapshot {
       phaseCode: p.phaseCode,
       phaseName: p.phaseName,
       sortOrder: p.sortOrder,
-      entryCriteria: p.entryCriteria ?? { requirePreviousPhaseComplete: false, requireApproval: false },
-      exitCriteria: p.exitCriteria ?? { requiredDeliverables: [], requiredTasks: [], requiredMilestones: [], requiredApprovals: [] }
+      entryCriteria: normalizeEntryCriteria(p.entryCriteria),
+      exitCriteria: normalizeExitCriteria(p.exitCriteria)
     })),
     // 任务：taskCode 在后端 DTO 中不存在，转成 parentTaskName 由后端处理；保留前端 id/children 内部字段后端会忽略
     tasks: flattenTasks(tasks.value),
