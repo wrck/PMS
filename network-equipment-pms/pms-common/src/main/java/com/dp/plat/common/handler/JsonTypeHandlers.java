@@ -1,6 +1,7 @@
 package com.dp.plat.common.handler;
 
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.dp.plat.common.dto.DeliverableContentBlock;
 import com.dp.plat.common.dto.PhaseCriteria;
 import com.dp.plat.common.dto.PhaseExitGate;
 import com.dp.plat.common.dto.TaskPlanSnapshot;
@@ -81,6 +82,33 @@ public final class JsonTypeHandlers {
     public static class TemplateSnapshotHandler extends JacksonTypeHandler {
         public TemplateSnapshotHandler() {
             super(TemplateSnapshot.class);
+        }
+    }
+
+    /**
+     * DeliverableContentBlock List TypeHandler
+     * （pms_deliverable.content_blocks 与 pms_deliverable_type_template.default_blocks 共用）
+     *
+     * <p>重写 parse 以 {@link TypeReference}#{@code List<DeliverableContentBlock>} 反序列化，
+     * 解决泛型擦除导致的元素退化为 LinkedHashMap 问题。使用自包含 ObjectMapper，
+     * 不依赖父类 getObjectMapper 的可见性差异。</p>
+     */
+    public static class DeliverableContentBlockListHandler extends JacksonTypeHandler {
+        private static final ObjectMapper MAPPER = new ObjectMapper();
+        private static final TypeReference<List<DeliverableContentBlock>> TYPE_REF = new TypeReference<>() {
+        };
+
+        public DeliverableContentBlockListHandler() {
+            super(List.class);
+        }
+
+        @Override
+        protected Object parse(String json) {
+            try {
+                return MAPPER.readValue(json, TYPE_REF);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

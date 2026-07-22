@@ -6,6 +6,7 @@ import com.dp.plat.deliverable.dto.MandatoryDeliverableValidationResult;
 import com.dp.plat.deliverable.entity.Deliverable;
 import com.dp.plat.deliverable.entity.DeliverableReference;
 import com.dp.plat.deliverable.entity.DeliverableSignature;
+import com.dp.plat.deliverable.entity.DeliverableTypeTemplate;
 import com.dp.plat.deliverable.entity.DeliverableVersion;
 import com.dp.plat.deliverable.service.DeliverableService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -217,5 +218,19 @@ public class DeliverableController {
     public Result<MandatoryDeliverableValidationResult> validateMandatoryDeliverables(
             @PathVariable Long phaseId) {
         return Result.ok(deliverableService.validateMandatoryDeliverables(phaseId));
+    }
+
+    // ==================== 类型默认内容块模板 ====================
+
+    @Operation(summary = "查询所有交付件类型默认内容块模板（按 deliverableType 升序）")
+    @GetMapping("/type-templates")
+    public Result<List<DeliverableTypeTemplate>> listTypeTemplates() {
+        return Result.ok(deliverableService.listTypeTemplates());
+    }
+
+    @Operation(summary = "查询指定交付件类型的默认内容块模板")
+    @GetMapping("/type-templates/{deliverableType}")
+    public Result<DeliverableTypeTemplate> getTypeTemplate(@PathVariable String deliverableType) {
+        return Result.ok(deliverableService.getTypeTemplate(deliverableType));
     }
 }

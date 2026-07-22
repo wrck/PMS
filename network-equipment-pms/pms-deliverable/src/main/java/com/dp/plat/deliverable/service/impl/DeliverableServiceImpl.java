@@ -9,12 +9,14 @@ import com.dp.plat.deliverable.dto.MandatoryDeliverableValidationResult;
 import com.dp.plat.deliverable.entity.Deliverable;
 import com.dp.plat.deliverable.entity.DeliverableReference;
 import com.dp.plat.deliverable.entity.DeliverableSignature;
+import com.dp.plat.deliverable.entity.DeliverableTypeTemplate;
 import com.dp.plat.deliverable.entity.DeliverableVersion;
 import com.dp.plat.deliverable.enums.DeliverableStatus;
 import com.dp.plat.deliverable.exception.IllegalStateTransitionException;
 import com.dp.plat.deliverable.mapper.DeliverableMapper;
 import com.dp.plat.deliverable.mapper.DeliverableReferenceMapper;
 import com.dp.plat.deliverable.mapper.DeliverableSignatureMapper;
+import com.dp.plat.deliverable.mapper.DeliverableTypeTemplateMapper;
 import com.dp.plat.deliverable.mapper.DeliverableVersionMapper;
 import com.dp.plat.deliverable.service.DeliverableService;
 import com.dp.plat.common.dto.StoredBusinessFile;
@@ -48,6 +50,7 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
     private final DeliverableVersionMapper deliverableVersionMapper;
     private final DeliverableSignatureMapper deliverableSignatureMapper;
     private final DeliverableReferenceMapper deliverableReferenceMapper;
+    private final DeliverableTypeTemplateMapper deliverableTypeTemplateMapper;
     private final BusinessFileStorage businessFileStorage;
     private final ProjectPhaseLookup projectPhaseLookup;
 
@@ -120,6 +123,7 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
         current.setApproverRole(patch.getApproverRole());
         current.setRefEntityType(patch.getRefEntityType());
         current.setRefEntityId(patch.getRefEntityId());
+        current.setContentBlocks(patch.getContentBlocks());
         validateRefEntity(current);
         updateById(current);
         return current;
@@ -519,5 +523,24 @@ public class DeliverableServiceImpl extends ServiceImpl<DeliverableMapper, Deliv
             throw new BusinessException("交付件不存在：id=" + id);
         }
         return deliverable;
+    }
+
+    // ==================== 类型模板管理 ====================
+
+    @Override
+    public List<DeliverableTypeTemplate> listTypeTemplates() {
+        return deliverableTypeTemplateMapper.selectList(
+                new LambdaQueryWrapper<DeliverableTypeTemplate>()
+                        .orderByAsc(DeliverableTypeTemplate::getDeliverableType));
+    }
+
+    @Override
+    public DeliverableTypeTemplate getTypeTemplate(String deliverableType) {
+        if (deliverableType == null || deliverableType.isBlank()) {
+            return null;
+        }
+        return deliverableTypeTemplateMapper.selectOne(
+                new LambdaQueryWrapper<DeliverableTypeTemplate>()
+                        .eq(DeliverableTypeTemplate::getDeliverableType, deliverableType));
     }
 }

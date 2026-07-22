@@ -5,6 +5,7 @@ import com.dp.plat.deliverable.dto.MandatoryDeliverableValidationResult;
 import com.dp.plat.deliverable.entity.Deliverable;
 import com.dp.plat.deliverable.entity.DeliverableReference;
 import com.dp.plat.deliverable.entity.DeliverableSignature;
+import com.dp.plat.deliverable.entity.DeliverableTypeTemplate;
 import com.dp.plat.deliverable.entity.DeliverableVersion;
 
 import java.util.List;
@@ -196,4 +197,22 @@ public interface DeliverableService extends IService<Deliverable> {
      * @return 已创建的引用关系
      */
     DeliverableReference addReference(DeliverableReference reference);
+
+    /**
+     * 查询所有交付件类型默认内容块模板（按 deliverableType 升序）。
+     *
+     * <p>用于前端新建交付件切换类型时加载默认内容块。
+     * 模板来源 V88 迁移预置，每种交付件性质类型对应一份。</p>
+     *
+     * @return 模板列表（按 deliverableType 升序）
+     */
+    List<DeliverableTypeTemplate> listTypeTemplates();
+
+    /**
+     * 查询指定交付件类型的默认内容块模板。
+     *
+     * @param deliverableType 交付件性质类型（见字典 {@code pms_deliverable_type}）
+     * @return 模板（不存在返回 null）
+     */
+    DeliverableTypeTemplate getTypeTemplate(String deliverableType);
 }

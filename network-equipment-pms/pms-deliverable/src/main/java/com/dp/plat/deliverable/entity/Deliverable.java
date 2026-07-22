@@ -1,7 +1,10 @@
 package com.dp.plat.deliverable.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.dp.plat.common.dto.DeliverableContentBlock;
 import com.dp.plat.common.entity.BaseEntity;
+import com.dp.plat.common.handler.JsonTypeHandlers;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 交付件实体（全生命周期 7 态状态机）。
@@ -27,7 +31,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("pms_deliverable")
+@TableName(value = "pms_deliverable", autoResultMap = true)
 public class Deliverable extends BaseEntity {
 
     /** 项目ID。 */
@@ -41,6 +45,22 @@ public class Deliverable extends BaseEntity {
 
     /** 文件路径（最新版本）。 */
     private String filePath;
+
+    /**
+     * 结构化内容块（JSON 数组，元素见 {@link DeliverableContentBlock}）。
+     *
+     * <p>借鉴问卷功能：交付件文档内容由若干内容块有序组成，支持富文本/内嵌表/选项卡/
+     * 标题/分隔线/代码块 6 种类型（blockType 取值由字典 {@code pms_deliverable_block_type} 维护）。
+     * 新建交付件时由前端按 deliverableType 加载对应默认模板
+     * （{@link DeliverableTypeTemplate}）填充，用户可二次编辑。</p>
+     *
+     * <p>TypeHandler：{@link JsonTypeHandlers.DeliverableContentBlockListHandler}
+     * （重写 parse 以 {@code TypeReference<List<DeliverableContentBlock>>} 反序列化，
+     * 解决泛型擦除）。{@code autoResultMap = true} 已在类级 {@code @TableName} 开启，
+     * 确保 BaseMapper 查询时字段级 typeHandler 生效。</p>
+     */
+    @TableField(typeHandler = JsonTypeHandlers.DeliverableContentBlockListHandler.class)
+    private List<DeliverableContentBlock> contentBlocks;
 
     /**
      * 状态（7 态）：DRAFT/SUBMITTED/REVIEWED/SIGNED/PUBLISHED/REFERENCED/ARCHIVED。

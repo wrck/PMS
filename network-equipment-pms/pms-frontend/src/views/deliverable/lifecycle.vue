@@ -21,6 +21,7 @@ import {
   deleteDeliverable,
   DELIVERABLE_STATUS_LABELS,
   DELIVERABLE_STATUS_ORDER,
+  getTypeTemplate,
   listFullDeliverables,
   loadDeliverableTypes,
   publishDeliverable,
@@ -30,6 +31,7 @@ import {
   submitDeliverable,
   translateDeliverableType,
   type Deliverable,
+  type DeliverableContentBlock,
   type DeliverableStatus,
   type ReviseRequest,
   type SysDictItem
@@ -41,6 +43,7 @@ import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import DeliverableStatusBadge from '@/components/common/DeliverableStatusBadge.vue'
 import DeliverableRefEntitySelector from '@/components/DeliverableRefEntitySelector.vue'
+import DeliverableContentBlockEditor from '@/components/DeliverableContentBlockEditor.vue'
 
 defineOptions({ name: 'DeliverableLifecycle' })
 
@@ -251,6 +254,7 @@ const createForm = ref<Deliverable>({
   deliverableName: '',
   deliverableType: 'DOCUMENT',
   filePath: '',
+  contentBlocks: [] as DeliverableContentBlock[],
   mandatory: false,
   phaseId: undefined,
   approverRole: '',
@@ -264,6 +268,7 @@ function openCreate() {
     deliverableName: '',
     deliverableType: 'DOCUMENT',
     filePath: '',
+    contentBlocks: [] as DeliverableContentBlock[],
     mandatory: false,
     phaseId: undefined,
     approverRole: '',
@@ -271,10 +276,26 @@ function openCreate() {
     refEntityId: undefined
   }
   createVisible.value = true
+  // 默认加载 DOCUMENT 类型的内容块模板
+  loadTypeTemplate('DOCUMENT')
 }
 
-/** 切换类型时清理不相关字段，确保后端校验通过 */
-function onTypeChangeCreate(t: string) {
+/** 加载指定交付件类型的默认内容块模板，填充 createForm.contentBlocks */
+async function loadTypeTemplate(type: string) {
+  try {
+    const template = await getTypeTemplate(type)
+    if (template && template.defaultBlocks) {
+      createForm.value.contentBlocks = template.defaultBlocks.map((b) => ({ ...b }))
+    } else {
+      createForm.value.contentBlocks = []
+    }
+  } catch {
+    createForm.value.contentBlocks = []
+  }
+}
+
+/** 切换类型时清理不相关字段，确保后端校验通过；并加载对应内容块模板 */
+async function onTypeChangeCreate(t: string) {
   createForm.value.deliverableType = t
   // 非 ENTITY_REF 类型清空引用字段
   if (t !== 'ENTITY_REF') {
@@ -284,6 +305,22 @@ function onTypeChangeCreate(t: string) {
   // 非文件类类型清空文件路径
   if (!needsFilePath(t)) {
     createForm.value.filePath = ''
+  }
+  // 切换内容块模板：若已有内容则确认，否则直接加载
+  const hasContent = (createForm.value.contentBlocks ?? []).length > 0
+  if (hasContent) {
+    try {
+      await ElMessageBox.confirm(
+        '切换交付件类型将覆盖当前已配置的内容块，是否继续？',
+        '切换类型确认',
+        { type: 'warning', confirmButtonText: '覆盖', cancelButtonText: '取消' }
+      )
+      await loadTypeTemplate(t)
+    } catch {
+      /* 用户取消，保留现有内容块 */
+    }
+  } else {
+    await loadTypeTemplate(t)
   }
 }
 
@@ -699,7 +736,7 @@ onMounted(async () => {
     </template>
 
     <!-- 新建弹窗 -->
-    <el-dialog v-model="createVisible" title="新建交付件" width="560px" destroy-on-close>
+    <el-dialog v-model="createVisible" title="新建交付件" width="780px" destroy-on-close>
       <el-form :model="createForm" label-width="100px">
         <el-form-item label="交付件名称" required>
           <el-input v-model="createForm.deliverableName" placeholder="请输入交付件名称" />
@@ -755,6 +792,11 @@ onMounted(async () => {
         <el-form-item label="必需交付件">
           <el-switch v-model="createForm.mandatory" />
           <span class="hint">必需交付件影响阶段退出校验</span>
+        </el-form-item>
+
+        <!-- 内容配置：按交付件类型加载默认内容块模板，用户可二次编辑 -->
+        <el-form-item label="内容配置">
+          <DeliverableContentBlockEditor v-model="createForm.contentBlocks" />
         </el-form-item>
       </el-form>
       <template #footer>

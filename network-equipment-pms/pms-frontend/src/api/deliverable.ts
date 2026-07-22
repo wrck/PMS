@@ -6,6 +6,8 @@ import { getDictItems, type SysDictItem } from '@/api/system'
 export const DELIVERABLE_TYPE_DICT = 'pms_deliverable_type'
 /** 交付件引用实体类型字典编码 */
 export const DELIVERABLE_REF_ENTITY_TYPE_DICT = 'pms_deliverable_ref_entity_type'
+/** 交付件内容块类型字典编码 */
+export const DELIVERABLE_BLOCK_TYPE_DICT = 'pms_deliverable_block_type'
 
 /**
  * @deprecated 交付件类型已改为数据字典驱动（字典 pms_deliverable_type），
@@ -190,6 +192,59 @@ export const DELIVERABLE_STATUS_ORDER: DeliverableStatus[] = [
  */
 export type DeliverableKind = DeliverableType
 
+/** 交付件内容块类型（见字典 pms_deliverable_block_type） */
+export type DeliverableBlockType =
+  | 'RICH_TEXT'
+  | 'TABLE'
+  | 'TABS'
+  | 'HEADING'
+  | 'DIVIDER'
+  | 'CODE_BLOCK'
+  | string
+
+/** 交付件结构化文档内容块（单个元素，借鉴问卷功能动态配置） */
+export interface DeliverableContentBlock {
+  /** 内容块类型（见字典 pms_deliverable_block_type） */
+  blockType: DeliverableBlockType
+  /** 内容块唯一标识（同一交付件内唯一，如 title/body/code/attrs） */
+  blockKey: string
+  /** 内容块标题（前端展示用，用户可编辑） */
+  blockTitle?: string
+  /**
+   * 内容块配置（结构随 blockType 不同而不同）：
+   * - RICH_TEXT：{} 预留
+   * - TABLE：{ columns: string[] }
+   * - TABS：{} 预留（标签名从 blockContent 键读取）
+   * - HEADING：{ level: 1~4 }
+   * - DIVIDER：{} 无配置
+   * - CODE_BLOCK：{ language: string }
+   */
+  blockConfig?: Record<string, unknown>
+  /**
+   * 内容块内容（类型随 blockType 不同而不同）：
+   * - RICH_TEXT/HEADING/CODE_BLOCK：string
+   * - TABLE：string[][]（二维行数据）
+   * - TABS：Record<string,string>（key 为标签名，value 为富文本内容）
+   * - DIVIDER：null
+   */
+  blockContent?: unknown
+  /** 排序号（从 1 开始，升序排列） */
+  sortOrder?: number
+}
+
+/** 交付件类型默认内容块模板 */
+export interface DeliverableTypeTemplate {
+  id?: number
+  /** 交付件性质类型（见字典 pms_deliverable_type） */
+  deliverableType: string
+  /** 默认内容块数组 */
+  defaultBlocks: DeliverableContentBlock[]
+  /** 模板说明 */
+  description?: string
+  createTime?: string
+  updateTime?: string
+}
+
 /** 交付件实体（7 态状态机） */
 export interface Deliverable {
   id?: number
@@ -198,6 +253,8 @@ export interface Deliverable {
   deliverableName: string
   deliverableType?: DeliverableType | string
   filePath?: string
+  /** 结构化内容块（JSON 数组，元素见 DeliverableContentBlock） */
+  contentBlocks?: DeliverableContentBlock[]
   status?: DeliverableStatus
   phaseId?: number
   currentVersion?: number
@@ -456,4 +513,55 @@ export function translateRefEntityType(value?: string): string {
     REPORT: '报告'
   }
   return labels[value] ?? value
+}
+
+// -------------------- 内容块类型字典 --------------------
+
+/**
+ * 内容块类型中文标签兜底常量（字典未就绪时使用）。
+ */
+export const DELIVERABLE_BLOCK_TYPE_LABELS: Record<string, string> = {
+  RICH_TEXT: '富文本',
+  TABLE: '内嵌表',
+  TABS: '选项卡',
+  HEADING: '标题',
+  DIVIDER: '分隔线',
+  CODE_BLOCK: '代码块'
+}
+
+/** 内容块类型字典项缓存（首次调用后填充） */
+let deliverableBlockTypeItems: SysDictItem[] | null = null
+
+/** 加载交付件内容块类型字典（带缓存，字典未就绪时使用兜底常量） */
+export async function loadDeliverableBlockTypes(): Promise<SysDictItem[]> {
+  if (deliverableBlockTypeItems) return deliverableBlockTypeItems
+  try {
+    const items = await getDictItems(DELIVERABLE_BLOCK_TYPE_DICT)
+    deliverableBlockTypeItems = items.length > 0 ? items : toFallbackItems(DELIVERABLE_BLOCK_TYPE_LABELS)
+  } catch {
+    deliverableBlockTypeItems = toFallbackItems(DELIVERABLE_BLOCK_TYPE_LABELS)
+  }
+  return deliverableBlockTypeItems
+}
+
+/** 翻译内容块类型值为中文标签（优先用字典缓存，兜底 DELIVERABLE_BLOCK_TYPE_LABELS） */
+export function translateBlockType(value?: string): string {
+  if (!value) return '-'
+  if (deliverableBlockTypeItems) {
+    const item = deliverableBlockTypeItems.find((it) => it.itemValue === value)
+    if (item) return item.itemText
+  }
+  return DELIVERABLE_BLOCK_TYPE_LABELS[value] ?? value
+}
+
+// -------------------- 类型默认内容块模板 --------------------
+
+/** 查询所有交付件类型默认内容块模板（按 deliverableType 升序） */
+export function listTypeTemplates(): Promise<DeliverableTypeTemplate[]> {
+  return get<DeliverableTypeTemplate[]>('/api/deliverable/type-templates')
+}
+
+/** 查询指定交付件类型的默认内容块模板 */
+export function getTypeTemplate(type: string): Promise<DeliverableTypeTemplate> {
+  return get<DeliverableTypeTemplate>(`/api/deliverable/type-templates/${type}`)
 }

@@ -53,6 +53,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import DeliverableStatusBadge from '@/components/common/DeliverableStatusBadge.vue'
 import DeliverableStatusFlow from '@/components/DeliverableStatusFlow.vue'
 import DeliverableVersionList from '@/components/DeliverableVersionList.vue'
+import DeliverableContentBlockEditor from '@/components/DeliverableContentBlockEditor.vue'
 
 defineOptions({ name: 'DeliverableDetail' })
 
@@ -567,6 +568,16 @@ onMounted(loadAll)
               </el-descriptions-item>
               <el-descriptions-item v-else label="文件路径">{{ deliverable.filePath ?? '-' }}</el-descriptions-item>
             </el-descriptions>
+          </el-card>
+
+          <!-- 内容详情（结构化内容块，只读渲染） -->
+          <el-card
+            v-if="deliverable.contentBlocks && deliverable.contentBlocks.length > 0"
+            shadow="never"
+            class="section-card"
+          >
+            <template #header><span class="section-title">内容详情</span></template>
+            <DeliverableContentBlockEditor :model-value="deliverable.contentBlocks" disabled />
           </el-card>
 
           <!-- 引用实体概要（仅 ENTITY_REF 类型显示） -->
