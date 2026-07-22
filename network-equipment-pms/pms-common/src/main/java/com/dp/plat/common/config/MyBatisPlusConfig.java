@@ -5,18 +5,20 @@ import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
-import com.dp.plat.common.util.SecurityUtils;
-import org.apache.ibatis.reflection.MetaObject;
+import com.dp.plat.framework.mybatis.core.handler.DefaultDBFieldHandler;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.LocalDateTime;
 
 /**
  * MyBatis-Plus configuration: pagination interceptor, optimistic lock interceptor,
  * optional custom inner interceptors (e.g. data permission), and a
  * {@link MetaObjectHandler} for auto-filling audit fields.
+ *
+ * <p><b>MetaObjectHandler</b>：复用 yudao {@link DefaultDBFieldHandler}，对
+ * {@link com.dp.plat.framework.mybatis.core.dataobject.BaseDO} 实体填充
+ * creator/updater（当前登录用户编号），同时兼容历史
+ * {@link com.dp.plat.common.entity.BaseEntity} 的 createBy/updateBy/deleted 字段。
  *
  * <p><b>慢 SQL 监控注册说明</b>：{@link com.dp.plat.common.mybatis.SlowSqlInterceptor}
  * 为 MyBatis 原生 {@code org.apache.ibatis.plugin.Interceptor}（非 MyBatis-Plus 的
@@ -40,26 +42,15 @@ public class MyBatisPlusConfig {
         return interceptor;
     }
 
+    /**
+     * 复用 yudao {@link DefaultDBFieldHandler} 作为审计字段自动填充处理器。
+     *
+     * <p>同时处理 {@code BaseDO}（creator/updater/deleted:Boolean）与历史
+     * {@code BaseEntity}（createBy/updateBy/deleted:Integer）。
+     */
     @Bean
     public MetaObjectHandler metaObjectHandler() {
-        return new MetaObjectHandler() {
-            @Override
-            public void insertFill(MetaObject metaObject) {
-                String currentUser = SecurityUtils.getCurrentUsername();
-                LocalDateTime now = LocalDateTime.now();
-                this.strictInsertFill(metaObject, "createTime", LocalDateTime.class, now);
-                this.strictInsertFill(metaObject, "updateTime", LocalDateTime.class, now);
-                this.strictInsertFill(metaObject, "createBy", String.class, currentUser);
-                this.strictInsertFill(metaObject, "updateBy", String.class, currentUser);
-                this.strictInsertFill(metaObject, "deleted", Integer.class, 0);
-            }
-
-            @Override
-            public void updateFill(MetaObject metaObject) {
-                String currentUser = SecurityUtils.getCurrentUsername();
-                this.strictUpdateFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
-                this.strictUpdateFill(metaObject, "updateBy", String.class, currentUser);
-            }
-        };
+        return new DefaultDBFieldHandler();
     }
 }
+
