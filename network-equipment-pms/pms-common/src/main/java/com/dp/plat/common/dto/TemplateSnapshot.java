@@ -72,6 +72,16 @@ public class TemplateSnapshot implements Serializable {
         private String phaseCode;
         private Boolean mandatory;
         private String approverRole;
+        /**
+         * 引用实体类型（仅当 deliverableType 为 ENTITY_REF 时使用）。
+         * 取值参考字典 pms_deliverable_ref_entity_type：TASK/ASSET/PHASE/PROJECT/DELIVERABLE/REPORT。
+         */
+        private String refEntityType;
+        /**
+         * 引用实体 ID（仅当 deliverableType 为 ENTITY_REF 时使用）。
+         * 模板态可为空（创建项目时由用户补选），项目态为数据库主键。
+         */
+        private Long refEntityId;
     }
 
     @Data

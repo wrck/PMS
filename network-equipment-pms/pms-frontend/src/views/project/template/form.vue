@@ -34,6 +34,7 @@ import { getAllRoles, type RoleOption, type SysDictItem } from '@/api/system'
 import { loadDeliverableTypes } from '@/api/deliverable'
 import PageHeader from '@/components/common/PageHeader.vue'
 import PhaseExitGateEditor from '@/components/PhaseExitGateEditor.vue'
+import DeliverableRefEntitySelector from '@/components/DeliverableRefEntitySelector.vue'
 
 defineOptions({ name: 'ProjectTemplateForm' })
 
@@ -100,6 +101,10 @@ interface DeliverableNode {
   required: boolean
   signOffRole?: string
   phaseCode?: string
+  /** 引用实体类型（仅 type=ENTITY_REF 时使用） */
+  refEntityType?: string
+  /** 引用实体 ID（仅 type=ENTITY_REF 时使用） */
+  refEntityId?: number
 }
 const deliverables = ref<DeliverableNode[]>([])
 
@@ -145,18 +150,44 @@ function genId(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
 }
 
-/** 扁平化所有任务名（供依赖关系选择） */
+/** 扁平化所有非空任务名（供依赖关系选择），重复名自动加序号后缀避免歧义 */
 const allTaskNames = computed(() => {
   const names: string[] = []
   function collect(nodes: TaskNode[]) {
     for (const n of nodes) {
-      if (n.taskName) names.push(n.taskName)
+      if (n.taskName && n.taskName.trim()) names.push(n.taskName.trim())
       if (n.children) collect(n.children)
     }
   }
   collect(tasks.value)
   return names
 })
+
+/** 依赖下拉选项：任务名 + 所属阶段标签（便于区分同名任务） */
+const taskNameOptions = computed(() => {
+  return allTaskNames.value.map((name) => {
+    const task = findTaskByName(name)
+    const phase = task?.phaseCode ? phases.value.find((p) => p.phaseCode === task.phaseCode) : null
+    return {
+      label: phase ? `${name} [${phase.phaseName || task?.phaseCode}]` : name,
+      value: name
+    }
+  })
+})
+
+function findTaskByName(name: string): TaskNode | null {
+  function find(nodes: TaskNode[]): TaskNode | null {
+    for (const n of nodes) {
+      if (n.taskName === name) return n
+      if (n.children) {
+        const found = find(n.children)
+        if (found) return found
+      }
+    }
+    return null
+  }
+  return find(tasks.value)
+}
 
 /** 阶段编码重复校验，返回重复的编码列表 */
 function findDuplicatePhaseCodes(): string[] {
@@ -286,8 +317,18 @@ function addDeliverable() {
     type: 'DOCUMENT',
     required: true,
     signOffRole: '',
-    phaseCode: phases.value[0]?.phaseCode ?? ''
+    phaseCode: phases.value[0]?.phaseCode ?? '',
+    refEntityType: '',
+    refEntityId: undefined
   })
+}
+
+/** 交付件类型变更时，重置引用实体字段（非 ENTITY_REF 类型清空引用） */
+function onDeliverableTypeChange(row: DeliverableNode) {
+  if (row.type !== 'ENTITY_REF') {
+    row.refEntityType = ''
+    row.refEntityId = undefined
+  }
 }
 
 function removeDeliverable(idx: number) {
@@ -416,14 +457,17 @@ function applySnapshot(snap?: TemplateSnapshot) {
     children: Array.isArray(t.children) ? t.children.map((c: any) => ({ ...c, id: genId('task') })) : []
   })) as TaskNode[]
 
-  // 交付件：name↔deliverableName, type↔deliverableType, required↔mandatory, signOffRole↔approverRole
+  // 交付件：name↔deliverableName, type↔deliverableType, required↔mandatory, signOffRole↔approverRole,
+  // refEntityType/refEntityId 直接对齐
   deliverables.value = ((snap.deliverables ?? []) as any[]).map((d: any) => ({
     id: genId('delv'),
     name: d.name ?? d.deliverableName ?? '',
     type: d.type ?? d.deliverableType ?? 'OTHER',
     required: d.required ?? d.mandatory ?? true,
     signOffRole: d.signOffRole ?? d.approverRole ?? '',
-    phaseCode: d.phaseCode ?? ''
+    phaseCode: d.phaseCode ?? '',
+    refEntityType: d.refEntityType ?? '',
+    refEntityId: d.refEntityId ?? undefined
   })) as DeliverableNode[]
 
   // 依赖：fromTaskName↔predecessorTaskName, toTaskName↔successorTaskName, type↔dependencyType
@@ -538,13 +582,16 @@ function buildSnapshot(): TemplateSnapshot {
     })),
     // 任务：taskCode 在后端 DTO 中不存在，转成 parentTaskName 由后端处理；保留前端 id/children 内部字段后端会忽略
     tasks: flattenTasks(tasks.value),
-    // 交付件：name→deliverableName, type→deliverableType, required→mandatory, signOffRole→approverRole
+    // 交付件：name→deliverableName, type→deliverableType, required→mandatory, signOffRole→approverRole,
+    // refEntityType/refEntityId 直接对齐后端 DeliverableDef
     deliverables: deliverables.value.map((d) => ({
       deliverableName: d.name,
       deliverableType: d.type,
       phaseCode: d.phaseCode,
       mandatory: d.required,
-      approverRole: d.signOffRole
+      approverRole: d.signOffRole,
+      refEntityType: d.type === 'ENTITY_REF' ? d.refEntityType : undefined,
+      refEntityId: d.type === 'ENTITY_REF' ? d.refEntityId : undefined
     })),
     // 依赖：fromTaskName→predecessorTaskName, toTaskName→successorTaskName, type→dependencyType
     dependencies: dependencies.value.map((dep) => ({
@@ -787,10 +834,10 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Step 3: 任务配置 -->
+      <!-- Step 3: 任务配置（卡片式展开编辑，支持层级拖拽） -->
       <div v-else-if="activeStep === 2" class="step-panel">
         <div class="panel-toolbar">
-          <span class="panel-tip">支持拖拽调整层级与顺序</span>
+          <span class="panel-tip">支持拖拽调整层级与顺序 · 点击任务卡片展开详细配置</span>
           <el-button type="primary" :icon="Plus" @click="addTask()">添加任务</el-button>
         </div>
         <el-empty v-if="tasks.length === 0" description="暂无任务，点击「添加任务」开始配置" />
@@ -806,43 +853,54 @@ onMounted(() => {
           @node-drop="handleTaskDrop"
         >
           <template #default="{ data }">
-            <div class="task-node">
-              <el-input v-model="data.taskName" size="small" style="width: 200px" />
-              <el-input v-model="data.taskCode" size="small" placeholder="编码" style="width: 140px" />
-              <el-select
-                v-model="data.phaseCode"
-                size="small"
-                placeholder="所属阶段"
-                style="width: 160px"
-              >
-                <el-option v-for="p in phases" :key="p.phaseCode" :label="p.phaseName" :value="p.phaseCode" />
-              </el-select>
-              <el-select
-                v-model="data.assigneeRole"
-                size="small"
-                filterable
-                clearable
-                placeholder="请选择负责角色"
-                style="width: 160px"
-              >
-                <el-option v-for="r in roles" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
-              </el-select>
-              <el-input-number
-                v-model="data.plannedHours"
-                :min="0"
-                size="small"
-                placeholder="计划工时"
-                style="width: 120px"
-              />
-              <el-button
-                link
-                type="primary"
-                size="small"
-                :icon="CirclePlus"
-                @click.stop="addTask(data)"
-              >子任务</el-button>
-              <el-button link type="danger" size="small" :icon="Close" @click.stop="removeTask(data, tasks)" />
-            </div>
+            <el-card shadow="hover" class="task-card" body-style="padding: 12px;">
+              <div class="task-card-header">
+                <div class="task-card-title">
+                  <el-input v-model="data.taskName" size="small" placeholder="任务名称" style="width: 220px" />
+                  <el-input v-model="data.taskCode" size="small" placeholder="任务编码" style="width: 140px" />
+                </div>
+                <div class="task-card-actions">
+                  <el-button link type="primary" size="small" :icon="CirclePlus" @click.stop="addTask(data)">子任务</el-button>
+                  <el-button link type="danger" size="small" :icon="Close" @click.stop="removeTask(data, tasks)" />
+                </div>
+              </div>
+              <div class="task-card-body">
+                <el-row :gutter="12">
+                  <el-col :xs="24" :sm="12" :md="6">
+                    <div class="field-label">所属阶段</div>
+                    <el-select v-model="data.phaseCode" size="small" placeholder="请选择阶段" style="width: 100%">
+                      <el-option v-for="p in phases" :key="p.phaseCode" :label="p.phaseName" :value="p.phaseCode" />
+                    </el-select>
+                  </el-col>
+                  <el-col :xs="24" :sm="12" :md="6">
+                    <div class="field-label">负责角色</div>
+                    <el-select v-model="data.assigneeRole" size="small" filterable clearable placeholder="请选择角色" style="width: 100%">
+                      <el-option v-for="r in roles" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
+                    </el-select>
+                  </el-col>
+                  <el-col :xs="24" :sm="12" :md="6">
+                    <div class="field-label">计划工时</div>
+                    <el-input-number v-model="data.plannedHours" :min="0" size="small" placeholder="工时" style="width: 100%" />
+                  </el-col>
+                  <el-col :xs="24" :sm="12" :md="6">
+                    <div class="field-label">权重</div>
+                    <el-input-number v-model="data.weight" :min="0" :max="100" :precision="2" size="small" placeholder="权重" style="width: 100%" />
+                  </el-col>
+                  <el-col :xs="24" :sm="12" :md="6">
+                    <div class="field-label">优先级</div>
+                    <el-select v-model="data.priority" size="small" placeholder="请选择" style="width: 100%">
+                      <el-option label="高" value="HIGH" />
+                      <el-option label="中" value="NORMAL" />
+                      <el-option label="低" value="LOW" />
+                    </el-select>
+                  </el-col>
+                  <el-col :span="24">
+                    <div class="field-label">任务描述</div>
+                    <el-input v-model="data.description" size="small" type="textarea" :rows="2" placeholder="任务详细描述" />
+                  </el-col>
+                </el-row>
+              </div>
+            </el-card>
           </template>
         </el-tree>
       </div>
@@ -860,9 +918,14 @@ onMounted(() => {
               <el-input v-model="row.name" size="small" />
             </template>
           </el-table-column>
-          <el-table-column label="类型" width="140">
+          <el-table-column label="类型" width="160">
             <template #default="{ row }">
-              <el-select v-model="row.type" size="small" placeholder="请选择交付件性质类型">
+              <el-select
+                v-model="row.type"
+                size="small"
+                placeholder="请选择交付件性质类型"
+                @change="onDeliverableTypeChange(row)"
+              >
                 <el-option
                   v-for="item in deliverableTypeOptions"
                   :key="item.itemValue"
@@ -870,6 +933,17 @@ onMounted(() => {
                   :value="item.itemValue"
                 />
               </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="引用实体" min-width="320">
+            <template #default="{ row }">
+              <DeliverableRefEntitySelector
+                v-if="row.type === 'ENTITY_REF'"
+                v-model:ref-entity-type="row.refEntityType"
+                v-model:ref-entity-id="row.refEntityId"
+                size="small"
+              />
+              <span v-else class="text-muted">—</span>
             </template>
           </el-table-column>
           <el-table-column label="所属阶段" width="160">
@@ -907,26 +981,26 @@ onMounted(() => {
         </div>
         <el-empty v-if="dependencies.length === 0" description="暂无依赖关系" />
         <el-table v-else :data="dependencies" border stripe>
-          <el-table-column label="前置任务" min-width="180">
+          <el-table-column label="前置任务" min-width="200">
             <template #default="{ row }">
               <el-select v-model="row.fromTaskName" size="small" filterable clearable placeholder="请选择前置任务">
                 <el-option
-                  v-for="t in allTaskNames"
-                  :key="t"
-                  :label="t"
-                  :value="t"
+                  v-for="opt in taskNameOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
                 />
               </el-select>
             </template>
           </el-table-column>
-          <el-table-column label="后置任务" min-width="180">
+          <el-table-column label="后置任务" min-width="200">
             <template #default="{ row }">
               <el-select v-model="row.toTaskName" size="small" filterable clearable placeholder="请选择后置任务">
                 <el-option
-                  v-for="t in allTaskNames"
-                  :key="t"
-                  :label="t"
-                  :value="t"
+                  v-for="opt in taskNameOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
                 />
               </el-select>
             </template>
@@ -1225,6 +1299,43 @@ onMounted(() => {
   flex: 1;
   padding-right: 8px;
   flex-wrap: wrap;
+}
+
+/* 任务卡片式编辑 */
+.task-card {
+  width: 100%;
+  margin-bottom: 4px;
+}
+.task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.task-card-title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.task-card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.task-card-body {
+  border-top: 1px dashed var(--pms-color-border-light, #e4e7ed);
+  padding-top: 10px;
+}
+.field-label {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+.text-muted {
+  color: var(--el-text-color-secondary);
 }
 
 .step-actions {
