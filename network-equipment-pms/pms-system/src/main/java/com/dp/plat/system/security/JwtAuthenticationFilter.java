@@ -1,6 +1,8 @@
 package com.dp.plat.system.security;
 
 import com.dp.plat.common.constant.CommonConstants;
+import com.dp.plat.framework.common.enums.UserTypeEnum;
+import com.dp.plat.framework.security.core.LoginUser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,8 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -26,9 +26,11 @@ import java.util.Map;
  * JWT authentication filter that extracts the token from the Authorization header,
  * validates it, and sets the security context with the authenticated user.
  *
- * <p>Authorities (role-based permissions) are loaded from the database via
- * {@link UserAuthorityService} (with a short TTL cache) and the token is
- * rejected when it has been blacklisted by {@link TokenBlacklistService}.</p>
+ * <p>适配 yudao 框架：principal 使用 {@link LoginUser}（取代 Spring Security 默认
+ * {@code UserDetails}），使 {@link com.dp.plat.framework.security.core.util.SecurityFrameworkUtils#getLoginUserId()}
+ * 可直接获取当前用户编号。Authorities（角色权限）仍由 {@link UserAuthorityService} 加载，
+ * 以兼容 {@code @PreAuthorize("hasAuthority('xxx')")} 注解校验。Token 黑名单由
+ * {@link TokenBlacklistService} 处理。</p>
  */
 @Slf4j
 @Component
@@ -55,14 +57,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String username = jwtTokenProvider.getUsernameFromToken(token);
             if (userId != null && username != null
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // 加载角色权限（兼容 @PreAuthorize hasAuthority 注解）
                 Collection<GrantedAuthority> authorities = userAuthorityService.loadAuthorities(username);
-                UserDetails userDetails = User.builder()
-                        .username(String.valueOf(userId))
-                        .password("")
-                        .authorities(authorities)
-                        .build();
+                // 构建 yudao LoginUser 作为 principal
+                LoginUser loginUser = new LoginUser();
+                loginUser.setId(userId);
+                loginUser.setUserType(UserTypeEnum.ADMIN.getValue());
+                Map<String, String> info = new HashMap<>();
+                info.put(LoginUser.INFO_KEY_NICKNAME, username);
+                loginUser.setInfo(info);
+                // 设置认证信息：principal=LoginUser, authorities 来自角色权限
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(loginUser, null, authorities);
                 Map<String, Object> details = new HashMap<>();
                 details.put("webDetails", new WebAuthenticationDetailsSource().buildDetails(request));
                 details.put("username", username);
@@ -81,3 +87,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 }
+
