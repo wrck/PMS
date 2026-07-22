@@ -28,6 +28,9 @@ export type ProjectStatus =
 /** 项目类型枚举 */
 export type ProjectType = 'NETWORK_DEVICE' | 'SECURITY' | 'DATACENTER'
 
+/** 项目优先级枚举（对齐后端 Project.priority VARCHAR(16)，取值 HIGH/NORMAL/LOW） */
+export type ProjectPriority = 'HIGH' | 'NORMAL' | 'LOW'
+
 /**
  * 项目（字段名与后端 Project 实体严格对齐）。
  */
@@ -45,7 +48,7 @@ export interface Project {
   planEndDate?: string
   projectManagerId?: number
   projectManagerName?: string
-  priority?: number
+  priority?: ProjectPriority
   description?: string
   status?: ProjectStatus
   progress?: number

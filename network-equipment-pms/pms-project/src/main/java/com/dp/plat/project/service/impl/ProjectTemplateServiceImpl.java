@@ -275,6 +275,7 @@ public class ProjectTemplateServiceImpl implements IProjectTemplateService {
         Project project = new Project();
         project.setProjectCode(dto.getProjectCode());
         project.setProjectName(dto.getProjectName());
+        project.setProjectType(StringUtils.hasText(dto.getProjectType()) ? dto.getProjectType() : "NETWORK_DEVICE");
         project.setCustomerName(dto.getCustomerName());
         project.setCustomerContact(dto.getCustomerContact());
         project.setCustomerPhone(dto.getCustomerPhone());
@@ -283,7 +284,11 @@ public class ProjectTemplateServiceImpl implements IProjectTemplateService {
         project.setPlanStartDate(dto.getPlanStartDate());
         project.setPlanEndDate(dto.getPlanEndDate());
         project.setProjectManagerId(dto.getProjectManagerId());
+        project.setProjectManagerName(dto.getProjectManagerName());
         project.setStatus("PLANNING");
+        project.setPriority(StringUtils.hasText(dto.getPriority()) ? dto.getPriority() : "NORMAL");
+        project.setProgress(0);
+        project.setDescription(dto.getDescription());
         project.setTemplateId(dto.getTemplateId());
         project.setTemplateVersion(version.getVersion());
         project.setProjectObjective(dto.getProjectObjective());

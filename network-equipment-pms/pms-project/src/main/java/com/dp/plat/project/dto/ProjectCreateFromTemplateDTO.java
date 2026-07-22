@@ -20,6 +20,8 @@ public class ProjectCreateFromTemplateDTO implements Serializable {
 
     private String projectCode;
     private String projectName;
+    /** 项目类型（NETWORK_DEVICE / SECURITY / DATACENTER 等），对齐 Project.projectType */
+    private String projectType;
     private String customerName;
     private String customerContact;
     private String customerPhone;
@@ -28,6 +30,12 @@ public class ProjectCreateFromTemplateDTO implements Serializable {
     private LocalDate planStartDate;
     private LocalDate planEndDate;
     private Long projectManagerId;
+    /** 项目经理名称冗余字段，与 Project.projectManagerName 对齐，避免列表页二次查询用户 */
+    private String projectManagerName;
+    /** 优先级 HIGH / NORMAL / LOW，对齐 Project.priority */
+    private String priority;
+    /** 项目描述 */
+    private String description;
 
     private String projectObjective;
     private String projectScope;

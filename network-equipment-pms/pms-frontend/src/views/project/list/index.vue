@@ -39,6 +39,7 @@ import {
   listProjects,
   updateProject,
   type Project,
+  type ProjectPriority,
   type ProjectStatus,
   type ProjectType
 } from '@/api/project'
@@ -116,10 +117,10 @@ const typeOptions: { value: ProjectType; label: string }[] = [
   { value: 'DATACENTER', label: '数据中心' }
 ]
 
-const priorityOptions = [
-  { value: 1, label: '高' },
-  { value: 2, label: '中' },
-  { value: 3, label: '低' }
+const priorityOptions: { value: ProjectPriority; label: string }[] = [
+  { value: 'HIGH', label: '高' },
+  { value: 'NORMAL', label: '中' },
+  { value: 'LOW', label: '低' }
 ]
 
 function getStatusMeta(status?: string) {
@@ -182,7 +183,7 @@ interface ProjectForm {
   planEndDate?: string
   projectManagerId?: number
   projectManagerName?: string
-  priority?: number
+  priority?: ProjectPriority
   description?: string
 }
 
@@ -200,7 +201,7 @@ function createEmptyForm(): ProjectForm {
     planEndDate: '',
     projectManagerId: undefined,
     projectManagerName: '',
-    priority: 2,
+    priority: 'NORMAL',
     description: ''
   }
 }
@@ -221,7 +222,8 @@ const dateRange = ref<[string, string] | null>(null)
 
 const rules: FormRules = {
   projectName: [{ required: true, message: '请输入项目名称', trigger: 'blur' }],
-  projectType: [{ required: true, message: '请选择项目类型', trigger: 'change' }]
+  projectType: [{ required: true, message: '请选择项目类型', trigger: 'change' }],
+  customerName: [{ required: true, message: '请输入客户名称', trigger: 'blur' }]
 }
 
 // ============== 数据加载 ==============
@@ -706,7 +708,7 @@ onMounted(loadData)
           </el-col>
           <el-col :xs="24" :sm="12">
             <el-form-item label="项目类型" prop="projectType">
-              <el-select v-model="form.projectType" placeholder="请选择" style="width: 100%">
+              <el-select v-model="form.projectType" placeholder="请选择项目类型" style="width: 100%">
                 <el-option
                   v-for="opt in typeOptions"
                   :key="opt.value"
@@ -717,7 +719,7 @@ onMounted(loadData)
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12">
-            <el-form-item label="客户名称">
+            <el-form-item label="客户名称" prop="customerName">
               <el-input v-model="form.customerName" placeholder="请输入客户名称" />
             </el-form-item>
           </el-col>
@@ -759,7 +761,7 @@ onMounted(loadData)
           </el-col>
           <el-col :xs="24" :sm="12">
             <el-form-item label="优先级">
-              <el-select v-model="form.priority" placeholder="请选择" style="width: 100%">
+              <el-select v-model="form.priority" placeholder="请选择优先级" style="width: 100%">
                 <el-option
                   v-for="opt in priorityOptions"
                   :key="opt.value"

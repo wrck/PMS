@@ -122,6 +122,8 @@ export interface ProjectCreateFromTemplateDTO {
   versionId: number
   projectCode: string
   projectName: string
+  /** 项目类型（对齐后端 Project.projectType） */
+  projectType?: string
   customerName?: string
   customerContact?: string
   customerPhone?: string
@@ -130,6 +132,11 @@ export interface ProjectCreateFromTemplateDTO {
   planStartDate?: string
   planEndDate?: string
   projectManagerId?: number
+  /** 项目经理名称冗余字段（对齐 Project.projectManagerName） */
+  projectManagerName?: string
+  /** 优先级 HIGH/NORMAL/LOW（对齐 Project.priority） */
+  priority?: string
+  description?: string
   projectObjective?: string
   projectScope?: string
   members?: { userId: number; role: string }[]
