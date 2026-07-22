@@ -2,6 +2,8 @@ package com.dp.plat.common.exception;
 
 import com.dp.plat.common.result.Result;
 import com.dp.plat.common.result.ResultCode;
+import com.dp.plat.framework.common.exception.ServiceException;
+import com.dp.plat.framework.common.exception.ServerException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
@@ -33,6 +35,32 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusinessException(BusinessException e, HttpServletRequest request) {
         log.warn("Business exception on {}: {}", request.getRequestURI(), e.getMessage());
+        return Result.fail(e.getCode(), e.getMessage());
+    }
+
+    /**
+     * 处理 yudao 业务异常 {@link ServiceException}：与 {@link BusinessException} 等价处理，
+     * 统一转换为 {@link Result} 返回。
+     *
+     * @param e yudao 业务异常
+     * @return 统一 Result
+     */
+    @ExceptionHandler(ServiceException.class)
+    public Result<Void> handleServiceException(ServiceException e, HttpServletRequest request) {
+        log.warn("Service exception on {}: code={}, msg={}", request.getRequestURI(), e.getCode(), e.getMessage());
+        return Result.fail(e.getCode(), e.getMessage());
+    }
+
+    /**
+     * 处理 yudao 服务器异常 {@link ServerException}：返回 HTTP 500。
+     *
+     * @param e yudao 服务器异常
+     * @return 统一 Result
+     */
+    @ExceptionHandler(ServerException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Result<Void> handleServerException(ServerException e, HttpServletRequest request) {
+        log.error("Server exception on {}: code={}, msg={}", request.getRequestURI(), e.getCode(), e.getMessage(), e);
         return Result.fail(e.getCode(), e.getMessage());
     }
 
