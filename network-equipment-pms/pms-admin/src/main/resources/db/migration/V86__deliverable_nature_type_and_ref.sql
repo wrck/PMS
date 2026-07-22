@@ -3,53 +3,37 @@
 -- 1. pms_deliverable 新增 template_inherited / ref_entity_type / ref_entity_id 字段
 -- 2. 旧终验用途类型（AS_BUILT 等 8 类）迁移为性质分类 DOCUMENT
 -- 3. 新增字典 pms_deliverable_type（交付件性质类型）和 pms_deliverable_ref_entity_type（引用实体类型）
+--
+-- NOTE: 使用 PREPARE/EXECUTE + INFORMATION_SCHEMA 实现幂等（参考 V60 写法），
+--       不使用 DELIMITER/存储过程，确保 Flyway 完全兼容。
 
 -- =============================================================
--- 1. 幂等新增字段（与 V75 风格一致，通过存储过程判断列是否存在）
+-- 1. 幂等新增字段（PREPARE/EXECUTE 方式，参考 V60）
 -- =============================================================
-DROP PROCEDURE IF EXISTS pms_v86_alter_deliverable;
-DELIMITER $$
-CREATE PROCEDURE pms_v86_alter_deliverable()
-BEGIN
-    -- template_inherited：是否模板预设（0=否 1=是）
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-          AND TABLE_NAME = 'pms_deliverable'
-          AND COLUMN_NAME = 'template_inherited'
-    ) THEN
-        ALTER TABLE pms_deliverable
-            ADD COLUMN `template_inherited` TINYINT(1) NOT NULL DEFAULT 0
-            COMMENT '是否模板预设（0=否 1=是）' AFTER `mandatory`;
-    END IF;
 
-    -- ref_entity_type：引用实体类型（见字典 pms_deliverable_ref_entity_type）
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-          AND TABLE_NAME = 'pms_deliverable'
-          AND COLUMN_NAME = 'ref_entity_type'
-    ) THEN
-        ALTER TABLE pms_deliverable
-            ADD COLUMN `ref_entity_type` VARCHAR(32) DEFAULT NULL
-            COMMENT '引用实体类型（见字典 pms_deliverable_ref_entity_type）' AFTER `approver_role`;
-    END IF;
+-- 1.1 template_inherited：是否模板预设（0=否 1=是）
+SET @c = (SELECT COUNT(*) FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pms_deliverable' AND COLUMN_NAME = 'template_inherited');
+SET @sql = IF(@c = 0,
+    'ALTER TABLE pms_deliverable ADD COLUMN `template_inherited` TINYINT(1) NOT NULL DEFAULT 0 COMMENT ''是否模板预设（0=否 1=是）'' AFTER `mandatory`',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-    -- ref_entity_id：引用实体ID
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-          AND TABLE_NAME = 'pms_deliverable'
-          AND COLUMN_NAME = 'ref_entity_id'
-    ) THEN
-        ALTER TABLE pms_deliverable
-            ADD COLUMN `ref_entity_id` BIGINT DEFAULT NULL
-            COMMENT '引用实体ID' AFTER `ref_entity_type`;
-    END IF;
-END$$
-DELIMITER ;
-CALL pms_v86_alter_deliverable();
-DROP PROCEDURE IF EXISTS pms_v86_alter_deliverable;
+-- 1.2 ref_entity_type：引用实体类型（见字典 pms_deliverable_ref_entity_type）
+SET @c = (SELECT COUNT(*) FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pms_deliverable' AND COLUMN_NAME = 'ref_entity_type');
+SET @sql = IF(@c = 0,
+    'ALTER TABLE pms_deliverable ADD COLUMN `ref_entity_type` VARCHAR(32) DEFAULT NULL COMMENT ''引用实体类型（见字典 pms_deliverable_ref_entity_type）'' AFTER `approver_role`',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- 1.3 ref_entity_id：引用实体ID
+SET @c = (SELECT COUNT(*) FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pms_deliverable' AND COLUMN_NAME = 'ref_entity_id');
+SET @sql = IF(@c = 0,
+    'ALTER TABLE pms_deliverable ADD COLUMN `ref_entity_id` BIGINT DEFAULT NULL COMMENT ''引用实体ID'' AFTER `ref_entity_type`',
+    'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- =============================================================
 -- 2. 旧终验用途类型迁移为性质分类

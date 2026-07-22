@@ -15,6 +15,7 @@ export type DeliverableType = string
 
 /**
  * @deprecated 已改为数据字典驱动，请使用 {@link loadDeliverableTypes}。
+ * 保留作为字典数据未就绪时的兜底常量。
  */
 export const DELIVERABLE_TYPE_LABELS: Record<string, string> = {
   DOCUMENT: '文档',
@@ -26,16 +27,39 @@ export const DELIVERABLE_TYPE_LABELS: Record<string, string> = {
   OTHER: '其他'
 }
 
+/**
+ * @deprecated 引用实体类型兜底常量，字典未就绪时使用。
+ */
+export const DELIVERABLE_REF_ENTITY_TYPE_LABELS: Record<string, string> = {
+  TASK: '任务',
+  ASSET: '资产',
+  PHASE: '阶段',
+  PROJECT: '项目',
+  DELIVERABLE: '交付件',
+  REPORT: '报告'
+}
+
+/** 将 Record<string,string> 转为 SysDictItem[] 兜底选项 */
+function toFallbackItems(labels: Record<string, string>): SysDictItem[] {
+  return Object.entries(labels).map(([value, text], i) => ({
+    dictId: 0,
+    itemText: text,
+    itemValue: value,
+    sortOrder: i + 1
+  }))
+}
+
 /** 交付件类型字典项缓存（首次调用后填充） */
 let deliverableTypeItems: SysDictItem[] | null = null
 
-/** 加载交付件性质类型字典（带缓存） */
+/** 加载交付件性质类型字典（带缓存，字典未就绪时使用兜底常量） */
 export async function loadDeliverableTypes(): Promise<SysDictItem[]> {
   if (deliverableTypeItems) return deliverableTypeItems
   try {
-    deliverableTypeItems = await getDictItems(DELIVERABLE_TYPE_DICT)
+    const items = await getDictItems(DELIVERABLE_TYPE_DICT)
+    deliverableTypeItems = items.length > 0 ? items : toFallbackItems(DELIVERABLE_TYPE_LABELS)
   } catch {
-    deliverableTypeItems = []
+    deliverableTypeItems = toFallbackItems(DELIVERABLE_TYPE_LABELS)
   }
   return deliverableTypeItems
 }
@@ -43,13 +67,14 @@ export async function loadDeliverableTypes(): Promise<SysDictItem[]> {
 /** 交付件引用实体类型字典项缓存 */
 let deliverableRefEntityTypeItems: SysDictItem[] | null = null
 
-/** 加载交付件引用实体类型字典（带缓存） */
+/** 加载交付件引用实体类型字典（带缓存，字典未就绪时使用兜底常量） */
 export async function loadDeliverableRefEntityTypes(): Promise<SysDictItem[]> {
   if (deliverableRefEntityTypeItems) return deliverableRefEntityTypeItems
   try {
-    deliverableRefEntityTypeItems = await getDictItems(DELIVERABLE_REF_ENTITY_TYPE_DICT)
+    const items = await getDictItems(DELIVERABLE_REF_ENTITY_TYPE_DICT)
+    deliverableRefEntityTypeItems = items.length > 0 ? items : toFallbackItems(DELIVERABLE_REF_ENTITY_TYPE_LABELS)
   } catch {
-    deliverableRefEntityTypeItems = []
+    deliverableRefEntityTypeItems = toFallbackItems(DELIVERABLE_REF_ENTITY_TYPE_LABELS)
   }
   return deliverableRefEntityTypeItems
 }
