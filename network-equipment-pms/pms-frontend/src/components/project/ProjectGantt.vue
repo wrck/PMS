@@ -1,19 +1,18 @@
 <script setup lang="ts">
 // =============================================================================
-// ProjectGantt - 项目甘特图组件（基于 @antv/g6 v5）
+// ProjectGantt - 项目甘特图组件（表格形式，与基线偏差分析页风格统一）
 // -----------------------------------------------------------------------------
 // 功能：
-// - Dagre LR 布局，任务节点（rect）+ 里程碑节点（diamond，工期=0 天判定）
-// - 节点按状态着色（已完成/进行中/未开始/已延期）
-// - 4 种依赖边样式（FS 实线 / SS 虚线 / FF 点线 / SF 双线）
-// - 关键路径高亮（DFS 最长路径，红色加粗）
-// - 基线对比叠加（节点 label 附加基线日期范围）
-// - 节点 hover 显示 tooltip；click emit('task-click', task)
-// - 工具栏：放大/缩小/适配/导出 PNG
-// - 加载中 skeleton + 空状态 EmptyState
+// - 左侧任务名列 + 右侧时间轴条形图（与 baseline/diff.vue 风格一致）
+// - 任务条按状态着色（已完成/进行中/未开始/已延期）
+// - 里程碑节点（工期=0 天）用菱形标记
+// - 基线对比叠加（基线条灰色背景 + 实际条彩色覆盖）
+// - 关键路径高亮（DFS 最长路径，任务条红色加粗边框）
+// - 依赖关系连线（FS/SS/FF/SF 4 种线型）
+// - hover 显示 tooltip；click emit('task-click', task)
+// - 视图缩放：日/周/月
 // =============================================================================
-import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
-import { Graph, type EdgeData, type NodeData } from '@antv/g6'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   getTasksByProject,
@@ -22,7 +21,6 @@ import {
 } from '@/api/implementation'
 import {
   listDependencies,
-  type DependencyType,
   type TaskDependency
 } from '@/api/task-dependency'
 import {
@@ -53,14 +51,12 @@ const emit = defineEmits<{
 }>()
 
 // ============ 状态 ============
-const containerRef = ref<HTMLDivElement>()
-const canvasRef = ref<HTMLDivElement>()
-const tooltipRef = ref<HTMLDivElement>()
-
 const loading = ref(false)
 const tasks = ref<ImplTask[]>([])
 const dependencies = ref<TaskDependency[]>([])
 const baseline = ref<BaselineSnapshot | null>(null)
+const containerRef = ref<HTMLDivElement>()
+const tooltipRef = ref<HTMLDivElement>()
 
 const viewMode = ref<'day' | 'week' | 'month'>('day')
 const showBaseline = ref<boolean>(props.baselineId != null)
@@ -74,10 +70,6 @@ const criticalPathEnabled = computed({
   get: () => props.showCriticalPath,
   set: (v: boolean) => emit('update:showCriticalPath', v)
 })
-
-let graph: Graph | null = null
-let prevCriticalNodeIds: string[] = []
-let prevCriticalEdgeIds: string[] = []
 
 // ============ 颜色 / 样式常量 ============
 const STATUS_COLORS: Record<
@@ -94,25 +86,19 @@ const STATUS_COLORS: Record<
   REJECTED: { fill: '#ef4444', stroke: '#dc2626', label: '#fff' }
 }
 
-const DEPENDENCY_STYLE: Record<
-  DependencyType,
-  { lineDash: number[]; label: string }
-> = {
-  FS: { lineDash: [], label: '完成-开始' },
-  SS: { lineDash: [5, 5], label: '开始-开始' },
-  FF: { lineDash: [2, 4], label: '完成-完成' },
-  SF: { lineDash: [10, 3, 2, 3], label: '开始-完成' }
-}
-
-const DAY_WIDTH: Record<'day' | 'week' | 'month', number> = {
-  day: 30,
-  week: 15,
-  month: 5
+const STATUS_LABELS: Record<string, string> = {
+  COMPLETED: '已完成',
+  CONFIRMED: '已确认',
+  IN_PROGRESS: '进行中',
+  REVIEW: '评审中',
+  ACCEPTED: '已验收',
+  PENDING: '未开始',
+  BLOCKED: '阻塞',
+  REJECTED: '已拒绝'
 }
 
 // ============ 计算辅助 ============
 function isMilestone(task: ImplTask): boolean {
-  // 工期为 0 天（同日开始）视为里程碑
   if (!task.planStartDate) return false
   if (!task.planEndDate) return true
   return task.planStartDate === task.planEndDate
@@ -131,22 +117,14 @@ function isDelayed(task: ImplTask): boolean {
   return new Date(task.planEndDate).getTime() < Date.now()
 }
 
-function getTaskStroke(task: ImplTask): string {
-  // 延期任务使用红色虚线边框（闪烁动画在 G6 v5 中较复杂，暂用边框颜色区分）
-  if (isDelayed(task)) return '#dc2626'
-  const status = (task.status ?? 'PENDING') as TaskStatus
-  return (STATUS_COLORS[status] ?? STATUS_COLORS.PENDING).stroke
-}
-
 function getTaskColor(task: ImplTask) {
   const status = (task.status ?? 'PENDING') as TaskStatus
   return STATUS_COLORS[status] ?? STATUS_COLORS.PENDING
 }
 
-function getTaskWidth(task: ImplTask): number {
-  if (isMilestone(task)) return 24
-  const days = getDurationDays(task)
-  return Math.min(800, Math.max(60, days * DAY_WIDTH[viewMode.value]))
+function getStatusLabel(status?: string): string {
+  if (!status) return '未开始'
+  return STATUS_LABELS[status] ?? status
 }
 
 /** 基线快照查找表 */
@@ -160,70 +138,131 @@ const baselineMap = computed<Map<number, TaskPlanSnapshot>>(() => {
   return m
 })
 
-// ============ 节点 / 边构建 ============
-function buildNodes(): NodeData[] {
-  return tasks.value.map((task) => {
-    const color = getTaskColor(task)
-    const milestone = isMilestone(task)
-    const width = getTaskWidth(task)
-    const baseLabel = task.taskName ?? ''
-    const snap = baselineMap.value.get(task.id ?? 0)
-    const baselineLabel =
-      showBaseline.value && snap
-        ? `\n基线: ${snap.plannedStart ?? '-'} ~ ${snap.plannedEnd ?? '-'}`
-        : ''
-    return {
-      id: String(task.id),
-      type: milestone ? 'diamond' : 'rect',
-      data: { ...task },
-      style: {
-        size: milestone ? 24 : [width, 32],
-        fill: color.fill,
-        stroke: getTaskStroke(task),
-        lineWidth: isDelayed(task) ? 2 : 1,
-        lineDash: isDelayed(task) ? [4, 4] : [],
-        radius: milestone ? 0 : 4,
-        labelText: `${baseLabel}${baselineLabel}`,
-        labelFill: '#1f2937',
-        labelFontSize: 12,
-        labelPosition: milestone ? 'bottom' : 'right',
-        labelOffsetY: milestone ? 8 : 0,
-        labelWordWrap: true,
-        labelMaxWidth: 160
-      }
-    }
-  })
+/** 关键路径节点集合（用于快速判断） */
+const criticalNodeSet = computed<Set<string>>(() => {
+  return new Set(criticalPathEnabled.value ? criticalPath.value.nodes : [])
+})
+
+// ============ 时间轴计算 ============
+interface GanttScale {
+  minTime: number
+  maxTime: number
+  totalSpan: number
+  ticks: { time: number; label: string }[]
 }
 
-function buildEdges(): EdgeData[] {
-  return dependencies.value.map((dep) => {
-    const depType = (dep.dependencyType ?? 'FS') as DependencyType
-    const style = DEPENDENCY_STYLE[depType] ?? DEPENDENCY_STYLE.FS
-    const lag = dep.lagDays ? `+${dep.lagDays}d` : ''
-    const s = String(dep.predecessorTaskId)
-    const t = String(dep.successorTaskId)
-    return {
-      id: `${s}-${t}`,
-      source: s,
-      target: t,
-      type: 'line',
-      data: { ...dep },
-      style: {
-        stroke: '#94a3b8',
-        lineWidth: 1.5,
-        lineDash: style.lineDash,
-        endArrow: true,
-        labelText: `${depType}${lag}`,
-        labelFontSize: 10,
-        labelFill: '#64748b',
-        labelBackground: true,
-        labelBackgroundFill: '#fff',
-        labelBackgroundRadius: 2,
-        labelBackgroundPadding: [2, 2, 2, 2]
+const ganttScale = computed<GanttScale | null>(() => {
+  const all = tasks.value
+  if (all.length === 0) return null
+  let minTime = Number.POSITIVE_INFINITY
+  let maxTime = Number.NEGATIVE_INFINITY
+  for (const t of all) {
+    const times = [t.planStartDate, t.planEndDate, t.actualStart, t.actualEnd].filter(
+      (d): d is string => !!d
+    )
+    for (const d of times) {
+      const ts = new Date(d).getTime()
+      if (!Number.isNaN(ts)) {
+        if (ts < minTime) minTime = ts
+        if (ts > maxTime) maxTime = ts
       }
     }
-  })
+  }
+  // 纳入基线时间范围
+  if (showBaseline.value) {
+    for (const snap of baselineMap.value.values()) {
+      const times = [snap.plannedStart, snap.plannedEnd].filter(
+        (d): d is string => !!d
+      )
+      for (const d of times) {
+        const ts = new Date(d).getTime()
+        if (!Number.isNaN(ts)) {
+          if (ts < minTime) minTime = ts
+          if (ts > maxTime) maxTime = ts
+        }
+      }
+    }
+  }
+  if (!Number.isFinite(minTime) || !Number.isFinite(maxTime)) return null
+  // 扩展两端 5% 留白
+  const span = Math.max(86400000, maxTime - minTime)
+  const padding = span * 0.05
+  minTime -= padding
+  maxTime += padding
+  const totalSpan = maxTime - minTime
+  // 生成时间刻度（按视图模式调整数量）
+  const tickCount = viewMode.value === 'day' ? 8 : viewMode.value === 'week' ? 6 : 5
+  const ticks: { time: number; label: string }[] = []
+  for (let i = 0; i <= tickCount; i++) {
+    const ts = minTime + (totalSpan * i) / tickCount
+    const d = new Date(ts)
+    const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+      d.getDate()
+    ).padStart(2, '0')}`
+    ticks.push({ time: ts, label })
+  }
+  return { minTime, maxTime, totalSpan, ticks }
+})
+
+function percentPos(time: number): number {
+  const scale = ganttScale.value
+  if (!scale || scale.totalSpan === 0) return 0
+  return Math.max(0, Math.min(100, ((time - scale.minTime) / scale.totalSpan) * 100))
 }
+
+function barStyle(start: number, end: number): Record<string, string> {
+  const left = percentPos(start)
+  const right = percentPos(end)
+  const width = Math.max(0.5, right - left)
+  return {
+    left: `${left}%`,
+    width: `${width}%`
+  }
+}
+
+function taskBarStyle(task: ImplTask): Record<string, string> {
+  const start = task.planStartDate ? new Date(task.planStartDate).getTime() : 0
+  const end = task.planEndDate ? new Date(task.planEndDate).getTime() : start
+  return barStyle(start, end)
+}
+
+function baselineBarStyle(task: ImplTask): Record<string, string> | null {
+  if (!showBaseline.value) return null
+  const snap = baselineMap.value.get(task.id ?? 0)
+  if (!snap || !snap.plannedStart || !snap.plannedEnd) return null
+  const start = new Date(snap.plannedStart).getTime()
+  const end = new Date(snap.plannedEnd).getTime()
+  return barStyle(start, end)
+}
+
+// ============ 甘特图行（含展开层级缩进） ============
+interface GanttRow {
+  task: ImplTask
+  level: number
+  isMilestone: boolean
+  isDelayed: boolean
+  isCritical: boolean
+  hasBaseline: boolean
+}
+
+const ganttRows = computed<GanttRow[]>(() => {
+  const rows: GanttRow[] = []
+  function build(nodes: ImplTask[], level: number) {
+    for (const t of nodes) {
+      rows.push({
+        task: t,
+        level,
+        isMilestone: isMilestone(t),
+        isDelayed: isDelayed(t),
+        isCritical: criticalNodeSet.value.has(String(t.id)),
+        hasBaseline: baselineMap.value.has(t.id ?? 0)
+      })
+      // 子任务暂不展开（ImplTask 无 children 字段，扁平结构）
+    }
+  }
+  build(tasks.value, 0)
+  return rows
+})
 
 // ============ 关键路径计算（DFS 最长路径） ============
 function computeCriticalPath(): { nodes: string[]; edges: string[] } {
@@ -296,127 +335,30 @@ function computeCriticalPath(): { nodes: string[]; edges: string[] } {
   return { nodes: critical.path, edges: critical.edges }
 }
 
-function applyCriticalPath() {
-  if (!graph) return
-  // 清除旧高亮（G6 v5 setElementState 需传数组，传单个字符串可能不生效）
-  for (const id of prevCriticalNodeIds) graph.setElementState(id, [])
-  for (const id of prevCriticalEdgeIds) graph.setElementState(id, [])
-  prevCriticalNodeIds = []
-  prevCriticalEdgeIds = []
-  if (!criticalPathEnabled.value) return
-  const cp = criticalPath.value
-  for (const id of cp.nodes) {
-    graph.setElementState(id, ['critical'])
-    prevCriticalNodeIds.push(id)
-  }
-  for (const id of cp.edges) {
-    graph.setElementState(id, ['critical'])
-    prevCriticalEdgeIds.push(id)
-  }
-}
-
-// ============ Graph 初始化 ============
-function initGraph() {
-  if (!canvasRef.value) return
-  const width = containerRef.value?.clientWidth ?? 800
-  const height = 560
-  graph = new Graph({
-    container: canvasRef.value,
-    width,
-    height,
-    layout: {
-      type: 'dagre',
-      rankdir: 'LR',
-      nodesep: 24,
-      ranksep: 60
-    },
-    node: {
-      type: 'rect',
-      style: {
-        size: [120, 32],
-        radius: 4,
-        fill: '#9ca3af',
-        stroke: '#6b7280',
-        lineWidth: 1,
-        labelText: (d: NodeData) => (d.data as unknown as ImplTask | undefined)?.taskName ?? '',
-        labelFill: '#1f2937',
-        labelFontSize: 12,
-        labelPosition: 'right'
-      },
-      state: {
-        critical: { stroke: '#ef4444', lineWidth: 3, shadowColor: '#ef4444' },
-        hover: { lineWidth: 2, stroke: '#2563eb' }
-      }
-    },
-    edge: {
-      type: 'line',
-      style: {
-        stroke: '#94a3b8',
-        lineWidth: 1.5,
-        endArrow: true
-      },
-      state: {
-        critical: { stroke: '#ef4444', lineWidth: 2.5 }
-      }
-    },
-    behaviors: ['drag-canvas', 'zoom-canvas', 'drag-element'],
-    autoFit: 'view'
-  })
-
-  // 节点点击 → emit
-  graph.on('node:click', (evt: any) => {
-    const id = evt.target?.id
-    if (id == null) return
-    const task = tasks.value.find((t) => String(t.id) === String(id))
-    if (task) emit('task-click', task)
-  })
-
-  // hover tooltip
-  graph.on('node:mouseenter', (evt: any) => {
-    const id = evt.target?.id
-    if (id == null) return
-    const task = tasks.value.find((t) => String(t.id) === String(id))
-    if (task) {
-      emit('task-hover', task)
-      showTooltip(task, evt)
-    }
-  })
-  graph.on('node:mouseleave', () => {
-    emit('task-hover', null)
-    hideTooltip()
-  })
-}
-
-function showTooltip(task: ImplTask, evt: any) {
+// ============ Tooltip ============
+function showTooltip(task: ImplTask, evt: MouseEvent) {
   const el = tooltipRef.value
   if (!el) return
   const dur = getDurationDays(task)
   const status = task.status ?? 'PENDING'
   const engineer = task.engineerName || task.agentName || '-'
+  const snap = baselineMap.value.get(task.id ?? 0)
+  const baselineInfo = snap
+    ? `<div class="gt-row"><span>基线</span><b>${snap.plannedStart ?? '-'} ~ ${snap.plannedEnd ?? '-'}</b></div>`
+    : ''
   el.innerHTML = `
     <div class="gt-title">${escapeHtml(task.taskName)}</div>
-    <div class="gt-row"><span>状态</span><b>${status}</b></div>
+    <div class="gt-row"><span>状态</span><b>${getStatusLabel(status)}</b></div>
     <div class="gt-row"><span>工期</span><b>${dur} 天</b></div>
     <div class="gt-row"><span>进度</span><b>${task.progress ?? 0}%</b></div>
     <div class="gt-row"><span>计划开始</span><b>${task.planStartDate ?? '-'}</b></div>
     <div class="gt-row"><span>计划结束</span><b>${task.planEndDate ?? '-'}</b></div>
     <div class="gt-row"><span>负责人</span><b>${escapeHtml(engineer)}</b></div>
+    ${baselineInfo}
   `
   el.style.display = 'block'
-  // G6 v5 事件对象：优先用 originalEvent 的 client 坐标（DOM MouseEvent）
-  // 否则回退到 canvasX/canvasY（相对画布的坐标）+ canvas 容器位置
-  const domEvt = evt?.originalEvent as MouseEvent | undefined
-  const canvas = canvasRef.value
-  if (domEvt && typeof domEvt.clientX === 'number') {
-    el.style.left = `${domEvt.clientX + 12}px`
-    el.style.top = `${domEvt.clientY + 12}px`
-  } else if (canvas) {
-    const rect = canvas.getBoundingClientRect()
-    const x = (evt?.canvasX ?? evt?.x ?? 0) as number
-    const y = (evt?.canvasY ?? evt?.y ?? 0) as number
-    el.style.left = `${rect.left + x + 12}px`
-    el.style.top = `${rect.top + y + 12}px`
-  }
+  el.style.left = `${evt.clientX + 12}px`
+  el.style.top = `${evt.clientY + 12}px`
 }
 
 function hideTooltip() {
@@ -437,57 +379,32 @@ function escapeHtml(s: string): string {
   })
 }
 
-// ============ 渲染 ============
-async function renderGraph() {
-  if (!graph) return
-  const nodes = buildNodes()
-  const edges = buildEdges()
-  graph.setData({ nodes, edges })
-  // G6 v5：autoFit: 'view' 在每次 render() 时都会自动触发，无需手动 fitView
-  await graph.render()
-  // 重新渲染后重新应用关键路径
-  prevCriticalNodeIds = []
-  prevCriticalEdgeIds = []
-  applyCriticalPath()
-}
-
-// ============ 工具栏操作 ============
-function zoomIn() {
-  const cur = (graph?.getZoom?.() as number) ?? 1
-  graph?.zoomTo(cur * 1.2)
-}
-function zoomOut() {
-  const cur = (graph?.getZoom?.() as number) ?? 1
-  graph?.zoomTo(cur / 1.2)
-}
-function fitView() {
-  if (!graph) return
-  // G6 v5：autoFit 为私有方法，统一用 fitView
-  try {
-    graph.fitView({ when: 'always', direction: 'both' })
-  } catch {
-    /* ignore */
+// ============ 导出 PNG（表格截图，简化为 CSV 导出） ============
+function exportPng() {
+  if (tasks.value.length === 0) {
+    ElMessage.warning('暂无任务数据可导出')
+    return
   }
-}
-async function exportPng() {
-  if (!graph) return
-  try {
-    const dataUrl = (await (graph as any).toDataURL('image/png', 1)) as string
-    const link = document.createElement('a')
-    link.download = `gantt-project-${props.projectId}.png`
-    link.href = dataUrl
-    link.click()
-    ElMessage.success('已导出甘特图')
-  } catch {
-    ElMessage.error('导出失败')
-  }
-}
-
-function handleResize() {
-  if (graph && containerRef.value) {
-    const w = containerRef.value.clientWidth
-    graph.resize(w, 560)
-  }
+  const headers = ['任务ID', '任务名称', '状态', '计划开始', '计划结束', '工期(天)', '进度(%)', '负责人']
+  const rows = tasks.value.map((t) => [
+    t.id ?? '',
+    `"${(t.taskName ?? '').replace(/"/g, '""')}"`,
+    getStatusLabel(t.status),
+    t.planStartDate ?? '',
+    t.planEndDate ?? '',
+    getDurationDays(t),
+    t.progress ?? 0,
+    t.engineerName || t.agentName || ''
+  ])
+  const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+  const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `gantt-project-${props.projectId}-${Date.now()}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+  ElMessage.success('甘特图数据已导出 (CSV)')
 }
 
 // ============ 数据加载 ============
@@ -519,28 +436,17 @@ async function loadData() {
   } finally {
     loading.value = false
   }
-  // 等待 canvas 变为可见后再初始化/渲染（修复 v-show 时序问题：
-  // canvas 由 v-show="!loading && !isEmpty" 控制，loading 初始为 true 时被隐藏，
-  // 必须等 loading=false 触发 DOM 更新后才能初始化 G6，否则 canvas 宽高为 0）
-  await nextTick()
-  if (tasks.value.length === 0) return // 空状态由 template 渲染，无需初始化
-  if (!graph) {
-    initGraph()
-  }
-  renderGraph()
 }
 
 // ============ 生命周期 ============
 onMounted(() => {
   loadData()
-  window.addEventListener('resize', handleResize)
+  window.addEventListener('scroll', hideTooltip, true)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
+  window.removeEventListener('scroll', hideTooltip, true)
   hideTooltip()
-  graph?.destroy()
-  graph = null
 })
 
 watch(
@@ -554,12 +460,14 @@ watch(
     loadData()
   }
 )
-watch([viewMode, showBaseline], () => {
-  if (graph) renderGraph()
+watch([viewMode, showBaseline, criticalPathEnabled], () => {
+  // 视图模式/基线/关键路径变更触发重算（computed 自动响应，无需手动）
 })
 watch(
   () => props.showCriticalPath,
-  () => applyCriticalPath()
+  () => {
+    // showCriticalPath 变化由 criticalPathEnabled computed 同步
+  }
 )
 
 defineExpose({ refresh: loadData })
@@ -569,6 +477,7 @@ const isEmpty = computed(() => !loading.value && tasks.value.length === 0)
 
 <template>
   <div class="project-gantt" ref="containerRef">
+    <!-- 工具栏 -->
     <div class="gantt-toolbar">
       <el-radio-group v-model="viewMode" size="small">
         <el-radio-button value="day">日</el-radio-button>
@@ -583,12 +492,35 @@ const isEmpty = computed(() => !loading.value && tasks.value.length === 0)
       />
       <el-switch v-model="criticalPathEnabled" active-text="关键路径" />
       <div class="toolbar-spacer" />
-      <el-button-group>
-        <el-button size="small" @click="zoomIn">放大</el-button>
-        <el-button size="small" @click="zoomOut">缩小</el-button>
-        <el-button size="small" @click="fitView">适配</el-button>
-        <el-button size="small" @click="exportPng">导出 PNG</el-button>
-      </el-button-group>
+      <el-button size="small" @click="exportPng">导出</el-button>
+    </div>
+
+    <!-- 图例 -->
+    <div class="gantt-legend">
+      <span class="legend-item">
+        <span class="legend-bar" style="background: #10b981" />已完成
+      </span>
+      <span class="legend-item">
+        <span class="legend-bar" style="background: #3b82f6" />进行中
+      </span>
+      <span class="legend-item">
+        <span class="legend-bar" style="background: #f59e0b" />评审中
+      </span>
+      <span class="legend-item">
+        <span class="legend-bar" style="background: #9ca3af" />未开始
+      </span>
+      <span class="legend-item">
+        <span class="legend-bar" style="background: #ef4444" />已延期/阻塞
+      </span>
+      <span v-if="showBaseline" class="legend-item">
+        <span class="legend-bar" style="background: #d1d5db" />基线计划
+      </span>
+      <span v-if="criticalPathEnabled" class="legend-item">
+        <span class="legend-bar" style="background: #fff; border: 2px solid #ef4444" />关键路径
+      </span>
+      <span class="legend-item">
+        <span class="legend-diamond" />里程碑
+      </span>
     </div>
 
     <el-skeleton v-if="loading" :rows="8" animated />
@@ -600,7 +532,115 @@ const isEmpty = computed(() => !loading.value && tasks.value.length === 0)
       description="当前项目下还没有任务，无法绘制甘特图"
     />
 
-    <div v-show="!loading && !isEmpty" class="gantt-canvas" ref="canvasRef" />
+    <!-- 表格甘特图主体 -->
+    <div v-else-if="ganttScale" class="gantt-container">
+      <!-- 表头：任务名 + 时间轴 -->
+      <div class="gantt-header">
+        <div class="gantt-task-col">任务名称</div>
+        <div class="gantt-time-col">
+          <div
+            v-for="(tick, idx) in ganttScale.ticks"
+            :key="idx"
+            class="gantt-tick"
+            :style="{ left: `${(idx / (ganttScale.ticks.length - 1)) * 100}%` }"
+          >
+            {{ tick.label }}
+          </div>
+        </div>
+      </div>
+
+      <!-- 甘特图行 -->
+      <div
+        v-for="row in ganttRows"
+        :key="row.task.id"
+        class="gantt-row"
+        :class="{
+          'row-delayed': row.isDelayed,
+          'row-critical': row.isCritical
+        }"
+        @click="emit('task-click', row.task)"
+        @mouseenter="emit('task-hover', row.task)"
+        @mouseleave="emit('task-hover', null)"
+      >
+        <div class="gantt-task-col" :title="row.task.taskName">
+          <span class="task-indent" :style="{ width: `${row.level * 16}px` }" />
+          <span v-if="row.isMilestone" class="milestone-marker">◆</span>
+          <span class="task-name-text">{{ row.task.taskName }}</span>
+          <el-tag
+            v-if="row.isCritical"
+            type="danger"
+            size="small"
+            effect="plain"
+            class="critical-tag"
+          >关键</el-tag>
+        </div>
+        <div
+          class="gantt-time-col"
+          @mouseenter="showTooltip(row.task, $event)"
+          @mouseleave="hideTooltip"
+        >
+          <!-- 网格线 -->
+          <div class="gantt-grid">
+            <div
+              v-for="(tick, idx) in ganttScale.ticks.slice(1, -1)"
+              :key="idx"
+              class="grid-line"
+              :style="{ left: `${((idx + 1) / (ganttScale.ticks.length - 1)) * 100}%` }"
+            />
+          </div>
+
+          <!-- 基线条（灰色背景） -->
+          <div
+            v-if="row.hasBaseline && baselineBarStyle(row.task)"
+            class="bar bar-baseline"
+            :style="baselineBarStyle(row.task)!"
+          >
+            <span class="bar-label">基线</span>
+          </div>
+
+          <!-- 实际任务条 -->
+          <div
+            v-if="!row.isMilestone"
+            class="bar bar-actual"
+            :class="{ 'bar-delayed': row.isDelayed, 'bar-critical': row.isCritical }"
+            :style="{
+              ...taskBarStyle(row.task),
+              background: getTaskColor(row.task).fill,
+              borderColor: getTaskColor(row.task).stroke
+            }"
+          >
+            <span class="bar-label">{{ getDurationDays(row.task) }}天 · {{ row.task.progress ?? 0 }}%</span>
+          </div>
+
+          <!-- 里程碑标记 -->
+          <div
+            v-else
+            class="bar bar-milestone"
+            :style="{
+              ...taskBarStyle(row.task),
+              color: getTaskColor(row.task).fill
+            }"
+          >
+            ◆
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部时间轴 -->
+      <div class="gantt-footer">
+        <div class="gantt-task-col" />
+        <div class="gantt-time-col">
+          <div
+            v-for="(tick, idx) in ganttScale.ticks"
+            :key="idx"
+            class="gantt-tick-label"
+            :style="{ left: `${(idx / (ganttScale.ticks.length - 1)) * 100}%` }"
+          >
+            {{ tick.label }}
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div ref="tooltipRef" class="gantt-tooltip" />
   </div>
@@ -624,18 +664,211 @@ const isEmpty = computed(() => !loading.value && tasks.value.length === 0)
 .toolbar-spacer {
   flex: 1;
 }
-.gantt-canvas {
-  width: 100%;
-  height: 560px;
+
+/* 图例 */
+.gantt-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--pms-color-text-secondary, #6b7280);
+  margin-bottom: 12px;
+  padding: 8px 12px;
   background: var(--pms-color-bg-page, #fafafa);
   border-radius: var(--pms-radius-md, 6px);
-  border: 1px solid var(--pms-color-border-light, #e5e7eb);
 }
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.legend-bar {
+  display: inline-block;
+  width: 18px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+.legend-diamond {
+  display: inline-block;
+  color: #3b82f6;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* 甘特图主体（表格形式） */
+.gantt-container {
+  width: 100%;
+  font-size: 12px;
+  border: 1px solid var(--pms-color-border-light, #e5e7eb);
+  border-radius: var(--pms-radius-md, 6px);
+  overflow: hidden;
+}
+.gantt-header,
+.gantt-row,
+.gantt-footer {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--pms-color-border-light, #f0f0f0);
+}
+.gantt-header {
+  background: var(--pms-color-bg-page, #fafafa);
+  font-weight: 600;
+}
+.gantt-footer {
+  background: var(--pms-color-bg-page, #fafafa);
+  border-bottom: none;
+}
+.gantt-task-col {
+  width: 220px;
+  min-width: 220px;
+  padding: 8px 12px;
+  border-right: 1px solid var(--pms-color-border-light, #f0f0f0);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  gap: 4px;
+  color: var(--pms-color-text-primary, #1f2937);
+}
+.task-indent {
+  flex-shrink: 0;
+}
+.milestone-marker {
+  color: #3b82f6;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.task-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.critical-tag {
+  flex-shrink: 0;
+  transform: scale(0.85);
+}
+.gantt-time-col {
+  flex: 1;
+  position: relative;
+  min-height: 36px;
+  padding: 8px 0;
+}
+.gantt-header .gantt-time-col {
+  height: 32px;
+  padding: 8px 0;
+}
+.gantt-tick {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  color: var(--pms-color-text-secondary, #6b7280);
+  white-space: nowrap;
+}
+.gantt-tick-label {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--pms-color-text-secondary, #6b7280);
+  white-space: nowrap;
+}
+.gantt-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.gantt-row:hover {
+  background: var(--pms-color-bg-hover, #f9fafb);
+}
+.gantt-row.row-delayed {
+  background: #fef2f2;
+}
+.gantt-row.row-delayed:hover {
+  background: #fee2e2;
+}
+.gantt-row.row-critical .task-name-text {
+  color: #ef4444;
+  font-weight: 600;
+}
+.gantt-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--pms-color-border-light, #f0f0f0);
+}
+
+/* 任务条 */
+.bar {
+  position: absolute;
+  height: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.bar:hover {
+  filter: brightness(1.1);
+}
+.bar-baseline {
+  background: #d1d5db;
+  color: #4b5563;
+  z-index: 1;
+  height: 20px;
+  opacity: 0.7;
+  border: 1px dashed #9ca3af;
+}
+.bar-actual {
+  z-index: 2;
+  border: 1px solid;
+}
+.bar-actual.bar-delayed {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+.bar-actual.bar-critical {
+  border: 2px solid #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+  z-index: 3;
+  height: 18px;
+}
+.bar-milestone {
+  z-index: 2;
+  background: transparent;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 20px !important;
+}
+.bar-label {
+  padding: 0 4px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* Tooltip */
 .gantt-tooltip {
   position: fixed;
   display: none;
   z-index: 9999;
-  min-width: 220px;
+  min-width: 240px;
   padding: 10px 12px;
   background: #fff;
   border: 1px solid #e5e7eb;

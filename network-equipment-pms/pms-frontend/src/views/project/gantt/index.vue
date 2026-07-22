@@ -36,14 +36,9 @@ const statusLegend = [
   { color: '#3b82f6', label: '进行中' },
   { color: '#f59e0b', label: '评审中' },
   { color: '#9ca3af', label: '未开始' },
-  { color: '#ef4444', label: '已延期/阻塞' }
-]
-
-const edgeLegend = [
-  { dash: 'solid', label: 'FS 完成-开始' },
-  { dash: '5,5', label: 'SS 开始-开始' },
-  { dash: '2,4', label: 'FF 完成-完成' },
-  { dash: '10,3,2,3', label: 'SF 开始-完成' }
+  { color: '#ef4444', label: '已延期/阻塞' },
+  { color: '#d1d5db', label: '基线计划' },
+  { color: '#fff', label: '关键路径', border: '#ef4444' }
 ]
 
 async function loadAll() {
@@ -84,7 +79,7 @@ onMounted(loadAll)
   <div class="gantt-page">
     <PageHeader
       :title="`项目甘特图${project?.projectName ? ' · ' + project.projectName : ''}`"
-      description="Dagre 从左到右布局 · 节点宽度按工期 · 关键路径红色加粗"
+      description="表格甘特图 · 任务条按状态着色 · 关键路径红色加粗 · 支持基线对比"
     >
       <template #actions>
         <el-button @click="goBack">返回</el-button>
@@ -143,41 +138,14 @@ onMounted(loadAll)
 
         <el-card shadow="never" class="side-card">
           <template #header>
-            <span class="card-title">节点图例</span>
+            <span class="card-title">任务条图例</span>
           </template>
           <ul class="legend-list">
             <li v-for="item in statusLegend" :key="item.label" class="legend-item">
               <span
                 class="legend-swatch"
-                :style="{ background: item.color }"
+                :style="{ background: item.color, border: item.border ? `2px solid ${item.border}` : '1px solid rgba(0,0,0,0.1)' }"
               />
-              <span>{{ item.label }}</span>
-            </li>
-          </ul>
-        </el-card>
-
-        <el-card shadow="never" class="side-card">
-          <template #header>
-            <span class="card-title">依赖边图例</span>
-          </template>
-          <ul class="legend-list">
-            <li
-              v-for="item in edgeLegend"
-              :key="item.label"
-              class="legend-item edge-legend"
-            >
-              <svg width="48" height="10" class="edge-swatch">
-                <line
-                  x1="0"
-                  y1="5"
-                  x2="44"
-                  y2="5"
-                  stroke="#94a3b8"
-                  stroke-width="2"
-                  :stroke-dasharray="item.dash === 'solid' ? '' : item.dash"
-                />
-                <polygon points="44,1 48,5 44,9" fill="#94a3b8" />
-              </svg>
               <span>{{ item.label }}</span>
             </li>
           </ul>
@@ -263,11 +231,5 @@ onMounted(loadAll)
   height: 12px;
   border-radius: 2px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-}
-.edge-legend {
-  gap: 8px;
-}
-.edge-swatch {
-  flex-shrink: 0;
 }
 </style>
