@@ -12,8 +12,13 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * MyBatis-Plus configuration: pagination interceptor, optimistic lock interceptor,
- * optional custom inner interceptors (e.g. data permission), and a
- * {@link MetaObjectHandler} for auto-filling audit fields.
+ * optional custom inner interceptors, and a {@link MetaObjectHandler} for auto-filling audit fields.
+ *
+ * <p><b>数据权限说明</b>：yudao 数据权限框架
+ * （{@link com.dp.plat.framework.datapermission.config.DataPermissionAutoConfiguration}）
+ * 在本 Bean 创建后，通过 {@link com.dp.plat.framework.mybatis.core.util.MyBatisUtils#addInterceptor}
+ * 将 MyBatis-Plus 的 {@code DataPermissionInterceptor} 插入到链首（index=0），
+ * 以确保数据权限过滤在分页之前生效（MyBatis-Plus 官方规定）。</p>
  *
  * <p><b>MetaObjectHandler</b>：复用 yudao {@link DefaultDBFieldHandler}，对
  * {@link com.dp.plat.framework.mybatis.core.dataobject.BaseDO} 实体填充
@@ -35,9 +40,9 @@ public class MyBatisPlusConfig {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
-        // Add any custom InnerInterceptor beans discovered in the context
-        // (e.g. DataPermissionInterceptor from pms-system). Ordering: data permission
-        // is applied last so it operates on the original SQL before pagination wraps it.
+        // 注册容器中其它自定义 InnerInterceptor Bean（例如业务模块的租户隔离拦截器等）。
+        // 注意：yudao 数据权限拦截器由 DataPermissionAutoConfiguration 单独插入到链首，
+        // 不通过此 ObjectProvider 注册，避免与分页插件顺序冲突。
         innerInterceptors.orderedStream().forEach(interceptor::addInnerInterceptor);
         return interceptor;
     }
