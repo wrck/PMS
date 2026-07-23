@@ -6,6 +6,8 @@
       1. Frontend Vite process (port 3000)
       2. Backend Spring Boot process (port 8080)
       3. Optional: Redis container (stopped only with -StopRedis switch)
+    底层已迁移到 yudao framework，后端 pms-admin 通过 spring-boot:run 启动，
+    本脚本通过端口定位 Java 进程并停止，同时清理残留 mvn 进程。
 .NOTES
     Usage:
       powershell -ExecutionPolicy Bypass -File .\stop-all.ps1
