@@ -12,7 +12,6 @@ import {
   Delete,
   Plus,
   Promotion,
-  Rank,
   RefreshLeft
 } from '@element-plus/icons-vue'
 import {
@@ -99,9 +98,6 @@ const tasks = ref<TaskNode[]>([])
 /** el-table 渲染用的树形数据：由扁平 tasks 按 parentId 实时计算 */
 const taskTree = computed(() => buildTaskTree(tasks.value))
 
-/** 任务树最大深度：父任务 + 一级子任务（共 2 层），避免子任务内再嵌套子任务 */
-const MAX_TASK_DEPTH = 2
-
 /** el-table 树形配置：children 字段渲染子行（非懒加载，不需要 hasChildren） */
 const taskTableTreeProps = { children: 'children' }
 
@@ -125,16 +121,19 @@ function buildTaskTree(flat: TaskNode[]): TaskNode[] {
   return roots
 }
 
-/** 计算 node 在树中的深度（根=1） */
-function getTaskDepth(flat: TaskNode[], id: string): number {
-  let depth = 1
+/** 计算从 root 到指定 id 的祖先链（不含自身），用于检测循环引用 */
+function getAncestors(flat: TaskNode[], id: string): TaskNode[] {
+  const chain: TaskNode[] = []
+  const seen = new Set<string>()
   let cur = flat.find((t) => t.id === id)
-  while (cur?.parentId) {
-    depth++
-    cur = flat.find((t) => t.id === cur!.parentId)
-    if (depth > MAX_TASK_DEPTH + 1) break // 防御循环引用
+  while (cur?.parentId && !seen.has(cur.parentId)) {
+    seen.add(cur.parentId)
+    const parent = flat.find((t) => t.id === cur!.parentId)
+    if (!parent) break
+    chain.push(parent)
+    cur = parent
   }
-  return depth
+  return chain
 }
 
 // 交付件
@@ -317,9 +316,6 @@ function updateExitCriteria(phase: PhaseDef, value: PhaseExitGate) {
 /** el-table 实例引用：用于初始化 sortablejs 拖拽 */
 const taskTableRef = ref()
 
-/** 拖拽手柄列宽（仅显示拖拽手柄图标） */
-const DRAG_HANDLE_WIDTH = 48
-
 function newTask(parent?: TaskNode): TaskNode {
   return {
     id: genId('task'),
@@ -361,67 +357,60 @@ function indentTask(row: TaskNode) {
   row.parentId = parent.parentId ?? null
 }
 
-/** 降级：将 row 变为前一个兄弟的子节点（增加一层嵌套），受 MAX_TASK_DEPTH 限制 */
+/** 降级：将 row 变为前一个兄弟的子节点（增加一层嵌套） */
 function outdentTask(row: TaskNode) {
   const siblings = tasks.value.filter((t) => t.parentId === row.parentId)
   const idx = siblings.findIndex((t) => t.id === row.id)
   if (idx <= 0) return // 无前一个兄弟
-  const prevSibling = siblings[idx - 1]
-  const newParentDepth = getTaskDepth(tasks.value, prevSibling.id)
-  const subtreeDepth = (id: string): number => {
-    const kids = tasks.value.filter((t) => t.parentId === id)
-    return kids.length === 0 ? 1 : 1 + Math.max(...kids.map((k) => subtreeDepth(k.id)))
-  }
-  const resultingDepth = newParentDepth + subtreeDepth(row.id)
-  if (resultingDepth > MAX_TASK_DEPTH) {
-    ElMessage.warning(`降级后层级深度 ${resultingDepth} 超过最大 ${MAX_TASK_DEPTH}，已阻止`)
-    return
-  }
-  row.parentId = prevSibling.id
+  row.parentId = siblings[idx - 1].id
 }
 
-/** 上移/下移：在同兄弟间调整顺序（操作扁平列表中的相对位置） */
+/** 上移/下移：在同兄弟间调整顺序（连同各自子树片段一起移动） */
 function moveTask(row: TaskNode, dir: 'up' | 'down') {
-  const sibIndices = tasks.value
-    .map((t, i) => (t.parentId === row.parentId ? i : -1))
-    .filter((i) => i >= 0)
-  const curIdx = tasks.value.findIndex((t) => t.id === row.id)
-  const pos = sibIndices.indexOf(curIdx)
+  // 收集同级兄弟在扁平列表中的连续片段范围 [start, end)
+  const sibRanges: Array<{ id: string; start: number; end: number }> = []
+  for (let i = 0; i < tasks.value.length; i++) {
+    if (tasks.value[i].parentId === row.parentId) {
+      let end = i + 1
+      const childIds = new Set<string>([tasks.value[i].id])
+      while (end < tasks.value.length && childIds.has(tasks.value[end].parentId ?? '')) {
+        childIds.add(tasks.value[end].id)
+        end++
+      }
+      sibRanges.push({ id: tasks.value[i].id, start: i, end })
+    }
+  }
+  const pos = sibRanges.findIndex((r) => r.id === row.id)
   const targetPos = dir === 'up' ? pos - 1 : pos + 1
-  if (targetPos < 0 || targetPos >= sibIndices.length) return
-  const i = sibIndices[pos]
-  const j = sibIndices[targetPos]
-  const segI = tasks.value.slice(i, i + 1)
-  const segJ = tasks.value.slice(j, j + 1)
-  const newTasks = tasks.value.slice()
-  newTasks[i] = segJ[0]
-  newTasks[j] = segI[0]
+  if (targetPos < 0 || targetPos >= sibRanges.length) return
+  const a = sibRanges[pos]
+  const b = sibRanges[targetPos]
+  const segA = tasks.value.slice(a.start, a.end)
+  const segB = tasks.value.slice(b.start, b.end)
+  const newTasks = tasks.value.slice(0, Math.min(a.start, b.start))
+  if (a.start < b.start) {
+    newTasks.push(...segB, ...segA)
+    newTasks.push(...tasks.value.slice(a.end))
+  } else {
+    newTasks.push(...segA, ...segB)
+    newTasks.push(...tasks.value.slice(b.end))
+  }
   tasks.value = newTasks
 }
 
 /** 判断 row 是否可上下移动（是否存在同父兄弟可交换） */
 function canMoveSibling(row: TaskNode, dir: 'up' | 'down'): boolean {
-  const sibIndices = tasks.value
-    .map((t, i) => (t.parentId === row.parentId ? i : -1))
-    .filter((i) => i >= 0)
-  const curIdx = tasks.value.findIndex((t) => t.id === row.id)
-  const pos = sibIndices.indexOf(curIdx)
+  const sibIds = tasks.value.filter((t) => t.parentId === row.parentId).map((t) => t.id)
+  const pos = sibIds.indexOf(row.id)
   if (pos < 0) return false
-  return dir === 'up' ? pos > 0 : pos < sibIndices.length - 1
+  return dir === 'up' ? pos > 0 : pos < sibIds.length - 1
 }
 
-/** 判断 row 是否可降级（存在前一个兄弟且降级后不超过最大深度） */
+/** 判断 row 是否可降级（存在前一个兄弟） */
 function canOutdent(row: TaskNode): boolean {
   const siblings = tasks.value.filter((t) => t.parentId === row.parentId)
   const idx = siblings.findIndex((t) => t.id === row.id)
-  if (idx <= 0) return false
-  const prevSibling = siblings[idx - 1]
-  const newParentDepth = getTaskDepth(tasks.value, prevSibling.id)
-  const subtreeDepth = (id: string): number => {
-    const kids = tasks.value.filter((t) => t.parentId === id)
-    return kids.length === 0 ? 1 : 1 + Math.max(...kids.map((k) => subtreeDepth(k.id)))
-  }
-  return newParentDepth + subtreeDepth(row.id) <= MAX_TASK_DEPTH
+  return idx > 0
 }
 
 /** tasks 变化或切换到任务配置步骤后，重新初始化 sortablejs（el-table 行 DOM 会重建） */
@@ -435,7 +424,7 @@ watch(activeStep, (step) => {
   if (step === 2) initTaskSortable()
 })
 
-/** 初始化 sortablejs：在 el-table tbody 上启用行拖拽，变更父子关系与排序 */
+/** 初始化 sortablejs：在 el-table tbody 上启用整行拖拽，变更父子关系与排序 */
 let taskSortable: Sortable | null = null
 function initTaskSortable() {
   if (taskSortable) {
@@ -448,8 +437,8 @@ function initTaskSortable() {
     if (!tbody) return
     taskSortable = Sortable.create(tbody, {
       animation: 150,
-      handle: '.task-drag-handle',
       ghostClass: 'task-drag-ghost',
+      chosenClass: 'task-drag-chosen',
       onEnd(evt) {
         handleTaskRowDrop(evt)
       }
@@ -457,51 +446,62 @@ function initTaskSortable() {
   })
 }
 
-/** 处理 el-table 行拖拽结束：根据目标行位置与放置方向更新 parentId 与顺序 */
+/**
+ * 处理 el-table 行拖拽结束。
+ *
+ * 关键：sortablejs 已直接操作 DOM 移动了 <tr>，而 el-table 行内容由 Vue
+ * 响应式数据驱动。若不处理，el-table 内部状态与 DOM 错位，导致输入框
+ * 内容重置、行序混乱。
+ *
+ * 策略：以 sortablejs 提供的 oldIndex/newIndex 计算新的 parentId 与顺序，
+ * 更新 tasks 数据，然后销毁并重建 sortable 实例 + 强制 Vue 重新渲染表格，
+ * 确保 DOM 完全由 Vue 数据接管。
+ */
 function handleTaskRowDrop(evt: Sortable.MoveEvent) {
   const oldIndex = evt.oldIndex
   const newIndex = evt.newIndex
   if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return
-  const dragged = tasks.value[oldIndex]
-  const target = tasks.value[newIndex]
+
+  // 复制当前数据快照（避免操作过程中引用变化）
+  const snapshot = tasks.value.map((t) => ({ ...t }))
+  const dragged = snapshot[oldIndex]
+  const target = snapshot[newIndex]
   if (!dragged || !target || dragged.id === target.id) {
+    // 异常情况：强制重渲染恢复 DOM 与数据一致
     tasks.value = [...tasks.value]
     return
   }
+
   // 防止拖入自己的后代（会形成环）
-  let cur: TaskNode | undefined = target
-  while (cur) {
-    if (cur.id === dragged.id) {
-      ElMessage.warning('不能拖入自身或后代任务')
-      tasks.value = [...tasks.value]
-      return
-    }
-    cur = cur.parentId ? tasks.value.find((t) => t.id === cur!.parentId) : undefined
+  const ancestorIds = new Set(getAncestors(snapshot, target.id).map((a) => a.id))
+  if (ancestorIds.has(dragged.id)) {
+    ElMessage.warning('不能拖入自身或后代任务')
+    tasks.value = [...tasks.value]
+    return
   }
-  const without = tasks.value.filter((t) => t.id !== dragged.id)
+
+  // 移除被拖拽节点，准备重新插入
+  const without = snapshot.filter((t) => t.id !== dragged.id)
   const targetIdx = without.findIndex((t) => t.id === target.id)
-  // 放在目标行下方→成为其子节点（受深度限制）；上方→成为前一个兄弟
-  const placeAsChild = newIndex > oldIndex
-  if (placeAsChild) {
-    const targetDepth = getTaskDepth(without, target.id)
-    const subDepth = (id: string): number => {
-      const kids = without.filter((t) => t.parentId === id)
-      return kids.length === 0 ? 1 : 1 + Math.max(...kids.map((k) => subDepth(k.id)))
-    }
-    if (targetDepth + subDepth(dragged.id) > MAX_TASK_DEPTH) {
-      ElMessage.warning(`作为子任务后层级深度超过最大 ${MAX_TASK_DEPTH}，已阻止`)
-      tasks.value = [...tasks.value]
-      return
-    }
+
+  // 向下拖（newIndex > oldIndex）：作为 target 的子节点（插到 target 之后、target 现有子树之前）
+  // 向上拖（newIndex < oldIndex）：作为 target 的前一个兄弟（同级，插到 target 之前）
+  if (newIndex > oldIndex) {
     dragged.parentId = target.id
     without.splice(targetIdx + 1, 0, dragged)
   } else {
     dragged.parentId = target.parentId
     without.splice(targetIdx, 0, dragged)
   }
+
+  // 更新数据，触发 Vue 重渲染 el-table
   tasks.value = without
-  ElMessage.success('任务顺序已更新')
 }
+
+/** 强制 el-table 重新渲染（销毁并重建 sortable，确保 DOM 由 Vue 接管） */
+watch(taskTree, () => {
+  nextTick(() => initTaskSortable())
+})
 
 // ============== 交付件操作 ==============
 
@@ -1056,7 +1056,7 @@ onMounted(() => {
       <!-- Step 3: 任务配置（el-table 树形数据，支持拖拽排序与父子关系变更） -->
       <div v-else-if="activeStep === 2" class="step-panel">
         <div class="panel-toolbar">
-          <span class="panel-tip">拖拽行变更排序与父子关系 · 升降级调整层级 · 最大 {{ MAX_TASK_DEPTH }} 层</span>
+          <span class="panel-tip">拖拽行变更排序与父子关系 · 升降级调整层级</span>
           <el-button type="primary" :icon="Plus" @click="addTask()">添加任务</el-button>
         </div>
         <el-empty v-if="tasks.length === 0" description="暂无任务，点击「添加任务」开始配置" />
@@ -1069,13 +1069,9 @@ onMounted(() => {
           border
           default-expand-all
           :tree-props="taskTableTreeProps"
+          class="task-tree-table"
           @expand-change="initTaskSortable"
         >
-          <el-table-column :width="DRAG_HANDLE_WIDTH" align="center" class-name="drag-col">
-            <template #default>
-              <el-icon class="task-drag-handle" title="拖拽变更排序与父子关系"><Rank /></el-icon>
-            </template>
-          </el-table-column>
           <el-table-column label="任务名称" prop="taskName" min-width="220" class-name="task-name-col">
             <template #default="{ row }">
               <el-input v-model="row.taskName" size="small" placeholder="任务名称" />
@@ -1533,20 +1529,22 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-/* 任务表格拖拽手柄 */
-.task-drag-handle {
+/* 任务树形表格：整行拖拽 + 层级展示 */
+.task-tree-table .el-table__row {
   cursor: grab;
-  color: var(--el-text-color-secondary);
-  font-size: 16px;
 }
-.task-drag-handle:active {
+.task-tree-table .el-table__row:active {
   cursor: grabbing;
 }
+/* 拖拽占位与选中样式 */
 .task-drag-ghost {
   opacity: 0.5;
-  background: var(--el-color-primary-light-9);
+  background: var(--el-color-primary-light-9) !important;
 }
-/* el-table 树形层级展示：展开图标与缩进 */
+.task-drag-chosen {
+  background: var(--el-color-primary-light-9) !important;
+}
+/* 任务名称列：展开图标与输入框对齐 */
 .task-name-col .el-table__expand-icon {
   margin-right: 6px;
 }
@@ -1557,6 +1555,9 @@ onMounted(() => {
 /* 子行通过层级背景色增强视觉区分 */
 .el-table .el-table__row--level-1 .task-name-col {
   background-color: var(--el-fill-color-light);
+}
+.el-table .el-table__row--level-2 .task-name-col {
+  background-color: var(--el-fill-color-lighter);
 }
 .text-muted {
   color: var(--el-text-color-secondary);
