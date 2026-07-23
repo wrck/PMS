@@ -97,7 +97,7 @@ public final class TestDataBuilder {
      * @return error result
      */
     public static <T> Result<T> failResult(String message) {
-        return new Result<>(ResultCode.ERROR.getCode(), message, null);
+        return new Result<>(ResultCode.INTERNAL_SERVER_ERROR.getCode(), message, null);
     }
 
     /**
