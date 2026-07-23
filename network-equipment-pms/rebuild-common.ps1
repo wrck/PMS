@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     重建底层公共模块（yudao framework + pms-common + 依赖链）
 .DESCRIPTION

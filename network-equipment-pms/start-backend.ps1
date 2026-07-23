@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     启动后端 pms-admin 服务（spring-boot:run）
 .DESCRIPTION
