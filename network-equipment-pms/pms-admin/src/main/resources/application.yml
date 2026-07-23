@@ -92,6 +92,17 @@ yudao:
     send-maximum-quantity-per-day: 10
     begin-code: 9999
     end-code: 9999
+  # 代码生成配置（yudao-module-infra CodegenProperties 强制 @NotNull/@NotEmpty 校验）
+  # 即使不使用代码生成器，CodegenProperties 仍会被装配（@EnableConfigurationProperties）。
+  # 这里复用 yudao-server 默认值；db-schemas 填数据库名（List<String>），与 master.url 中库名一致。
+  codegen:
+    base-package: ${yudao.info.base-package}
+    db-schemas: [dpspms]
+    front-type: 20      # CodegenFrontTypeEnum 枚举，20=vue3-element-plus
+    vo-type: 10         # CodegenVOTypeEnum 枚举，10=_req/_resp 分离
+    delete-batch-enable: true
+    unit-test-enable: false
+    import-enable: false
 
 # 微信公众号、小程序配置
 # PMS 当前未使用微信登录，但 yudao-module-system 引入了 wx-java starter，
