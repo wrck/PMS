@@ -33,7 +33,7 @@ public class SysConfigController {
 
     @Operation(summary = "Paginated config query")
     @GetMapping("/page")
-    @PreAuthorize("hasAuthority('system:config:list')")
+    @PreAuthorize("@ss.hasPermission('system:config:list')")
     public Result<Page<SysConfig>> page(@RequestParam(defaultValue = "1") Integer pageNum,
                                         @RequestParam(defaultValue = "10") Integer pageSize,
                                         @RequestParam(required = false) String configName) {
@@ -42,7 +42,7 @@ public class SysConfigController {
 
     @Operation(summary = "Get config by id")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:config:list')")
+    @PreAuthorize("@ss.hasPermission('system:config:list')")
     public Result<SysConfig> get(@PathVariable Long id) {
         return Result.ok(sysConfigService.getById(id));
     }
@@ -55,7 +55,7 @@ public class SysConfigController {
 
     @Operation(summary = "Create config")
     @PostMapping
-    @PreAuthorize("hasAuthority('system:config:add')")
+    @PreAuthorize("@ss.hasPermission('system:config:add')")
     @OperLog(title = "参数配置", businessType = 1)
     public Result<Boolean> add(@Valid @RequestBody SysConfig config) {
         return Result.ok(sysConfigService.create(config));
@@ -63,7 +63,7 @@ public class SysConfigController {
 
     @Operation(summary = "Update config")
     @PutMapping
-    @PreAuthorize("hasAuthority('system:config:edit')")
+    @PreAuthorize("@ss.hasPermission('system:config:edit')")
     @OperLog(title = "参数配置", businessType = 2)
     public Result<Boolean> update(@Valid @RequestBody SysConfig config) {
         return Result.ok(sysConfigService.update(config));
@@ -71,7 +71,7 @@ public class SysConfigController {
 
     @Operation(summary = "Delete config")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:config:remove')")
+    @PreAuthorize("@ss.hasPermission('system:config:remove')")
     @OperLog(title = "参数配置", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(sysConfigService.deleteById(id));

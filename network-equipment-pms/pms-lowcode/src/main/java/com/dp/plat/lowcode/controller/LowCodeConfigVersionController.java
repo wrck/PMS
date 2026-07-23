@@ -48,7 +48,7 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "查询版本历史")
     @GetMapping("/history")
-    @PreAuthorize("hasAuthority('lowcode:version:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:list')")
     public Result<List<LowCodeConfigVersion>> history(@RequestParam String configType,
                                                         @RequestParam Long configId) {
         return Result.ok(configVersionService.getVersionHistory(configType, configId));
@@ -56,7 +56,7 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "查询版本树（按 parentVersionId 构建分支树，支持多分支）")
     @GetMapping("/tree")
-    @PreAuthorize("hasAuthority('lowcode:version:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:list')")
     public Result<List<VersionTreeNode>> tree(@RequestParam String configType,
                                                 @RequestParam Long configId) {
         return Result.ok(configVersionService.getVersionTree(configType, configId));
@@ -64,7 +64,7 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "对比两个版本差异")
     @GetMapping("/diff")
-    @PreAuthorize("hasAuthority('lowcode:version:diff')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:diff')")
     public Result<VersionDiffDTO> diff(@RequestParam String configType,
                                         @RequestParam Long configId,
                                         @RequestParam Integer fromVersion,
@@ -74,7 +74,7 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "回滚到指定版本")
     @PostMapping("/rollback")
-    @PreAuthorize("hasAuthority('lowcode:version:rollback')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:rollback')")
     @OperLog(title = "低代码配置版本", businessType = 2)
     public Result<LowCodeConfigVersion> rollback(@RequestParam String configType,
                                                    @RequestParam Long configId,
@@ -85,7 +85,7 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "回滚预览（批次5-T5，对比当前版本与目标版本差异，不实际回滚）")
     @GetMapping("/rollback-preview")
-    @PreAuthorize("hasAuthority('lowcode:version:rollback')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:rollback')")
     public Result<VersionDiffDTO> rollbackPreview(@RequestParam String configType,
                                                     @RequestParam Long configId,
                                                     @RequestParam Integer targetVersion) {
@@ -94,7 +94,7 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "发布影响范围分析（批次5-T5）")
     @GetMapping("/publish-impact")
-    @PreAuthorize("hasAuthority('lowcode:version:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:list')")
     public Result<com.dp.plat.lowcode.dto.PublishImpactDTO> publishImpact(@RequestParam String configType,
                                                                             @RequestParam Long configId,
                                                                             @RequestParam(required = false) String configCode) {
@@ -103,7 +103,7 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "环境晋升")
     @PostMapping("/promote")
-    @PreAuthorize("hasAuthority('lowcode:version:promote')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:promote')")
     @OperLog(title = "低代码配置版本", businessType = 5)
     public Result<Void> promote(@RequestParam String targetEnvironment,
                                  @RequestBody List<String> configCodes) {
@@ -113,21 +113,21 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "查询晋升管道状态（批次5-T2）")
     @GetMapping("/pipeline")
-    @PreAuthorize("hasAuthority('lowcode:version:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:list')")
     public Result<List<PromotionPipelineDTO>> pipeline(@RequestParam List<String> configCodes) {
         return Result.ok(promotionService.getPipelineStatus(configCodes));
     }
 
     @Operation(summary = "晋升门禁预检（批次5-T2，不实际晋升）")
     @PostMapping("/gate-check")
-    @PreAuthorize("hasAuthority('lowcode:version:promote')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:promote')")
     public Result<PromotionGateService.GateResult> gateCheck(@RequestBody GateCheckRequest req) {
         return Result.ok(gateService.check(req.getSourceEnvironment(), req.getTargetEnvironment(), req.getConfigCodes()));
     }
 
     @Operation(summary = "导出配置包")
     @GetMapping("/export-package")
-    @PreAuthorize("hasAuthority('lowcode:version:export')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:export')")
     @OperLog(title = "低代码配置版本", businessType = 4)
     public Result<String> exportPackage(@RequestParam List<String> configCodes) {
         return Result.ok(promotionService.exportPackageJson(configCodes));
@@ -135,7 +135,7 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "导出配置包（zip）")
     @PostMapping("/export-package")
-    @PreAuthorize("hasAuthority('lowcode:version:export')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:export')")
     @OperLog(title = "低代码配置版本", businessType = 4)
     public ResponseEntity<byte[]> exportPackageZip(@RequestBody ExportPackageRequest req) {
         byte[] zip = promotionService.exportPackageZip(req.getConfigCodes(), req.getTargetEnvironment());
@@ -147,7 +147,7 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "导入配置包")
     @PostMapping("/import-package")
-    @PreAuthorize("hasAuthority('lowcode:version:import')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:import')")
     @OperLog(title = "低代码配置版本", businessType = 1)
     public Result<Void> importPackage(@RequestParam("file") MultipartFile file,
                                        @RequestParam(defaultValue = "false") boolean overwrite) {
@@ -162,14 +162,14 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "检测导入冲突（批次5-T3）")
     @PostMapping("/import-conflicts")
-    @PreAuthorize("hasAuthority('lowcode:version:import')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:import')")
     public Result<ImportConflictDTO> detectImportConflicts(@RequestBody DetectConflictsRequest req) {
         return Result.ok(promotionService.detectImportConflicts(req.getPackageJson(), req.getTargetEnvironment()));
     }
 
     @Operation(summary = "按解决方案导入配置包（批次5-T3）")
     @PostMapping("/import-resolve")
-    @PreAuthorize("hasAuthority('lowcode:version:import')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:import')")
     @OperLog(title = "低代码配置版本", businessType = 1)
     public Result<Void> importWithResolution(@RequestBody ImportResolveRequest req) {
         promotionService.importPackageWithResolution(req.getPackageJson(), req.getTargetEnvironment(), req.getResolutions());
@@ -178,7 +178,7 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "创建分支（批次5-T1）")
     @PostMapping("/branch")
-    @PreAuthorize("hasAuthority('lowcode:version:branch')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:branch')")
     @OperLog(title = "低代码配置版本", businessType = 1)
     public Result<LowCodeConfigVersion> createBranch(@RequestBody CreateBranchRequest req) {
         return Result.ok(configVersionService.createBranch(
@@ -188,7 +188,7 @@ public class LowCodeConfigVersionController {
 
     @Operation(summary = "为版本添加标签（批次5-T1）")
     @PostMapping("/tag")
-    @PreAuthorize("hasAuthority('lowcode:version:tag')")
+    @PreAuthorize("@ss.hasPermission('lowcode:version:tag')")
     @OperLog(title = "低代码配置版本", businessType = 2)
     public Result<LowCodeConfigVersion> addTag(@RequestBody AddTagRequest req) {
         return Result.ok(configVersionService.addTag(

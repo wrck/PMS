@@ -37,7 +37,7 @@ public class ImplTaskController {
 
     @Operation(summary = "Assign OEM implementation task")
     @PostMapping("/oem/assign")
-    @PreAuthorize("hasAuthority('implementation:implTask:add')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:add')")
     @OperLog(title = "实施任务管理", businessType = 1)
     public Result<ImplTask> assignOem(@Valid @RequestBody ImplTask task) {
         return Result.ok(implTaskService.assignOemTask(task));
@@ -45,7 +45,7 @@ public class ImplTaskController {
 
     @Operation(summary = "Assign agent implementation task")
     @PostMapping("/agent/assign")
-    @PreAuthorize("hasAuthority('implementation:implTask:add')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:add')")
     @OperLog(title = "实施任务管理", businessType = 1)
     public Result<ImplTask> assignAgent(@Valid @RequestBody ImplTask task) {
         return Result.ok(implTaskService.assignAgentTask(task));
@@ -53,7 +53,7 @@ public class ImplTaskController {
 
     @Operation(summary = "Accept a task")
     @PostMapping("/{id}/accept")
-    @PreAuthorize("hasAuthority('implementation:implTask:edit')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:edit')")
     @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> accept(@PathVariable Long id) {
         implTaskService.acceptTask(id);
@@ -62,7 +62,7 @@ public class ImplTaskController {
 
     @Operation(summary = "Start a task")
     @PostMapping("/{id}/start")
-    @PreAuthorize("hasAuthority('implementation:implTask:edit')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:edit')")
     @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> start(@PathVariable Long id) {
         implTaskService.startTask(id);
@@ -71,7 +71,7 @@ public class ImplTaskController {
 
     @Operation(summary = "Report task progress")
     @PostMapping("/{id}/progress")
-    @PreAuthorize("hasAuthority('implementation:implTask:edit')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:edit')")
     @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> reportProgress(@PathVariable Long id, @Valid @RequestBody ImplProgress progress) {
         implTaskService.reportProgress(id, progress);
@@ -80,7 +80,7 @@ public class ImplTaskController {
 
     @Operation(summary = "Complete a task")
     @PostMapping("/{id}/complete")
-    @PreAuthorize("hasAuthority('implementation:implTask:edit')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:edit')")
     @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> complete(@PathVariable Long id, @RequestParam(required = false) String description) {
         implTaskService.completeTask(id, description);
@@ -89,7 +89,7 @@ public class ImplTaskController {
 
     @Operation(summary = "Confirm a completed task")
     @PostMapping("/{id}/confirm")
-    @PreAuthorize("hasAuthority('implementation:implTask:confirm')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:confirm')")
     @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> confirm(@PathVariable Long id, @RequestParam(required = false) String opinion) {
         implTaskService.confirmTask(id, opinion);
@@ -98,7 +98,7 @@ public class ImplTaskController {
 
     @Operation(summary = "Reject a task")
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAuthority('implementation:implTask:confirm')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:confirm')")
     @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> reject(@PathVariable Long id, @RequestParam(required = false) String opinion) {
         implTaskService.rejectTask(id, opinion);
@@ -107,14 +107,14 @@ public class ImplTaskController {
 
     @Operation(summary = "Get task by id")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('implementation:implTask:list')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:list')")
     public Result<ImplTask> get(@PathVariable Long id) {
         return Result.ok(implTaskService.getById(id));
     }
 
     @Operation(summary = "Paginated task query")
     @GetMapping("/list")
-    @PreAuthorize("hasAuthority('implementation:implTask:list')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:list')")
     public Result<Page<ImplTask>> list(@RequestParam(defaultValue = "1") int page,
                                        @RequestParam(defaultValue = "10") int size,
                                        ImplTask filters) {
@@ -123,7 +123,7 @@ public class ImplTaskController {
 
     @Operation(summary = "List tasks by project id")
     @GetMapping("/project/{projectId}")
-    @PreAuthorize("hasAuthority('implementation:implTask:list')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:list')")
     public Result<List<ImplTask>> listByProject(@PathVariable Long projectId) {
         return Result.ok(implTaskService.getByProjectId(projectId));
     }
@@ -132,14 +132,14 @@ public class ImplTaskController {
 
     @Operation(summary = "查询任务子树（含自身及所有后代）")
     @GetMapping("/{id}/subtree")
-    @PreAuthorize("hasAuthority('implementation:implTask:list')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:list')")
     public Result<List<ImplTask>> subtree(@PathVariable Long id) {
         return Result.ok(implTaskService.getTaskSubtree(id));
     }
 
     @Operation(summary = "移动任务（变更父任务，同步更新 taskPath）")
     @PostMapping("/{id}/move")
-    @PreAuthorize("hasAuthority('project:task:move')")
+    @PreAuthorize("@ss.hasPermission('project:task:move')")
     @OperLog(title = "实施任务管理", businessType = 2)
     public Result<Void> move(@PathVariable Long id, @RequestParam(required = false) Long newParentId) {
         implTaskService.moveTask(id, newParentId);
@@ -148,7 +148,7 @@ public class ImplTaskController {
 
     @Operation(summary = "提交评审（含强制检查项校验）")
     @PostMapping("/{id}/submit-review")
-    @PreAuthorize("hasAuthority('project:task:complete')")
+    @PreAuthorize("@ss.hasPermission('project:task:complete')")
     @OperLog(title = "实施任务管理", businessType = 2)
     public Result<TaskReviewResult> submitReview(@PathVariable Long id) {
         return Result.ok(implTaskService.submitForReview(id, SecurityUtils.getCurrentUserId()));
@@ -156,7 +156,7 @@ public class ImplTaskController {
 
     @Operation(summary = "验收任务（评审通过）")
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAuthority('project:task:approve')")
+    @PreAuthorize("@ss.hasPermission('project:task:approve')")
     @OperLog(title = "实施任务管理", businessType = 2)
     public Result<TaskReviewResult> approve(@PathVariable Long id) {
         return Result.ok(implTaskService.approveTask(id, SecurityUtils.getCurrentUserId()));
@@ -164,7 +164,7 @@ public class ImplTaskController {
 
     @Operation(summary = "任务进度（含子任务加权汇总）")
     @GetMapping("/{id}/progress")
-    @PreAuthorize("hasAuthority('implementation:implTask:list')")
+    @PreAuthorize("@ss.hasPermission('implementation:implTask:list')")
     public Result<TaskProgressVO> progress(@PathVariable Long id) {
         return Result.ok(implTaskService.getTaskProgress(id));
     }

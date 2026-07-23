@@ -33,7 +33,7 @@ public class LowCodeConfigAuditLogController {
 
     @Operation(summary = "分页查询配置审计日志")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:config-audit:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:config-audit:list')")
     public Result<Page<LowCodeConfigAuditLog>> page(
             @RequestParam(required = false) String actor,
             @RequestParam(required = false) String configType,
@@ -59,7 +59,7 @@ public class LowCodeConfigAuditLogController {
 
     @Operation(summary = "查询审计日志详情（含 before/after JSON 快照）")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:config-audit:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:config-audit:list')")
     public Result<LowCodeConfigAuditLog> get(@PathVariable Long id) {
         return Result.ok(auditLogMapper.selectById(id));
     }

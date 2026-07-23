@@ -45,7 +45,7 @@ public class ApprovalFieldPermissionController {
 
     @Operation(summary = "查询字段权限列表（按节点 + 实体类型过滤）")
     @GetMapping("/list")
-    @PreAuthorize("hasAuthority('workflow:field:perm')")
+    @PreAuthorize("@ss.hasPermission('workflow:field:perm')")
     public Result<List<ApprovalFieldPermission>> list(
             @RequestParam Long approvalNodeId,
             @RequestParam(required = false) String entityType) {
@@ -61,7 +61,7 @@ public class ApprovalFieldPermissionController {
 
     @Operation(summary = "新增字段权限")
     @PostMapping
-    @PreAuthorize("hasAuthority('workflow:field:perm')")
+    @PreAuthorize("@ss.hasPermission('workflow:field:perm')")
     @OperLog(title = "字段权限-新增", businessType = 1)
     public Result<ApprovalFieldPermission> save(@RequestBody ApprovalFieldPermission permission) {
         validatePermission(permission);
@@ -76,7 +76,7 @@ public class ApprovalFieldPermissionController {
 
     @Operation(summary = "更新字段权限")
     @PutMapping
-    @PreAuthorize("hasAuthority('workflow:field:perm')")
+    @PreAuthorize("@ss.hasPermission('workflow:field:perm')")
     @OperLog(title = "字段权限-更新", businessType = 2)
     public Result<ApprovalFieldPermission> update(@RequestBody ApprovalFieldPermission permission) {
         if (permission.getId() == null) {
@@ -90,7 +90,7 @@ public class ApprovalFieldPermissionController {
 
     @Operation(summary = "删除字段权限")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('workflow:field:perm')")
+    @PreAuthorize("@ss.hasPermission('workflow:field:perm')")
     @OperLog(title = "字段权限-删除", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         fieldPermissionMapper.deleteById(id);

@@ -28,7 +28,7 @@ public class FinalAcceptanceController {
 
     @Operation(summary = "申请终验")
     @PostMapping("/apply")
-    @PreAuthorize("hasAuthority('project:finalAcceptance:apply')")
+    @PreAuthorize("@ss.hasPermission('project:finalAcceptance:apply')")
     @OperLog(title = "终验管理", businessType = 1)
     public Result<FinalAcceptance> apply(@RequestParam Long projectId,
                                          @RequestParam(required = false) String report) {
@@ -37,7 +37,7 @@ public class FinalAcceptanceController {
 
     @Operation(summary = "审批通过终验")
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAuthority('project:finalAcceptance:approve')")
+    @PreAuthorize("@ss.hasPermission('project:finalAcceptance:approve')")
     @OperLog(title = "终验管理", businessType = 2)
     public Result<FinalAcceptance> approve(@PathVariable Long id,
                                            @RequestParam(required = false) String opinion) {
@@ -46,7 +46,7 @@ public class FinalAcceptanceController {
 
     @Operation(summary = "驳回终验申请")
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAuthority('project:finalAcceptance:approve')")
+    @PreAuthorize("@ss.hasPermission('project:finalAcceptance:approve')")
     @OperLog(title = "终验管理", businessType = 2)
     public Result<FinalAcceptance> reject(@PathVariable Long id,
                                           @RequestParam(required = false) String opinion) {

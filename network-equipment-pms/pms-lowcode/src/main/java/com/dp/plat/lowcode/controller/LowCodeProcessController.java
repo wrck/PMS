@@ -70,14 +70,14 @@ public class LowCodeProcessController {
 
     @Operation(summary = "查询流程绑定列表")
     @GetMapping("/bindings")
-    @PreAuthorize("hasAuthority('lowcode:process:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:list')")
     public Result<List<LowCodeProcessBinding>> listBindings() {
         return Result.ok(bindingService.list());
     }
 
     @Operation(summary = "保存流程绑定")
     @PostMapping("/bindings")
-    @PreAuthorize("hasAuthority('lowcode:process:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:edit')")
     @OperLog(title = "低代码流程绑定", businessType = 1)
     public Result<LowCodeProcessBinding> saveBinding(@RequestBody LowCodeProcessBinding binding) {
         bindingService.saveOrUpdate(binding);
@@ -86,7 +86,7 @@ public class LowCodeProcessController {
 
     @Operation(summary = "查询 Flowable 流程定义列表")
     @GetMapping("/definitions")
-    @PreAuthorize("hasAuthority('lowcode:process:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:list')")
     public Result<Map<String, Object>> listDefinitions(@RequestParam(defaultValue = "1") int page,
                                                        @RequestParam(defaultValue = "20") int size) {
         return workflowService.listProcessDefinitions(page, size);
@@ -94,7 +94,7 @@ public class LowCodeProcessController {
 
     @Operation(summary = "根据 task 获取绑定的表单 code")
     @GetMapping("/task-form")
-    @PreAuthorize("hasAuthority('lowcode:process:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:list')")
     public Result<String> getTaskForm(@RequestParam String processDefinitionKey,
                                       @RequestParam String nodeId) {
         return Result.ok(bindingService.getFormCodeForNode(processDefinitionKey, nodeId));
@@ -102,7 +102,7 @@ public class LowCodeProcessController {
 
     @Operation(summary = "部署 BPMN XML 到 Flowable")
     @PostMapping("/deploy")
-    @PreAuthorize("hasAuthority('lowcode:process:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:edit')")
     @OperLog(title = "低代码流程部署", businessType = 1)
     public Result<Map<String, Object>> deployBpmnXml(@Valid @RequestBody DeployBpmnRequest request) {
         // 将 XML 字符串转为内存 MultipartFile，复用 WorkflowService.deployProcess
@@ -115,14 +115,14 @@ public class LowCodeProcessController {
 
     @Operation(summary = "获取已部署流程定义的 BPMN XML")
     @GetMapping("/bpmn-xml")
-    @PreAuthorize("hasAuthority('lowcode:process:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:list')")
     public Result<String> getBpmnXml(@RequestParam String processDefinitionKey) {
         return Result.ok(workflowService.getProcessDefinitionBpmnXml(processDefinitionKey));
     }
 
     @Operation(summary = "查询流程实例当前活动节点 ID 列表")
     @GetMapping("/instance/activity-ids")
-    @PreAuthorize("hasAuthority('lowcode:process:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:list')")
     public Result<List<String>> getActivityIds(@RequestParam String processInstanceId) {
         return Result.ok(runtimeService.getActiveActivityIds(processInstanceId));
     }
@@ -141,7 +141,7 @@ public class LowCodeProcessController {
      */
     @Operation(summary = "查询流程实例列表")
     @GetMapping("/instances")
-    @PreAuthorize("hasAuthority('lowcode:process:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:list')")
     public Result<List<ProcessInstanceDTO>> listInstances(
             @RequestParam(required = false) String processDefinitionKey,
             @RequestParam(required = false) String status) {
@@ -201,7 +201,7 @@ public class LowCodeProcessController {
      */
     @Operation(summary = "终止流程实例")
     @DeleteMapping("/instances/{id}")
-    @PreAuthorize("hasAuthority('lowcode:process:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:edit')")
     @OperLog(title = "终止流程实例", businessType = 2)
     public Result<Void> terminateInstance(@PathVariable("id") String processInstanceId,
                                            @RequestParam(required = false) String reason) {
@@ -228,7 +228,7 @@ public class LowCodeProcessController {
      */
     @Operation(summary = "启动流程实例")
     @PostMapping("/instances")
-    @PreAuthorize("hasAuthority('lowcode:process:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:edit')")
     @OperLog(title = "启动流程实例", businessType = 1)
     public Result<ProcessInstanceDTO> startInstance(
             @RequestParam String processDefinitionKey,
@@ -253,7 +253,7 @@ public class LowCodeProcessController {
      */
     @Operation(summary = "挂起流程实例")
     @PostMapping("/instances/{id}/suspend")
-    @PreAuthorize("hasAuthority('lowcode:process:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:edit')")
     @OperLog(title = "挂起流程实例", businessType = 1)
     public Result<Void> suspendInstance(@PathVariable("id") String processInstanceId) {
         runtimeService.suspendProcessInstanceById(processInstanceId);
@@ -268,7 +268,7 @@ public class LowCodeProcessController {
      */
     @Operation(summary = "激活流程实例")
     @PostMapping("/instances/{id}/activate")
-    @PreAuthorize("hasAuthority('lowcode:process:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:process:edit')")
     @OperLog(title = "激活流程实例", businessType = 1)
     public Result<Void> activateInstance(@PathVariable("id") String processInstanceId) {
         runtimeService.activateProcessInstanceById(processInstanceId);

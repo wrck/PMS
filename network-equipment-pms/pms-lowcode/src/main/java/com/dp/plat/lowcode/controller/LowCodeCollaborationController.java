@@ -32,7 +32,7 @@ public class LowCodeCollaborationController {
 
     @Operation(summary = "加入协同会话")
     @PostMapping("/join")
-    @PreAuthorize("hasAuthority('lowcode:collaboration:join')")
+    @PreAuthorize("@ss.hasPermission('lowcode:collaboration:join')")
     public Result<Void> join(@RequestBody JoinRequest req) {
         collaborationService.join(req.getConfigType(), req.getConfigId(), req.getUser());
         return Result.ok();
@@ -40,7 +40,7 @@ public class LowCodeCollaborationController {
 
     @Operation(summary = "离开协同会话")
     @PostMapping("/leave")
-    @PreAuthorize("hasAuthority('lowcode:collaboration:join')")
+    @PreAuthorize("@ss.hasPermission('lowcode:collaboration:join')")
     public Result<Void> leave(@RequestBody LeaveRequest req) {
         collaborationService.leave(req.getConfigType(), req.getConfigId(), req.getUserId());
         return Result.ok();
@@ -48,7 +48,7 @@ public class LowCodeCollaborationController {
 
     @Operation(summary = "心跳保活")
     @PostMapping("/heartbeat")
-    @PreAuthorize("hasAuthority('lowcode:collaboration:join')")
+    @PreAuthorize("@ss.hasPermission('lowcode:collaboration:join')")
     public Result<Void> heartbeat(@RequestBody HeartbeatRequest req) {
         collaborationService.heartbeat(req.getConfigType(), req.getConfigId(), req.getUserId());
         return Result.ok();
@@ -56,7 +56,7 @@ public class LowCodeCollaborationController {
 
     @Operation(summary = "查询在线用户")
     @GetMapping("/online")
-    @PreAuthorize("hasAuthority('lowcode:collaboration:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:collaboration:list')")
     public Result<List<OnlineUser>> online(@RequestParam String configType,
                                              @RequestParam Long configId) {
         return Result.ok(collaborationService.getOnlineUsers(configType, configId));
@@ -64,7 +64,7 @@ public class LowCodeCollaborationController {
 
     @Operation(summary = "广播变更")
     @PostMapping("/change")
-    @PreAuthorize("hasAuthority('lowcode:collaboration:join')")
+    @PreAuthorize("@ss.hasPermission('lowcode:collaboration:join')")
     public Result<Void> broadcastChange(@RequestBody ChangeRequest req) {
         collaborationService.broadcastChange(req.getConfigType(), req.getConfigId(), req.getChange());
         return Result.ok();
@@ -72,7 +72,7 @@ public class LowCodeCollaborationController {
 
     @Operation(summary = "拉取增量变更")
     @GetMapping("/changes")
-    @PreAuthorize("hasAuthority('lowcode:collaboration:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:collaboration:list')")
     public Result<List<CollaborationChange>> changes(@RequestParam String configType,
                                                        @RequestParam Long configId,
                                                        @RequestParam(required = false, defaultValue = "0") Long sinceSeq) {

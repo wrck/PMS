@@ -33,7 +33,7 @@ public class LowCodeGrayReleaseController {
 
     @Operation(summary = "创建灰度发布策略")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:gray-release:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:gray-release:edit')")
     @OperLog(title = "低代码灰度发布", businessType = 1)
     public Result<LowCodeGrayRelease> create(@RequestBody CreateGrayRequest req) {
         return Result.ok(grayReleaseService.createGrayRelease(
@@ -43,7 +43,7 @@ public class LowCodeGrayReleaseController {
 
     @Operation(summary = "调整灰度比例")
     @PostMapping("/{id}/percentage")
-    @PreAuthorize("hasAuthority('lowcode:gray-release:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:gray-release:edit')")
     @OperLog(title = "低代码灰度发布", businessType = 2)
     public Result<LowCodeGrayRelease> updatePercentage(@PathVariable Long id,
                                                          @RequestParam Integer newPercentage) {
@@ -52,7 +52,7 @@ public class LowCodeGrayReleaseController {
 
     @Operation(summary = "全量发布")
     @PostMapping("/{id}/full")
-    @PreAuthorize("hasAuthority('lowcode:gray-release:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:gray-release:edit')")
     @OperLog(title = "低代码灰度发布", businessType = 2)
     public Result<LowCodeGrayRelease> releaseFull(@PathVariable Long id) {
         return Result.ok(grayReleaseService.releaseFull(id));
@@ -60,7 +60,7 @@ public class LowCodeGrayReleaseController {
 
     @Operation(summary = "回滚灰度")
     @PostMapping("/{id}/rollback")
-    @PreAuthorize("hasAuthority('lowcode:gray-release:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:gray-release:edit')")
     @OperLog(title = "低代码灰度发布", businessType = 2)
     public Result<LowCodeGrayRelease> rollback(@PathVariable Long id) {
         return Result.ok(grayReleaseService.rollbackGray(id));
@@ -68,7 +68,7 @@ public class LowCodeGrayReleaseController {
 
     @Operation(summary = "查询指定配置的灰度记录")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:gray-release:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:gray-release:list')")
     public Result<List<LowCodeGrayRelease>> list(@RequestParam String configType,
                                                    @RequestParam Long configId) {
         return Result.ok(grayReleaseService.listByConfig(configType, configId));
@@ -76,7 +76,7 @@ public class LowCodeGrayReleaseController {
 
     @Operation(summary = "查询当前活跃灰度")
     @GetMapping("/active")
-    @PreAuthorize("hasAuthority('lowcode:gray-release:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:gray-release:list')")
     public Result<LowCodeGrayRelease> active(@RequestParam String configType,
                                                 @RequestParam Long configId) {
         return Result.ok(grayReleaseService.getActiveGrayRelease(configType, configId));
@@ -84,7 +84,7 @@ public class LowCodeGrayReleaseController {
 
     @Operation(summary = "判定用户/租户是否命中灰度")
     @GetMapping("/check")
-    @PreAuthorize("hasAuthority('lowcode:gray-release:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:gray-release:list')")
     public Result<Boolean> check(@RequestParam String configType,
                                   @RequestParam Long configId,
                                   @RequestParam(required = false) Long userId,

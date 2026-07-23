@@ -44,21 +44,21 @@ public class LowCodeMicroflowController {
 
     @Operation(summary = "微流列表")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:microflow:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:list')")
     public Result<List<LowCodeMicroflow>> list() {
         return Result.ok(microflowService.list());
     }
 
     @Operation(summary = "微流详情")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:microflow:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:list')")
     public Result<LowCodeMicroflow> get(@PathVariable Long id) {
         return Result.ok(microflowService.getById(id));
     }
 
     @Operation(summary = "保存微流")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:microflow:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:edit')")
     @OperLog(title = "低代码微流", businessType = 1)
     public Result<LowCodeMicroflow> save(@RequestBody LowCodeMicroflow microflow) {
         microflowService.saveOrUpdate(microflow);
@@ -67,7 +67,7 @@ public class LowCodeMicroflowController {
 
     @Operation(summary = "删除微流")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:microflow:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:edit')")
     @OperLog(title = "低代码微流", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         microflowService.removeById(id);
@@ -76,7 +76,7 @@ public class LowCodeMicroflowController {
 
     @Operation(summary = "执行微流")
     @PostMapping("/{code}/execute")
-    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:exec')")
     public Result<Map<String, Object>> execute(@PathVariable String code,
                                                @RequestBody(required = false) Map<String, Object> inputs) {
         return Result.ok(microflowService.execute(code, inputs == null ? Map.of() : inputs));
@@ -86,7 +86,7 @@ public class LowCodeMicroflowController {
 
     @Operation(summary = "导出微流流程图为 SVG")
     @GetMapping("/{id}/diagram.svg")
-    @PreAuthorize("hasAuthority('lowcode:microflow:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:list')")
     public ResponseEntity<byte[]> exportSvg(@PathVariable Long id) {
         LowCodeMicroflow microflow = microflowService.getById(id);
         if (microflow == null) {
@@ -104,7 +104,7 @@ public class LowCodeMicroflowController {
 
     @Operation(summary = "导出微流流程图为 PNG")
     @GetMapping("/{id}/diagram.png")
-    @PreAuthorize("hasAuthority('lowcode:microflow:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:list')")
     public ResponseEntity<byte[]> exportPng(@PathVariable Long id) {
         LowCodeMicroflow microflow = microflowService.getById(id);
         if (microflow == null) {
@@ -128,7 +128,7 @@ public class LowCodeMicroflowController {
 
     @Operation(summary = "启动微流调试会话")
     @PostMapping("/{code}/debug/start")
-    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:exec')")
     @OperLog(title = "低代码微流调试", businessType = 0)
     public Result<MicroflowDebugger.DebugSession> startDebug(@PathVariable String code,
                                                               @RequestBody(required = false) DebugStartRequest req) {
@@ -139,28 +139,28 @@ public class LowCodeMicroflowController {
 
     @Operation(summary = "单步执行（step over）")
     @PostMapping("/debug/{sessionId}/step")
-    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:exec')")
     public Result<MicroflowDebugger.DebugStepResult> stepOver(@PathVariable String sessionId) {
         return Result.ok(microflowDebugger.stepOver(sessionId));
     }
 
     @Operation(summary = "继续执行到下一断点")
     @PostMapping("/debug/{sessionId}/continue")
-    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:exec')")
     public Result<MicroflowDebugger.DebugStepResult> continueExecution(@PathVariable String sessionId) {
         return Result.ok(microflowDebugger.continueExecution(sessionId));
     }
 
     @Operation(summary = "查询当前变量状态")
     @GetMapping("/debug/{sessionId}/variables")
-    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:exec')")
     public Result<Map<String, Object>> getVariables(@PathVariable String sessionId) {
         return Result.ok(microflowDebugger.getVariables(sessionId));
     }
 
     @Operation(summary = "终止微流调试会话")
     @DeleteMapping("/debug/{sessionId}")
-    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:exec')")
     public Result<Void> terminateDebug(@PathVariable String sessionId) {
         microflowDebugger.terminate(sessionId);
         return Result.ok();
@@ -168,7 +168,7 @@ public class LowCodeMicroflowController {
 
     @Operation(summary = "添加断点")
     @PostMapping("/debug/{sessionId}/breakpoints/{nodeId}")
-    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:exec')")
     public Result<Void> addBreakpoint(@PathVariable String sessionId, @PathVariable String nodeId) {
         microflowDebugger.addBreakpoint(sessionId, nodeId);
         return Result.ok();
@@ -176,7 +176,7 @@ public class LowCodeMicroflowController {
 
     @Operation(summary = "移除断点")
     @DeleteMapping("/debug/{sessionId}/breakpoints/{nodeId}")
-    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:exec')")
     public Result<Void> removeBreakpoint(@PathVariable String sessionId, @PathVariable String nodeId) {
         microflowDebugger.removeBreakpoint(sessionId, nodeId);
         return Result.ok();

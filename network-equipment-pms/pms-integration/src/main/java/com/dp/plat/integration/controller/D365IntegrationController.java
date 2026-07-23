@@ -36,7 +36,7 @@ public class D365IntegrationController {
 
     @Operation(summary = "Manually push a purchase receipt to D365")
     @PostMapping("/push-receipt")
-    @PreAuthorize("hasAuthority('integration:d365:push')")
+    @PreAuthorize("@ss.hasPermission('integration:d365:push')")
     @OperLog(title = "D365集成", businessType = 2)
     public Result<String> pushReceipt(@Valid @RequestBody PurchaseReceiptHeader header) {
         return Result.ok(d365IntegrationService.pushPurchaseReceipt(header));
@@ -44,7 +44,7 @@ public class D365IntegrationController {
 
     @Operation(summary = "Trigger D365 purchase order sync")
     @PostMapping("/sync/purchase-orders")
-    @PreAuthorize("hasAuthority('integration:d365:sync')")
+    @PreAuthorize("@ss.hasPermission('integration:d365:sync')")
     @OperLog(title = "D365集成", businessType = 2)
     public Result<Integer> syncPurchaseOrders() {
         return Result.ok(d365IntegrationService.syncPurchaseOrders());
@@ -52,7 +52,7 @@ public class D365IntegrationController {
 
     @Operation(summary = "Trigger D365 purchase receipt sync")
     @PostMapping("/sync/purchase-receipts")
-    @PreAuthorize("hasAuthority('integration:d365:sync')")
+    @PreAuthorize("@ss.hasPermission('integration:d365:sync')")
     @OperLog(title = "D365集成", businessType = 2)
     public Result<Integer> syncPurchaseReceipts() {
         return Result.ok(d365IntegrationService.syncPurchaseReceipts());
@@ -60,7 +60,7 @@ public class D365IntegrationController {
 
     @Operation(summary = "Trigger D365 asset serial number sync")
     @PostMapping("/sync/asset-serial-numbers")
-    @PreAuthorize("hasAuthority('integration:d365:sync')")
+    @PreAuthorize("@ss.hasPermission('integration:d365:sync')")
     @OperLog(title = "D365集成", businessType = 2)
     public Result<Integer> syncAssetSerialNumbers() {
         return Result.ok(d365IntegrationService.syncAssetSerialNumbers());
@@ -68,7 +68,7 @@ public class D365IntegrationController {
 
     @Operation(summary = "Trigger D365 invoice sync")
     @PostMapping("/sync/invoices")
-    @PreAuthorize("hasAuthority('integration:d365:sync')")
+    @PreAuthorize("@ss.hasPermission('integration:d365:sync')")
     @OperLog(title = "D365集成", businessType = 2)
     public Result<Integer> syncInvoices() {
         return Result.ok(d365IntegrationService.syncInvoices());

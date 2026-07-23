@@ -38,21 +38,21 @@ public class LowCodeTriggerController {
 
     @Operation(summary = "触发器列表")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:trigger:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:trigger:list')")
     public Result<List<LowCodeTrigger>> list() {
         return Result.ok(triggerService.list());
     }
 
     @Operation(summary = "触发器详情")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:trigger:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:trigger:list')")
     public Result<LowCodeTrigger> get(@PathVariable Long id) {
         return Result.ok(triggerService.getById(id));
     }
 
     @Operation(summary = "保存触发器")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:trigger:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:trigger:edit')")
     @OperLog(title = "低代码触发器", businessType = 1)
     public Result<LowCodeTrigger> save(@RequestBody LowCodeTrigger trigger) {
         triggerService.saveOrUpdate(trigger);
@@ -61,7 +61,7 @@ public class LowCodeTriggerController {
 
     @Operation(summary = "删除触发器")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:trigger:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:trigger:edit')")
     @OperLog(title = "低代码触发器", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         triggerService.removeById(id);
@@ -70,7 +70,7 @@ public class LowCodeTriggerController {
 
     @Operation(summary = "手动执行触发器")
     @PostMapping("/{code}/execute")
-    @PreAuthorize("hasAuthority('lowcode:trigger:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:trigger:edit')")
     public Result<Map<String, Object>> execute(@PathVariable String code,
                                                @RequestBody(required = false) Map<String, Object> data) {
         return Result.ok(triggerService.executeTrigger(code, data == null ? Map.of() : data));
@@ -78,7 +78,7 @@ public class LowCodeTriggerController {
 
     @Operation(summary = "查询指定触发器的执行历史")
     @GetMapping("/{id}/execution-logs")
-    @PreAuthorize("hasAuthority('lowcode:trigger:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:trigger:list')")
     public Result<List<LowCodeTriggerExecutionLog>> getExecutionLogs(
             @PathVariable Long id,
             @RequestParam(defaultValue = "50") int limit) {
@@ -99,7 +99,7 @@ public class LowCodeTriggerController {
      */
     @Operation(summary = "查询全局最近触发器执行历史（支持时间窗口）")
     @GetMapping("/execution-logs/recent")
-    @PreAuthorize("hasAuthority('lowcode:trigger:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:trigger:list')")
     public Result<List<LowCodeTriggerExecutionLog>> getRecentLogs(
             @RequestParam(required = false) Integer hours,
             @RequestParam(defaultValue = "50") int limit) {

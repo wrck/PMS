@@ -178,7 +178,7 @@ public class LowCodePermissionController {
      */
     @Operation(summary = "为低代码页面创建菜单")
     @PostMapping("/menu")
-    @PreAuthorize("hasAuthority('lowcode:menu:create')")
+    @PreAuthorize("@ss.hasPermission('lowcode:menu:create')")
     @OperLog(title = "低代码菜单管理", businessType = 1)
     public Result<Long> createMenu(@RequestBody @Valid CreateLowCodeMenuRequest request) {
         // 1. 校验低代码配置存在且已发布

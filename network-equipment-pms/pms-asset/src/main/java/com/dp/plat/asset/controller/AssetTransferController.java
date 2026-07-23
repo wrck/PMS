@@ -31,7 +31,7 @@ public class AssetTransferController {
 
     @Operation(summary = "Apply for a transfer")
     @PostMapping("/apply")
-    @PreAuthorize("hasAuthority('asset:transfer:apply')")
+    @PreAuthorize("@ss.hasPermission('asset:transfer:apply')")
     @OperLog(title = "设备调拨管理", businessType = 1)
     public Result<Boolean> apply(@Valid @RequestBody AssetTransfer transfer) {
         return Result.ok(assetTransferService.apply(transfer));
@@ -39,7 +39,7 @@ public class AssetTransferController {
 
     @Operation(summary = "Approve a transfer")
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAuthority('asset:transfer:approve')")
+    @PreAuthorize("@ss.hasPermission('asset:transfer:approve')")
     @OperLog(title = "设备调拨管理", businessType = 2)
     public Result<Boolean> approve(@PathVariable Long id, @RequestParam(required = false) String opinion) {
         return Result.ok(assetTransferService.approve(id, opinion));
@@ -47,7 +47,7 @@ public class AssetTransferController {
 
     @Operation(summary = "Reject a transfer")
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAuthority('asset:transfer:approve')")
+    @PreAuthorize("@ss.hasPermission('asset:transfer:approve')")
     @OperLog(title = "设备调拨管理", businessType = 2)
     public Result<Boolean> reject(@PathVariable Long id, @RequestParam(required = false) String opinion) {
         return Result.ok(assetTransferService.reject(id, opinion));

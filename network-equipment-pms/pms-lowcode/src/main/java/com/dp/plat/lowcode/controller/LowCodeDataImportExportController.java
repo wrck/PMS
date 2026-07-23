@@ -36,7 +36,7 @@ public class LowCodeDataImportExportController {
 
     @Operation(summary = "下载导入模板（Excel，列头为字段 label）")
     @GetMapping("/template")
-    @PreAuthorize("hasAuthority('lowcode:data:import')")
+    @PreAuthorize("@ss.hasPermission('lowcode:data:import')")
     public void downloadTemplate(@RequestParam String entityCode,
                                   HttpServletResponse response) {
         dataImportExportService.downloadImportTemplate(entityCode, response);
@@ -44,7 +44,7 @@ public class LowCodeDataImportExportController {
 
     @Operation(summary = "上传 Excel 异步导入")
     @PostMapping("/import")
-    @PreAuthorize("hasAuthority('lowcode:data:import')")
+    @PreAuthorize("@ss.hasPermission('lowcode:data:import')")
     @OperLog(title = "低代码数据导入", businessType = 1)
     public Result<LowCodeImportTask> importExcel(@RequestParam String entityCode,
                                                    @RequestParam("file") MultipartFile file) {
@@ -53,7 +53,7 @@ public class LowCodeDataImportExportController {
 
     @Operation(summary = "导出当前列表数据为 Excel")
     @GetMapping("/export")
-    @PreAuthorize("hasAuthority('lowcode:data:export')")
+    @PreAuthorize("@ss.hasPermission('lowcode:data:export')")
     @OperLog(title = "低代码数据导出", businessType = 4)
     public void exportExcel(@RequestParam String entityCode,
                             @RequestParam(required = false) Map<String, Object> filters,
@@ -63,7 +63,7 @@ public class LowCodeDataImportExportController {
 
     @Operation(summary = "查询导入任务历史")
     @GetMapping("/tasks")
-    @PreAuthorize("hasAuthority('lowcode:data:import')")
+    @PreAuthorize("@ss.hasPermission('lowcode:data:import')")
     public Result<List<LowCodeImportTask>> listTasks(
             @RequestParam(required = false) String entityCode) {
         return Result.ok(dataImportExportService.listImportTasks(entityCode));
@@ -71,7 +71,7 @@ public class LowCodeDataImportExportController {
 
     @Operation(summary = "查询导入任务详情（含失败明细）")
     @GetMapping("/tasks/{id}")
-    @PreAuthorize("hasAuthority('lowcode:data:import')")
+    @PreAuthorize("@ss.hasPermission('lowcode:data:import')")
     public Result<LowCodeImportTask> getTask(@PathVariable Long id) {
         return Result.ok(dataImportExportService.getImportTask(id));
     }

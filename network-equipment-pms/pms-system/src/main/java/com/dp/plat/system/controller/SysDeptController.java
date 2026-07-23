@@ -47,7 +47,7 @@ public class SysDeptController {
 
     @Operation(summary = "Create department")
     @PostMapping
-    @PreAuthorize("hasAuthority('system:dept:add')")
+    @PreAuthorize("@ss.hasPermission('system:dept:add')")
     @OperLog(title = "部门管理", businessType = 1)
     public Result<Boolean> add(@Valid @RequestBody SysDept dept) {
         return Result.ok(sysDeptService.save(dept));
@@ -55,7 +55,7 @@ public class SysDeptController {
 
     @Operation(summary = "Update department")
     @PutMapping
-    @PreAuthorize("hasAuthority('system:dept:edit')")
+    @PreAuthorize("@ss.hasPermission('system:dept:edit')")
     @OperLog(title = "部门管理", businessType = 2)
     public Result<Boolean> update(@Valid @RequestBody SysDept dept) {
         return Result.ok(sysDeptService.updateById(dept));
@@ -63,7 +63,7 @@ public class SysDeptController {
 
     @Operation(summary = "Delete department")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:dept:remove')")
+    @PreAuthorize("@ss.hasPermission('system:dept:remove')")
     @OperLog(title = "部门管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(sysDeptService.removeById(id));

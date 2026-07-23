@@ -38,7 +38,7 @@ public class OaIntegrationController {
 
     @Operation(summary = "Manually push a todo to OA")
     @PostMapping("/todo/push")
-    @PreAuthorize("hasAuthority('integration:oa:push')")
+    @PreAuthorize("@ss.hasPermission('integration:oa:push')")
     @OperLog(title = "OA集成", businessType = 2)
     public Result<Boolean> pushTodo(@Valid @RequestBody OaTodoRequest request) {
         return Result.ok(oaIntegrationService.pushTodo(request));
@@ -46,7 +46,7 @@ public class OaIntegrationController {
 
     @Operation(summary = "Manually complete an OA todo")
     @PutMapping("/todo/complete")
-    @PreAuthorize("hasAuthority('integration:oa:process')")
+    @PreAuthorize("@ss.hasPermission('integration:oa:process')")
     @OperLog(title = "OA集成", businessType = 2)
     public Result<Boolean> completeTodo(@RequestParam String businessKey) {
         return Result.ok(oaIntegrationService.completeTodo(businessKey));
@@ -54,7 +54,7 @@ public class OaIntegrationController {
 
     @Operation(summary = "Manually transfer an OA todo to a new handler")
     @PutMapping("/todo/transfer")
-    @PreAuthorize("hasAuthority('integration:oa:process')")
+    @PreAuthorize("@ss.hasPermission('integration:oa:process')")
     @OperLog(title = "OA集成", businessType = 2)
     public Result<Boolean> transferTask(@RequestParam String businessKey,
                                         @RequestParam String newHandlerUserId) {

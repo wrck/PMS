@@ -35,7 +35,7 @@ public class LowCodeAppSourceExportController {
 
     @Operation(summary = "预览导出清单（不生成 ZIP）")
     @GetMapping("/manifest")
-    @PreAuthorize("hasAuthority('lowcode:app-source:export')")
+    @PreAuthorize("@ss.hasPermission('lowcode:app-source:export')")
     public Result<AppSourceManifest> previewManifest(
             @Parameter(description = "业务类型（应用分组键），为空时导出全部")
             @RequestParam(required = false) String bizType) {
@@ -44,7 +44,7 @@ public class LowCodeAppSourceExportController {
 
     @Operation(summary = "导出应用源码（ZIP）")
     @GetMapping("/export")
-    @PreAuthorize("hasAuthority('lowcode:app-source:export')")
+    @PreAuthorize("@ss.hasPermission('lowcode:app-source:export')")
     @OperLog(title = "低代码应用源码导出", businessType = 4)
     public ResponseEntity<byte[]> exportAsZip(
             @Parameter(description = "业务类型（应用分组键），为空时导出全部")
@@ -60,7 +60,7 @@ public class LowCodeAppSourceExportController {
 
     @Operation(summary = "查询可导出的应用列表（按 bizType 去重）")
     @GetMapping("/apps")
-    @PreAuthorize("hasAuthority('lowcode:app-source:export')")
+    @PreAuthorize("@ss.hasPermission('lowcode:app-source:export')")
     public Result<List<String>> listExportableApps() {
         return Result.ok(exportService.listExportableApps());
     }

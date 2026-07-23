@@ -35,21 +35,21 @@ public class LowCodeRuleController {
 
     @Operation(summary = "规则列表")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:rule:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:rule:list')")
     public Result<List<LowCodeRule>> list() {
         return Result.ok(ruleService.list());
     }
 
     @Operation(summary = "规则详情")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:rule:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:rule:list')")
     public Result<LowCodeRule> get(@PathVariable Long id) {
         return Result.ok(ruleService.getById(id));
     }
 
     @Operation(summary = "保存规则")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:rule:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:rule:edit')")
     @OperLog(title = "低代码规则", businessType = 1)
     public Result<LowCodeRule> save(@RequestBody LowCodeRule rule) {
         ruleService.saveOrUpdate(rule);
@@ -58,7 +58,7 @@ public class LowCodeRuleController {
 
     @Operation(summary = "删除规则")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:rule:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:rule:edit')")
     @OperLog(title = "低代码规则", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         ruleService.removeById(id);
@@ -67,7 +67,7 @@ public class LowCodeRuleController {
 
     @Operation(summary = "执行规则")
     @PostMapping("/{code}/execute")
-    @PreAuthorize("hasAuthority('lowcode:rule:exec')")
+    @PreAuthorize("@ss.hasPermission('lowcode:rule:exec')")
     public Result<Map<String, Object>> execute(@PathVariable String code,
                                                @RequestBody(required = false) Map<String, Object> facts) {
         return Result.ok(ruleService.execute(code, facts == null ? Map.of() : facts));
@@ -75,7 +75,7 @@ public class LowCodeRuleController {
 
     @Operation(summary = "发布规则并生成版本快照")
     @PostMapping("/{id}/publish")
-    @PreAuthorize("hasAuthority('lowcode:rule:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:rule:edit')")
     @OperLog(title = "低代码规则", businessType = 2)
     public Result<LowCodeConfigVersion> publishWithVersion(@PathVariable Long id) {
         return Result.ok(ruleService.publishWithVersion(id));
@@ -83,14 +83,14 @@ public class LowCodeRuleController {
 
     @Operation(summary = "查询规则版本历史")
     @GetMapping("/{id}/versions")
-    @PreAuthorize("hasAuthority('lowcode:rule:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:rule:list')")
     public Result<List<LowCodeConfigVersion>> listVersions(@PathVariable Long id) {
         return Result.ok(ruleService.listRuleVersions(id));
     }
 
     @Operation(summary = "回滚规则到指定版本")
     @PostMapping("/{id}/rollback/{targetVersion}")
-    @PreAuthorize("hasAuthority('lowcode:rule:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:rule:edit')")
     @OperLog(title = "低代码规则", businessType = 2)
     public Result<Void> rollback(@PathVariable Long id, @PathVariable Integer targetVersion) {
         ruleService.rollbackRule(id, targetVersion);

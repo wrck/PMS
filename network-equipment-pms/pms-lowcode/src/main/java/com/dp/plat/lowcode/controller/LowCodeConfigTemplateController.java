@@ -36,7 +36,7 @@ public class LowCodeConfigTemplateController {
 
     @Operation(summary = "保存模板（新增/更新，按 code 去重）")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:template:create')")
+    @PreAuthorize("@ss.hasPermission('lowcode:template:create')")
     @OperLog(title = "低代码模板-保存", businessType = 1)
     public Result<LowCodeConfigTemplate> save(@RequestBody LowCodeConfigTemplate template) {
         configTemplateService.save(template);
@@ -45,7 +45,7 @@ public class LowCodeConfigTemplateController {
 
     @Operation(summary = "上架模板")
     @PostMapping("/{id}/publish")
-    @PreAuthorize("hasAuthority('lowcode:template:publish')")
+    @PreAuthorize("@ss.hasPermission('lowcode:template:publish')")
     @OperLog(title = "低代码模板-上架", businessType = 2)
     public Result<LowCodeConfigTemplate> publish(@PathVariable Long id) {
         return Result.ok(configTemplateService.publish(id));
@@ -53,7 +53,7 @@ public class LowCodeConfigTemplateController {
 
     @Operation(summary = "下架模板")
     @PostMapping("/{id}/unpublish")
-    @PreAuthorize("hasAuthority('lowcode:template:publish')")
+    @PreAuthorize("@ss.hasPermission('lowcode:template:publish')")
     @OperLog(title = "低代码模板-下架", businessType = 2)
     public Result<LowCodeConfigTemplate> unpublish(@PathVariable Long id) {
         return Result.ok(configTemplateService.unpublish(id));
@@ -61,7 +61,7 @@ public class LowCodeConfigTemplateController {
 
     @Operation(summary = "归档模板")
     @PostMapping("/{id}/archive")
-    @PreAuthorize("hasAuthority('lowcode:template:delete')")
+    @PreAuthorize("@ss.hasPermission('lowcode:template:delete')")
     @OperLog(title = "低代码模板-归档", businessType = 3)
     public Result<LowCodeConfigTemplate> archive(@PathVariable Long id) {
         return Result.ok(configTemplateService.archive(id));
@@ -69,28 +69,28 @@ public class LowCodeConfigTemplateController {
 
     @Operation(summary = "模板详情（按 ID）")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:template:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:template:list')")
     public Result<LowCodeConfigTemplate> get(@PathVariable Long id) {
         return Result.ok(configTemplateService.getById(id));
     }
 
     @Operation(summary = "模板详情（按 code）")
     @GetMapping("/code/{code}")
-    @PreAuthorize("hasAuthority('lowcode:template:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:template:list')")
     public Result<LowCodeConfigTemplate> getByCode(@PathVariable String code) {
         return Result.ok(configTemplateService.getByCode(code));
     }
 
     @Operation(summary = "查询所有模板（含 DRAFT/ARCHIVED，管理用）")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:template:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:template:list')")
     public Result<List<LowCodeConfigTemplate>> list() {
         return Result.ok(configTemplateService.listAll());
     }
 
     @Operation(summary = "市场浏览（仅已发布，支持关键词/类型/分类过滤）")
     @GetMapping("/marketplace")
-    @PreAuthorize("hasAuthority('lowcode:template:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:template:list')")
     public Result<List<LowCodeConfigTemplate>> marketplace(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String configType,
@@ -100,7 +100,7 @@ public class LowCodeConfigTemplateController {
 
     @Operation(summary = "下载模板（增加下载计数，应用参数化替换后返回配置）")
     @PostMapping("/{id}/download")
-    @PreAuthorize("hasAuthority('lowcode:template:download')")
+    @PreAuthorize("@ss.hasPermission('lowcode:template:download')")
     @OperLog(title = "低代码模板-下载", businessType = 2)
     public Result<LowCodeConfigTemplate> download(@PathVariable Long id,
                                                     @RequestBody(required = false) Map<String, Object> parameters) {
@@ -109,7 +109,7 @@ public class LowCodeConfigTemplateController {
 
     @Operation(summary = "评分（更新平均评分与评分数）")
     @PostMapping("/{id}/rate")
-    @PreAuthorize("hasAuthority('lowcode:template:rate')")
+    @PreAuthorize("@ss.hasPermission('lowcode:template:rate')")
     public Result<LowCodeConfigTemplate> rate(@PathVariable Long id,
                                                 @RequestBody RateRequest request) {
         return Result.ok(configTemplateService.rate(id, request.getRating()));
@@ -117,7 +117,7 @@ public class LowCodeConfigTemplateController {
 
     @Operation(summary = "查询某 code 的所有版本（按 version desc）")
     @GetMapping("/versions/{code}")
-    @PreAuthorize("hasAuthority('lowcode:template:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:template:list')")
     public Result<List<LowCodeConfigTemplate>> listVersions(@PathVariable String code) {
         return Result.ok(configTemplateService.listVersions(code));
     }

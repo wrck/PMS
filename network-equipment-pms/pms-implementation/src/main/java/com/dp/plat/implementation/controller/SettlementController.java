@@ -41,7 +41,7 @@ public class SettlementController {
 
     @Operation(summary = "Create a settlement with line items")
     @PostMapping
-    @PreAuthorize("hasAuthority('implementation:settlement:add')")
+    @PreAuthorize("@ss.hasPermission('implementation:settlement:add')")
     @OperLog(title = "结算管理", businessType = 1)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     @Idempotent
@@ -52,7 +52,7 @@ public class SettlementController {
 
     @Operation(summary = "Approve a settlement")
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAuthority('implementation:settlement:approve')")
+    @PreAuthorize("@ss.hasPermission('implementation:settlement:approve')")
     @OperLog(title = "结算管理", businessType = 2)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     @Idempotent
@@ -63,7 +63,7 @@ public class SettlementController {
 
     @Operation(summary = "Reject a settlement")
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAuthority('implementation:settlement:approve')")
+    @PreAuthorize("@ss.hasPermission('implementation:settlement:approve')")
     @OperLog(title = "结算管理", businessType = 2)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<Void> reject(@PathVariable Long id, @RequestParam(required = false) String opinion) {
@@ -73,14 +73,14 @@ public class SettlementController {
 
     @Operation(summary = "Get settlement by id")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('implementation:settlement:list')")
+    @PreAuthorize("@ss.hasPermission('implementation:settlement:list')")
     public Result<Settlement> get(@PathVariable Long id) {
         return Result.ok(settlementService.getById(id));
     }
 
     @Operation(summary = "Paginated settlement query")
     @GetMapping("/list")
-    @PreAuthorize("hasAuthority('implementation:settlement:list')")
+    @PreAuthorize("@ss.hasPermission('implementation:settlement:list')")
     public Result<Page<Settlement>> list(@RequestParam(defaultValue = "1") int page,
                                          @RequestParam(defaultValue = "10") int size,
                                          Settlement filters) {
@@ -89,7 +89,7 @@ public class SettlementController {
 
     @Operation(summary = "Export settlement list to Excel")
     @GetMapping("/export")
-    @PreAuthorize("hasAuthority('implementation:settlement:export')")
+    @PreAuthorize("@ss.hasPermission('implementation:settlement:export')")
     @OperLog(title = "结算管理", businessType = 4)
     public void export(HttpServletResponse response, Settlement filters) {
         LambdaQueryWrapper<Settlement> wrapper = new LambdaQueryWrapper<>();

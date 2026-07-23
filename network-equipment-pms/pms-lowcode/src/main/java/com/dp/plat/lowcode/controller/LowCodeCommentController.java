@@ -30,7 +30,7 @@ public class LowCodeCommentController {
 
     @Operation(summary = "查询配置评论列表")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:comment:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:comment:list')")
     public Result<List<LowCodeComment>> list(@RequestParam String configType,
                                              @RequestParam Long configId) {
         return Result.ok(commentService.listByConfig(configType, configId));
@@ -38,7 +38,7 @@ public class LowCodeCommentController {
 
     @Operation(summary = "查询线程化评论（按 parent_id 构建树）")
     @GetMapping("/threaded")
-    @PreAuthorize("hasAuthority('lowcode:comment:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:comment:list')")
     public Result<List<CommentTreeNode>> listThreaded(@RequestParam String configType,
                                                       @RequestParam Long configId) {
         return Result.ok(commentService.listThreaded(configType, configId));
@@ -46,7 +46,7 @@ public class LowCodeCommentController {
 
     @Operation(summary = "添加评论")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:comment:add')")
+    @PreAuthorize("@ss.hasPermission('lowcode:comment:add')")
     @OperLog(title = "低代码评论", businessType = 1)
     public Result<LowCodeComment> add(@RequestBody LowCodeComment comment) {
         return Result.ok(commentService.addComment(comment));
@@ -54,7 +54,7 @@ public class LowCodeCommentController {
 
     @Operation(summary = "删除评论")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:comment:del')")
+    @PreAuthorize("@ss.hasPermission('lowcode:comment:del')")
     @OperLog(title = "低代码评论", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         commentService.removeById(id);

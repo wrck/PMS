@@ -93,7 +93,7 @@ public class FeedbackController {
 
     @Operation(summary = "List all feedback (admin)")
     @GetMapping("/list")
-    @PreAuthorize("hasAuthority('system:feedback:list')")
+    @PreAuthorize("@ss.hasPermission('system:feedback:list')")
     public Result<List<Feedback>> list(@RequestParam(required = false) String status,
                                        @RequestParam(required = false) String category) {
         return Result.ok(feedbackService.listAll(status, category));
@@ -101,7 +101,7 @@ public class FeedbackController {
 
     @Operation(summary = "Reply to a feedback ticket (admin)")
     @PutMapping("/{id}/reply")
-    @PreAuthorize("hasAuthority('system:feedback:reply')")
+    @PreAuthorize("@ss.hasPermission('system:feedback:reply')")
     @OperLog(title = "技术支持反馈", businessType = 2)
     @RateLimit(capacity = 30, refillTokens = 30, refillPeriodSeconds = 60)
     public Result<Boolean> reply(@PathVariable Long id,
@@ -112,7 +112,7 @@ public class FeedbackController {
 
     @Operation(summary = "Close a feedback ticket (admin)")
     @PutMapping("/{id}/close")
-    @PreAuthorize("hasAuthority('system:feedback:reply')")
+    @PreAuthorize("@ss.hasPermission('system:feedback:reply')")
     @OperLog(title = "技术支持反馈", businessType = 2)
     @RateLimit(capacity = 30, refillTokens = 30, refillPeriodSeconds = 60)
     public Result<Boolean> close(@PathVariable Long id) {

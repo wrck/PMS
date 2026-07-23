@@ -31,7 +31,7 @@ public class AgentScoreController {
 
     @Operation(summary = "Evaluate an agent")
     @PostMapping("/evaluate")
-    @PreAuthorize("hasAuthority('implementation:agentScore:add')")
+    @PreAuthorize("@ss.hasPermission('implementation:agentScore:add')")
     @OperLog(title = "代理商评价", businessType = 1)
     public Result<AgentScore> evaluate(@Valid @RequestBody AgentScore score) {
         return Result.ok(agentScoreService.evaluate(score));

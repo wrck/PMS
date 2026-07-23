@@ -46,7 +46,7 @@ public class AssetController {
 
     @Operation(summary = "Inbound a new asset")
     @PostMapping("/inbound")
-    @PreAuthorize("hasAuthority('asset:asset:add')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:add')")
     @OperLog(title = "设备资产管理", businessType = 1)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 20, refillTokens = 20, refillPeriodSeconds = 60)
     @Idempotent
@@ -56,7 +56,7 @@ public class AssetController {
 
     @Operation(summary = "Allocate asset to a project")
     @PostMapping("/{id}/allocate")
-    @PreAuthorize("hasAuthority('asset:asset:allocate')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:allocate')")
     @OperLog(title = "设备资产管理", businessType = 2)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 20, refillTokens = 20, refillPeriodSeconds = 60)
     public Result<Boolean> allocate(@PathVariable Long id, @RequestParam Long projectId) {
@@ -65,7 +65,7 @@ public class AssetController {
 
     @Operation(summary = "Return an allocated asset")
     @PostMapping("/{id}/return")
-    @PreAuthorize("hasAuthority('asset:asset:return')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:return')")
     @OperLog(title = "设备资产管理", businessType = 2)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 20, refillTokens = 20, refillPeriodSeconds = 60)
     public Result<Boolean> returnAsset(@PathVariable Long id) {
@@ -74,14 +74,14 @@ public class AssetController {
 
     @Operation(summary = "Get asset by id")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('asset:asset:list')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:list')")
     public Result<Asset> get(@PathVariable Long id) {
         return Result.ok(assetService.getById(id));
     }
 
     @Operation(summary = "Paginated asset list with filters")
     @GetMapping("/list")
-    @PreAuthorize("hasAuthority('asset:asset:list')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:list')")
     public Result<IPage<Asset>> list(@RequestParam(defaultValue = "1") int page,
                                      @RequestParam(defaultValue = "10") int size,
                                      Asset filter) {
@@ -90,7 +90,7 @@ public class AssetController {
 
     @Operation(summary = "Update asset")
     @PutMapping
-    @PreAuthorize("hasAuthority('asset:asset:edit')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:edit')")
     @OperLog(title = "设备资产管理", businessType = 2)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 30, refillTokens = 30, refillPeriodSeconds = 60)
     public Result<Boolean> update(@Valid @RequestBody Asset asset) {
@@ -99,7 +99,7 @@ public class AssetController {
 
     @Operation(summary = "Delete asset")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('asset:asset:remove')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:remove')")
     @OperLog(title = "设备资产管理", businessType = 3)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<Boolean> delete(@PathVariable Long id) {
@@ -108,14 +108,14 @@ public class AssetController {
 
     @Operation(summary = "Get asset lifecycle log")
     @GetMapping("/{id}/lifecycle")
-    @PreAuthorize("hasAuthority('asset:asset:list')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:list')")
     public Result<List<AssetLifecycleLog>> lifecycle(@PathVariable Long id) {
         return Result.ok(assetService.getLifecycleLog(id));
     }
 
     @Operation(summary = "Return all assets allocated to a project")
     @PostMapping("/return-by-project/{projectId}")
-    @PreAuthorize("hasAuthority('asset:asset:return')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:return')")
     @OperLog(title = "设备资产管理", businessType = 2)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<List<Asset>> returnByProject(@PathVariable Long projectId) {
@@ -124,14 +124,14 @@ public class AssetController {
 
     @Operation(summary = "Download asset import template")
     @GetMapping("/template")
-    @PreAuthorize("hasAuthority('asset:asset:list')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:list')")
     public void template(HttpServletResponse response) {
         ExcelUtils.exportTemplate(response, "asset-template", "资产导入模板", AssetImportDTO.class);
     }
 
     @Operation(summary = "Export asset list to Excel")
     @GetMapping("/export")
-    @PreAuthorize("hasAuthority('asset:asset:export')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:export')")
     public void export(HttpServletResponse response, Asset filter) {
         List<Asset> rows = filter == null
                 ? assetService.list(new LambdaQueryWrapper<Asset>().orderByDesc(Asset::getId))
@@ -146,7 +146,7 @@ public class AssetController {
 
     @Operation(summary = "Batch import assets from Excel")
     @PostMapping("/import")
-    @PreAuthorize("hasAuthority('asset:asset:import')")
+    @PreAuthorize("@ss.hasPermission('asset:asset:import')")
     @OperLog(title = "设备资产管理", businessType = 5)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 5, refillTokens = 5, refillPeriodSeconds = 60)
     public Result<ExcelImportResult<AssetImportDTO>> importExcel(@RequestParam("file") MultipartFile file) {

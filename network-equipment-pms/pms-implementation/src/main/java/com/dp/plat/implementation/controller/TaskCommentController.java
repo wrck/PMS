@@ -38,7 +38,7 @@ public class TaskCommentController {
 
     @Operation(summary = "新增评论")
     @PostMapping
-    @PreAuthorize("hasAuthority('project:task:edit')")
+    @PreAuthorize("@ss.hasPermission('project:task:edit')")
     @OperLog(title = "任务评论", businessType = 1)
     public Result<TaskComment> create(@Valid @RequestBody TaskComment comment) {
         return Result.ok(taskCommentService.create(comment));
@@ -46,7 +46,7 @@ public class TaskCommentController {
 
     @Operation(summary = "删除评论")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:task:edit')")
+    @PreAuthorize("@ss.hasPermission('project:task:edit')")
     @OperLog(title = "任务评论", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         taskCommentService.delete(id);

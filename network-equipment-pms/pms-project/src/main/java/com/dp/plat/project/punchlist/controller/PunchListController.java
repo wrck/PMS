@@ -52,7 +52,7 @@ public class PunchListController {
 
     @Operation(summary = "创建 Punch List 项")
     @PostMapping
-    @PreAuthorize("hasAuthority('project:punchList:add')")
+    @PreAuthorize("@ss.hasPermission('project:punchList:add')")
     @OperLog(title = "Punch List管理", businessType = 1)
     public Result<PunchList> create(@Valid @RequestBody PunchList punchList) {
         return punchListService.create(punchList);
@@ -60,7 +60,7 @@ public class PunchListController {
 
     @Operation(summary = "更新 Punch List 项")
     @PutMapping
-    @PreAuthorize("hasAuthority('project:punchList:edit')")
+    @PreAuthorize("@ss.hasPermission('project:punchList:edit')")
     @OperLog(title = "Punch List管理", businessType = 2)
     public Result<?> update(@Valid @RequestBody PunchList punchList) {
         return punchListService.update(punchList);
@@ -68,7 +68,7 @@ public class PunchListController {
 
     @Operation(summary = "删除 Punch List 项")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:punchList:remove')")
+    @PreAuthorize("@ss.hasPermission('project:punchList:remove')")
     @OperLog(title = "Punch List管理", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         return punchListService.delete(id);
@@ -94,7 +94,7 @@ public class PunchListController {
 
     @Operation(summary = "标记 Punch List 项为已解决")
     @PostMapping("/{id}/resolve")
-    @PreAuthorize("hasAuthority('project:punchList:resolve')")
+    @PreAuthorize("@ss.hasPermission('project:punchList:resolve')")
     @OperLog(title = "Punch List管理", businessType = 2)
     public Result<PunchList> resolve(@PathVariable Long id) {
         return punchListService.resolve(id);
@@ -102,7 +102,7 @@ public class PunchListController {
 
     @Operation(summary = "验证 Punch List 项")
     @PostMapping("/{id}/verify")
-    @PreAuthorize("hasAuthority('project:punchList:verify')")
+    @PreAuthorize("@ss.hasPermission('project:punchList:verify')")
     @OperLog(title = "Punch List管理", businessType = 2)
     public Result<PunchList> verify(@PathVariable Long id) {
         return punchListService.verify(id);

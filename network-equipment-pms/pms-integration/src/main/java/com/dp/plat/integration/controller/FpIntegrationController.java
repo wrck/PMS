@@ -41,7 +41,7 @@ public class FpIntegrationController {
 
     @Operation(summary = "Manually push a settlement to FP")
     @PostMapping("/push-settlement")
-    @PreAuthorize("hasAuthority('integration:fp:push')")
+    @PreAuthorize("@ss.hasPermission('integration:fp:push')")
     @OperLog(title = "FP集成", businessType = 2)
     public Result<FpResponse<String>> pushSettlement(@Valid @RequestBody SettlementPushRequest request) {
         return Result.ok(fpIntegrationService.pushSettlement(request));
@@ -49,7 +49,7 @@ public class FpIntegrationController {
 
     @Operation(summary = "Push an invoice image to FP OCR")
     @PostMapping(value = "/ocr-invoice", consumes = "multipart/form-data")
-    @PreAuthorize("hasAuthority('integration:fp:ocr')")
+    @PreAuthorize("@ss.hasPermission('integration:fp:ocr')")
     @OperLog(title = "FP集成", businessType = 2)
     public Result<D365Invoice> ocrInvoice(@RequestParam("file") MultipartFile file) {
         return Result.ok(fpIntegrationService.ocrInvoice(file));

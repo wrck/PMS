@@ -41,7 +41,7 @@ public class TaskChecklistController {
 
     @Operation(summary = "新增检查项")
     @PostMapping
-    @PreAuthorize("hasAuthority('project:task:edit')")
+    @PreAuthorize("@ss.hasPermission('project:task:edit')")
     @OperLog(title = "任务检查项", businessType = 1)
     public Result<TaskChecklist> create(@Valid @RequestBody TaskChecklist checklist) {
         return Result.ok(taskChecklistService.create(checklist));
@@ -49,7 +49,7 @@ public class TaskChecklistController {
 
     @Operation(summary = "更新检查项")
     @PutMapping
-    @PreAuthorize("hasAuthority('project:task:edit')")
+    @PreAuthorize("@ss.hasPermission('project:task:edit')")
     @OperLog(title = "任务检查项", businessType = 2)
     public Result<TaskChecklist> update(@Valid @RequestBody TaskChecklist checklist) {
         return Result.ok(taskChecklistService.update(checklist));
@@ -57,7 +57,7 @@ public class TaskChecklistController {
 
     @Operation(summary = "勾选/取消勾选检查项")
     @PostMapping("/{id}/check")
-    @PreAuthorize("hasAuthority('project:task:edit')")
+    @PreAuthorize("@ss.hasPermission('project:task:edit')")
     @OperLog(title = "任务检查项", businessType = 2)
     public Result<TaskChecklist> toggleCheck(@PathVariable Long id,
                                              @RequestParam(defaultValue = "true") boolean checked) {
@@ -66,7 +66,7 @@ public class TaskChecklistController {
 
     @Operation(summary = "删除检查项")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:task:edit')")
+    @PreAuthorize("@ss.hasPermission('project:task:edit')")
     @OperLog(title = "任务检查项", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         taskChecklistService.delete(id);
