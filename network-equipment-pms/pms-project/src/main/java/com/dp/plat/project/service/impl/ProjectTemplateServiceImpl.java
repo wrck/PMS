@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -367,7 +368,7 @@ public class ProjectTemplateServiceImpl implements IProjectTemplateService {
         }
 
         // 8. 深拷贝里程碑（同模块，直接调用 MilestoneMapper）
-        deepCopyMilestones(project.getId(), snapshot.getMilestones(), phaseCodeToIdMap);
+        deepCopyMilestones(project.getId(), snapshot.getMilestones(), phaseCodeToIdMap, project.getPlanStartDate());
 
         // 9. 深拷贝任务（跨模块 SPI：pms-implementation）
         deepCopyTasks(project.getId(), snapshot.getTasks(), phaseCodeToIdMap);
@@ -392,7 +393,7 @@ public class ProjectTemplateServiceImpl implements IProjectTemplateService {
      * （MilestoneType → PpdiooPhase 一一对应），无需在模板中显式定义。</p>
      */
     private void deepCopyMilestones(Long projectId, List<TemplateSnapshot.MilestoneDef> milestoneDefs,
-                                    Map<String, Long> phaseCodeToIdMap) {
+                                    Map<String, Long> phaseCodeToIdMap, LocalDate projectPlanStartDate) {
         if (milestoneDefs == null || milestoneDefs.isEmpty()) {
             return;
         }
@@ -404,11 +405,14 @@ public class ProjectTemplateServiceImpl implements IProjectTemplateService {
             Integer sortOrder = def.getSortOrder() != null
                     ? def.getSortOrder()
                     : (type != null ? type.getSortOrder() : 0);
+            // plan_date 列为 NOT NULL 无默认值，模板未定义具体计划日期时使用项目计划开始日期作为占位
+            LocalDate planDate = projectPlanStartDate != null ? projectPlanStartDate : LocalDate.now();
             Milestone milestone = Milestone.builder()
                     .projectId(projectId)
                     .milestoneName(def.getMilestoneName())
                     .milestoneType(def.getMilestoneType())
                     .ppdiooPhase(ppdiooPhase)
+                    .planDate(planDate)
                     .status("PENDING")
                     .sortOrder(sortOrder)
                     .build();

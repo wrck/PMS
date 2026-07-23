@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
@@ -78,9 +78,10 @@ const form = reactive<ProjectTemplate>({
 // 阶段列表
 const phases = ref<PhaseDef[]>([])
 
-// 任务树（简化结构：每个任务可有 children）
+// 任务节点：扁平数据，通过 parentId 关联父子关系，由 vxe-grid treeConfig.transform 自动构建树
 interface TaskNode {
   id: string
+  parentId: string | null
   taskName: string
   taskCode: string
   phaseCode: string
@@ -89,9 +90,55 @@ interface TaskNode {
   weight?: number
   priority?: string
   description?: string
-  children?: TaskNode[]
 }
 const tasks = ref<TaskNode[]>([])
+
+/** vxe-grid 实例引用：用于获取排序后的数据 */
+const taskGridRef = ref()
+
+/** vxe-grid 树形配置：transform=true 自动将扁平 parentId 数据转为树形渲染 */
+const taskGridOptions = reactive({
+  border: true,
+  rowConfig: {
+    keyField: 'id',
+    drag: true // 启用行拖拽
+  },
+  rowDragConfig: {
+    isCrossDrag: true, // 允许跨层级拖拽
+    isSelfToChildDrag: true, // 允许自身拖为子级
+    isToChildDrag: true // 拖拽时按 Ctrl 成为目标行的子节点
+  },
+  columnConfig: {
+    useKey: true
+  },
+  treeConfig: {
+    transform: true, // 扁平数据自动转树形
+    rowField: 'id',
+    parentField: 'parentId',
+    expandAll: true // 默认展开所有节点
+  }
+})
+
+/** vxe-grid 列配置：dragSort=true 的列作为拖拽触发区域（整行可拖） */
+const taskGridColumns = computed(() => [
+  { type: 'seq', width: 60, title: '序号' },
+  {
+    field: 'taskName',
+    title: '任务名称',
+    minWidth: 220,
+    treeNode: true, // 树形节点列（显示展开图标与缩进）
+    dragSort: true, // 该列作为拖拽把手
+    slots: { default: 'taskName_default' }
+  },
+  { field: 'taskCode', title: '任务编码', minWidth: 140, slots: { default: 'taskCode_default' } },
+  { field: 'phaseCode', title: '所属阶段', minWidth: 150, slots: { default: 'phaseCode_default' } },
+  { field: 'assigneeRole', title: '负责角色', minWidth: 150, slots: { default: 'assigneeRole_default' } },
+  { field: 'plannedHours', title: '工时', minWidth: 110, slots: { default: 'plannedHours_default' } },
+  { field: 'weight', title: '权重', minWidth: 110, slots: { default: 'weight_default' } },
+  { field: 'priority', title: '优先级', minWidth: 110, slots: { default: 'priority_default' } },
+  { field: 'description', title: '描述', minWidth: 200, slots: { default: 'description_default' } },
+  { title: '操作', width: 200, fixed: 'right', slots: { default: 'operation_default' } }
+])
 
 // 交付件
 interface DeliverableNode {
@@ -270,42 +317,50 @@ function updateExitCriteria(phase: PhaseDef, value: PhaseExitGate) {
 
 // ============== 任务操作 ==============
 
-const taskTreeProps = {
-  label: 'taskName',
-  children: 'children'
-}
-
-function allowDrop(_draggingNode: any, _dropNode: any, type: any) {
-  return type !== 'inner' || true
-}
-
-function handleTaskDrop() {
-  ElMessage.success('任务顺序已更新')
-}
-
-function addTask(parent?: TaskNode) {
-  const newTask: TaskNode = {
+function newTask(parent?: TaskNode): TaskNode {
+  return {
     id: genId('task'),
+    parentId: parent?.id ?? null,
     taskName: '新任务',
     taskCode: '',
     phaseCode: phases.value[0]?.phaseCode ?? '',
     assigneeRole: '',
     plannedHours: 0,
     weight: 1,
-    description: '',
-    children: []
-  }
-  if (parent) {
-    parent.children = parent.children ?? []
-    parent.children.push(newTask)
-  } else {
-    tasks.value.push(newTask)
+    priority: 'NORMAL',
+    description: ''
   }
 }
 
-function removeTask(node: TaskNode, list: TaskNode[]) {
-  const idx = list.indexOf(node)
-  if (idx >= 0) list.splice(idx, 1)
+function addTask(parent?: TaskNode) {
+  tasks.value.push(newTask(parent))
+}
+
+function removeTask(row: TaskNode) {
+  // 递归收集 row 及其所有后代 id，从扁平列表中一并移除
+  const idsToRemove = new Set<string>()
+  const collect = (id: string) => {
+    idsToRemove.add(id)
+    for (const t of tasks.value) {
+      if (t.parentId === id) collect(t.id)
+    }
+  }
+  collect(row.id)
+  tasks.value = tasks.value.filter((t) => !idsToRemove.has(t.id))
+}
+
+/**
+ * vxe-grid 拖拽排序结束回调：从 grid 实例同步最新的层级数据到 tasks。
+ * vxe-table 内部已维护好拖拽后的 parentId 关系，getFullData 返回扁平数据。
+ */
+function onTaskDragEnd() {
+  const $grid = taskGridRef.value
+  if (!$grid) return
+  const fullData = $grid.getFullData() as TaskNode[]
+  if (fullData && fullData.length) {
+    // 保留原 tasks 中可能存在的额外字段，仅更新 parentId 和顺序
+    tasks.value = fullData
+  }
 }
 
 // ============== 交付件操作 ==============
@@ -443,19 +498,38 @@ function applySnapshot(snap?: TemplateSnapshot) {
     exitCriteria: normalizeExitCriteria(p.exitCriteria)
   }))
 
-  // 任务：字段名一致（id/children 等前端字段在加载时缺失，由 addTask 等生成）
-  tasks.value = ((snap.tasks ?? []) as any[]).map((t: any) => ({
-    id: genId('task'),
-    taskName: t.taskName ?? '',
-    taskCode: t.taskCode ?? '',
-    phaseCode: t.phaseCode ?? '',
-    assigneeRole: t.assigneeRole ?? '',
-    plannedHours: t.plannedHours ?? 0,
-    weight: t.weight ?? 1,
-    priority: t.priority ?? 'NORMAL',
-    description: t.description ?? '',
-    children: Array.isArray(t.children) ? t.children.map((c: any) => ({ ...c, id: genId('task') })) : []
-  })) as TaskNode[]
+  // 任务：后端 TaskDef 为扁平列表（通过 parentTaskName 引用父任务）。
+  // 加载时按 parentTaskName 转换为前端 parentId（id 引用），存入扁平 tasks，
+  // vxe-grid treeConfig.transform 自动构建树形渲染，避免层级丢失或回显异常。
+  const flatTasks = (snap.tasks ?? []) as any[]
+  // 第一遍：为每个 TaskDef 生成 node 并记录 taskName → id
+  const nameToId = new Map<string, string>()
+  const nodes: TaskNode[] = []
+  for (const t of flatTasks) {
+    const id = genId('task')
+    const node: TaskNode = {
+      id,
+      parentId: null,
+      taskName: t.taskName ?? '',
+      taskCode: t.taskCode ?? '',
+      phaseCode: t.phaseCode ?? '',
+      assigneeRole: t.assigneeRole ?? '',
+      plannedHours: t.plannedHours ?? 0,
+      weight: t.weight ?? 1,
+      priority: t.priority ?? 'NORMAL',
+      description: t.description ?? ''
+    }
+    nodes.push(node)
+    if (node.taskName) nameToId.set(node.taskName, id)
+  }
+  // 第二遍：按 parentTaskName 查找父节点 id 设置 parentId
+  for (let i = 0; i < flatTasks.length; i++) {
+    const parentName = (flatTasks[i] as any).parentTaskName
+    if (parentName && nameToId.has(parentName)) {
+      nodes[i].parentId = nameToId.get(parentName)!
+    }
+  }
+  tasks.value = nodes
 
   // 交付件：name↔deliverableName, type↔deliverableType, required↔mandatory, signOffRole↔approverRole,
   // refEntityType/refEntityId 直接对齐
@@ -565,6 +639,9 @@ async function handleSaveDraft() {
     // 持久化阶段/任务/交付件等详细配置到草稿快照
     await saveDraftSnapshot(form.id, buildSnapshot())
     ElMessage.success('草稿已保存')
+  } catch (e: any) {
+    // 原实现仅 try/finally 无 catch，保存失败时错误被静默吞掉，用户只看到按钮恢复但无任何提示。
+    ElMessage.error('保存失败：' + (e?.message || '未知错误'))
   } finally {
     submitting.value = false
   }
@@ -580,7 +657,8 @@ function buildSnapshot(): TemplateSnapshot {
       entryCriteria: normalizeEntryCriteria(p.entryCriteria),
       exitCriteria: normalizeExitCriteria(p.exitCriteria)
     })),
-    // 任务：taskCode 在后端 DTO 中不存在，转成 parentTaskName 由后端处理；保留前端 id/children 内部字段后端会忽略
+    // 任务：flattenTasks 将树扁平化为后端 TaskDef 列表，parentTaskName 引用父任务名称；
+    // 前端 id/children 为内部字段，不随 TaskDef 提交（后端 DTO 不含这两个字段）
     tasks: flattenTasks(tasks.value),
     // 交付件：name→deliverableName, type→deliverableType, required→mandatory, signOffRole→approverRole,
     // refEntityType/refEntityId 直接对齐后端 DeliverableDef
@@ -614,11 +692,12 @@ function buildSnapshot(): TemplateSnapshot {
   }
 }
 
-/** 将任务树扁平化为后端 TaskDef 列表（parentTaskName 关联父节点，补全所有字段） */
-function flattenTasks(nodes: TaskNode[], parent?: TaskNode): TaskDef[] {
+/** 将扁平任务列表转换为后端 TaskDef 列表（parentTaskName 关联父节点，补全所有字段） */
+function flattenTasks(nodes: TaskNode[]): TaskDef[] {
   const result: TaskDef[] = []
   let order = 1
   for (const n of nodes) {
+    const parent = n.parentId ? nodes.find((t) => t.id === n.parentId) : undefined
     result.push({
       taskName: n.taskName,
       parentTaskName: parent?.taskName,
@@ -630,9 +709,6 @@ function flattenTasks(nodes: TaskNode[], parent?: TaskNode): TaskDef[] {
       description: n.description,
       sortOrder: order++
     })
-    if (n.children && n.children.length > 0) {
-      result.push(...flattenTasks(n.children, n))
-    }
   }
   return result
 }
@@ -657,6 +733,8 @@ async function handleSave() {
     await saveDraftSnapshot(form.id, buildSnapshot())
     ElMessage.success('保存成功')
     router.back()
+  } catch (e: any) {
+    ElMessage.error('保存失败：' + (e?.message || '未知错误'))
   } finally {
     submitting.value = false
   }
@@ -736,15 +814,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="template-form-page" v-loading="loading">
+  <div v-loading="loading" class="template-form-page">
     <PageHeader :title="isEdit ? '编辑模板' : '新建模板'" description="按 7 步分步配置模板内容">
       <template #actions>
-        <el-button :icon="RefreshLeft" @click="router.back()">取消</el-button>
-        <el-button v-permission="'project:template:add'" :icon="Check" :loading="submitting" @click="handleSaveDraft">保存草稿</el-button>
+        <el-button :icon="RefreshLeft" @click="router.back()">
+          取消
+        </el-button>
+        <el-button v-permission="'project:template:add'" :icon="Check" :loading="submitting" @click="handleSaveDraft">
+          保存草稿
+        </el-button>
         <el-button v-if="form.id" v-permission="'project:template:publish'" type="success" :icon="Promotion" @click="openPublishDialog">
           发布版本
         </el-button>
-        <el-button v-permission="'project:template:add'" type="primary" :icon="Check" :loading="submitting" @click="handleSave">保存</el-button>
+        <el-button v-permission="'project:template:add'" type="primary" :icon="Check" :loading="submitting" @click="handleSave">
+          保存
+        </el-button>
       </template>
     </PageHeader>
 
@@ -807,11 +891,15 @@ onMounted(() => {
       <div v-else-if="activeStep === 1" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ phases.length }} 个阶段 · 使用上下箭头调整顺序</span>
-          <el-button type="primary" :icon="Plus" @click="addPhase">添加阶段</el-button>
+          <el-button type="primary" :icon="Plus" @click="addPhase">
+            添加阶段
+          </el-button>
         </div>
         <el-empty v-if="phases.length === 0" description="暂无阶段，点击「添加阶段」开始配置" />
         <div v-for="(phase, idx) in phases" :key="idx" class="phase-row">
-          <div class="phase-order">{{ idx + 1 }}</div>
+          <div class="phase-order">
+            {{ idx + 1 }}
+          </div>
           <div class="phase-fields">
             <el-input v-model="phase.phaseCode" placeholder="阶段编码 PREPARE" style="width: 180px" />
             <el-input v-model="phase.phaseName" placeholder="阶段名称" style="width: 200px" />
@@ -834,82 +922,72 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Step 3: 任务配置（卡片式展开编辑，支持层级拖拽） -->
+      <!-- Step 3: 任务配置（vxe-grid 树形表格，内置行拖拽与父子关系变更） -->
       <div v-else-if="activeStep === 2" class="step-panel">
         <div class="panel-toolbar">
-          <span class="panel-tip">支持拖拽调整层级与顺序 · 点击任务卡片展开详细配置</span>
-          <el-button type="primary" :icon="Plus" @click="addTask()">添加任务</el-button>
+          <span class="panel-tip">拖拽任务名称列变更排序 · 按住 Ctrl 拖拽成为子任务</span>
+          <el-button type="primary" :icon="Plus" @click="addTask()">
+            添加任务
+          </el-button>
         </div>
         <el-empty v-if="tasks.length === 0" description="暂无任务，点击「添加任务」开始配置" />
-        <el-tree
+        <vxe-grid
           v-else
+          ref="taskGridRef"
+          class="task-tree-grid"
+          v-bind="taskGridOptions"
+          :columns="taskGridColumns"
           :data="tasks"
-          :props="taskTreeProps"
-          node-key="id"
-          draggable
-          default-expand-all
-          :expand-on-click-node="false"
-          :allow-drop="allowDrop"
-          @node-drop="handleTaskDrop"
+          @row-drag-end="onTaskDragEnd"
         >
-          <template #default="{ data }">
-            <el-card shadow="hover" class="task-card" body-style="padding: 12px;">
-              <div class="task-card-header">
-                <div class="task-card-title">
-                  <el-input v-model="data.taskName" size="small" placeholder="任务名称" style="width: 220px" />
-                  <el-input v-model="data.taskCode" size="small" placeholder="任务编码" style="width: 140px" />
-                </div>
-                <div class="task-card-actions">
-                  <el-button link type="primary" size="small" :icon="CirclePlus" @click.stop="addTask(data)">子任务</el-button>
-                  <el-button link type="danger" size="small" :icon="Close" @click.stop="removeTask(data, tasks)" />
-                </div>
-              </div>
-              <div class="task-card-body">
-                <el-row :gutter="12">
-                  <el-col :xs="24" :sm="12" :md="6">
-                    <div class="field-label">所属阶段</div>
-                    <el-select v-model="data.phaseCode" size="small" placeholder="请选择阶段" style="width: 100%">
-                      <el-option v-for="p in phases" :key="p.phaseCode" :label="p.phaseName" :value="p.phaseCode" />
-                    </el-select>
-                  </el-col>
-                  <el-col :xs="24" :sm="12" :md="6">
-                    <div class="field-label">负责角色</div>
-                    <el-select v-model="data.assigneeRole" size="small" filterable clearable placeholder="请选择角色" style="width: 100%">
-                      <el-option v-for="r in roles" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
-                    </el-select>
-                  </el-col>
-                  <el-col :xs="24" :sm="12" :md="6">
-                    <div class="field-label">计划工时</div>
-                    <el-input-number v-model="data.plannedHours" :min="0" size="small" placeholder="工时" style="width: 100%" />
-                  </el-col>
-                  <el-col :xs="24" :sm="12" :md="6">
-                    <div class="field-label">权重</div>
-                    <el-input-number v-model="data.weight" :min="0" :max="100" :precision="2" size="small" placeholder="权重" style="width: 100%" />
-                  </el-col>
-                  <el-col :xs="24" :sm="12" :md="6">
-                    <div class="field-label">优先级</div>
-                    <el-select v-model="data.priority" size="small" placeholder="请选择" style="width: 100%">
-                      <el-option label="高" value="HIGH" />
-                      <el-option label="中" value="NORMAL" />
-                      <el-option label="低" value="LOW" />
-                    </el-select>
-                  </el-col>
-                  <el-col :span="24">
-                    <div class="field-label">任务描述</div>
-                    <el-input v-model="data.description" size="small" type="textarea" :rows="2" placeholder="任务详细描述" />
-                  </el-col>
-                </el-row>
-              </div>
-            </el-card>
+          <template #taskName_default="{ row }">
+            <el-input v-model="row.taskName" size="small" placeholder="任务名称" />
           </template>
-        </el-tree>
+          <template #taskCode_default="{ row }">
+            <el-input v-model="row.taskCode" size="small" placeholder="任务编码" />
+          </template>
+          <template #phaseCode_default="{ row }">
+            <el-select v-model="row.phaseCode" size="small" placeholder="请选择阶段" style="width: 100%">
+              <el-option v-for="p in phases" :key="p.phaseCode" :label="p.phaseName" :value="p.phaseCode" />
+            </el-select>
+          </template>
+          <template #assigneeRole_default="{ row }">
+            <el-select v-model="row.assigneeRole" size="small" filterable clearable placeholder="请选择角色" style="width: 100%">
+              <el-option v-for="r in roles" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
+            </el-select>
+          </template>
+          <template #plannedHours_default="{ row }">
+            <el-input-number v-model="row.plannedHours" :min="0" size="small" controls-position="right" style="width: 100%" />
+          </template>
+          <template #weight_default="{ row }">
+            <el-input-number v-model="row.weight" :min="0" :max="100" :precision="2" size="small" controls-position="right" style="width: 100%" />
+          </template>
+          <template #priority_default="{ row }">
+            <el-select v-model="row.priority" size="small" placeholder="请选择" style="width: 100%">
+              <el-option label="高" value="HIGH" />
+              <el-option label="中" value="NORMAL" />
+              <el-option label="低" value="LOW" />
+            </el-select>
+          </template>
+          <template #description_default="{ row }">
+            <el-input v-model="row.description" size="small" placeholder="任务详细描述" />
+          </template>
+          <template #operation_default="{ row }">
+            <el-button link type="primary" size="small" :icon="CirclePlus" @click="addTask(row)">
+              子任务
+            </el-button>
+            <el-button link type="danger" size="small" :icon="Close" @click="removeTask(row)" />
+          </template>
+        </vxe-grid>
       </div>
 
       <!-- Step 4: 交付件配置 -->
       <div v-else-if="activeStep === 3" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ deliverables.length }} 个交付件</span>
-          <el-button type="primary" :icon="Plus" @click="addDeliverable">添加交付件</el-button>
+          <el-button type="primary" :icon="Plus" @click="addDeliverable">
+            添加交付件
+          </el-button>
         </div>
         <el-empty v-if="deliverables.length === 0" description="暂无交付件" />
         <el-table v-else :data="deliverables" border stripe>
@@ -977,7 +1055,9 @@ onMounted(() => {
       <div v-else-if="activeStep === 4" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ dependencies.length }} 条依赖关系</span>
-          <el-button type="primary" :icon="Plus" @click="addDependency">添加依赖</el-button>
+          <el-button type="primary" :icon="Plus" @click="addDependency">
+            添加依赖
+          </el-button>
         </div>
         <el-empty v-if="dependencies.length === 0" description="暂无依赖关系" />
         <el-table v-else :data="dependencies" border stripe>
@@ -1027,7 +1107,9 @@ onMounted(() => {
       <div v-else-if="activeStep === 5" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ approvalPlans.length }} 个审批计划</span>
-          <el-button type="primary" :icon="Plus" @click="addApprovalPlan">添加审批计划</el-button>
+          <el-button type="primary" :icon="Plus" @click="addApprovalPlan">
+            添加审批计划
+          </el-button>
         </div>
         <el-empty v-if="approvalPlans.length === 0" description="暂无审批计划" />
         <el-table v-else :data="approvalPlans" border stripe>
@@ -1071,7 +1153,9 @@ onMounted(() => {
       <div v-else-if="activeStep === 6" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ milestones.length }} 个里程碑</span>
-          <el-button type="primary" :icon="Plus" @click="addMilestone">添加里程碑</el-button>
+          <el-button type="primary" :icon="Plus" @click="addMilestone">
+            添加里程碑
+          </el-button>
         </div>
         <el-empty v-if="milestones.length === 0" description="暂无里程碑" />
         <el-table v-else :data="milestones" border stripe>
@@ -1118,14 +1202,18 @@ onMounted(() => {
         </div>
         <el-empty v-if="phases.length === 0" description="请先在「阶段定义」中添加阶段" />
         <div v-for="(phase, idx) in phases" :key="idx" class="phase-row">
-          <div class="phase-order">{{ idx + 1 }}</div>
+          <div class="phase-order">
+            {{ idx + 1 }}
+          </div>
           <div class="phase-fields">
             <span class="phase-name-label">{{ phase.phaseName || phase.phaseCode || `阶段 ${idx + 1}` }}</span>
             <span class="phase-code-label">{{ phase.phaseCode }}</span>
           </div>
           <div class="phase-criteria-block">
             <div class="criteria-group">
-              <div class="criteria-title">进入条件</div>
+              <div class="criteria-title">
+                进入条件
+              </div>
               <div class="criteria-body">
                 <el-checkbox
                   :model-value="phase.entryCriteria?.requirePreviousPhaseComplete ?? false"
@@ -1142,7 +1230,9 @@ onMounted(() => {
               </div>
             </div>
             <div class="criteria-group">
-              <div class="criteria-title">退出条件</div>
+              <div class="criteria-title">
+                退出条件
+              </div>
               <div class="criteria-body">
                 <PhaseExitGateEditor
                   :model-value="phase.exitCriteria"
@@ -1159,7 +1249,9 @@ onMounted(() => {
 
       <!-- 步骤导航 -->
       <div class="step-actions">
-        <el-button v-if="activeStep > 0" @click="handlePrev">上一步</el-button>
+        <el-button v-if="activeStep > 0" @click="handlePrev">
+          上一步
+        </el-button>
         <el-button v-if="activeStep < steps.length - 1" type="primary" @click="handleNext">
           下一步
         </el-button>
@@ -1180,8 +1272,12 @@ onMounted(() => {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="publishDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="publishing" @click="handlePublish">发布</el-button>
+        <el-button @click="publishDialogVisible = false">
+          取消
+        </el-button>
+        <el-button type="primary" :loading="publishing" @click="handlePublish">
+          发布
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -1301,38 +1397,16 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-/* 任务卡片式编辑 */
-.task-card {
-  width: 100%;
-  margin-bottom: 4px;
+/* 任务树形表格（vxe-grid）：拖拽把手 + 层级展示 */
+.task-tree-grid .vxe-body--row {
+  cursor: grab;
 }
-.task-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+.task-tree-grid .vxe-body--row:active {
+  cursor: grabbing;
 }
-.task-card-title {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.task-card-actions {
-  display: flex;
-  gap: 4px;
-  flex-shrink: 0;
-}
-.task-card-body {
-  border-top: 1px dashed var(--pms-color-border-light, #e4e7ed);
-  padding-top: 10px;
-}
-.field-label {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  margin-bottom: 4px;
-  line-height: 1.4;
+/* 拖拽把手列（任务名称）样式增强 */
+.task-tree-grid .vxe-header--column .vxe-cell {
+  font-weight: 600;
 }
 .text-muted {
   color: var(--el-text-color-secondary);
