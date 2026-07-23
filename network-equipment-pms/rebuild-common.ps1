@@ -8,12 +8,17 @@
       3. pms-common（兼容层 Result/BaseEntity/BusinessException 等）
       4. 依赖 pms-common 的业务模块：pms-system、pms-notification、pms-lowcode、pms-admin
     使用 -am（also make）自动构建上游依赖。
+
+    端口 / 凭据 / JDK 路径等配置统一在 env.ps1 中管理。
 .NOTES
     Usage:
       powershell -ExecutionPolicy Bypass -File .\rebuild-common.ps1
 #>
 
-$env:JAVA_HOME = "C:\Program Files\Java\jdk-17.0.9"
+# 引入统一配置（端口 / 凭据 / JDK 路径）
+. "$PSScriptRoot\env.ps1"
+
+$env:JAVA_HOME = $JavaHome
 $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 
 # Maven 选项：
