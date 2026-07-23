@@ -125,9 +125,12 @@ if (Test-PortListening -Port $BackendPort) {
 `$env:SPRING_DATASOURCE_URL = 'jdbc:mysql://localhost:$MysqlPort/${MysqlDatabase}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true'
 `$env:MYSQL_USER      = '$MysqlUser'
 `$env:MYSQL_PASSWORD  = '$MysqlPassword'
-`$env:REDIS_PASSWORD  = '$RedisPassword'
+`$env:REDIS_HOST      = 'localhost'
+`$env:REDIS_PORT      = '$RedisPort'
+if ('$RedisPassword') { `$env:REDIS_PASSWORD = '$RedisPassword' } else { Remove-Item Env:\REDIS_PASSWORD -ErrorAction SilentlyContinue }
 `$env:JWT_SECRET      = '$JwtSecret'
 `$env:APP_ENCRYPT_KEY = '$AppEncryptKey'
+`$env:SERVER_PORT     = '$BackendPort'
 Set-Location '$ProjectRoot'
 Write-Host 'Starting pms-admin (spring-boot:run) on port $BackendPort...'
 Write-Host 'NOTE: If you changed yudao-framework / pms-common / pms-system, run .\rebuild-common.ps1 first.'
