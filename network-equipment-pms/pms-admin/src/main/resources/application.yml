@@ -82,6 +82,16 @@ yudao:
   # 这里显式禁用，未来如需 SaaS 化再开启并补齐 tenant_id 列。
   tenant:
     enable: false
+  # 短信验证码配置（yudao-module-system SmsCodeProperties 强制 @NotNull 校验）
+  # PMS 当前未使用短信登录，但 SmsCodeApiImpl 被 AdminAuthService 装配依赖。
+  # 这里提供 yudao 参考默认值以满足校验，9999/9999 便于测试。
+  # 如需接入真实短信通道，参考 yudao 官方 sms-client 配置。
+  sms-code:
+    expire-times: 10m
+    send-frequency: 1m
+    send-maximum-quantity-per-day: 10
+    begin-code: 9999
+    end-code: 9999
 mybatis-plus:
   mapper-locations: classpath*:com/dp/plat/**/mapper/**/*.xml
   # yudao Entity 类型别名扫描（用于 ResultMap 自动映射 yudao-module-system/infra 的 DO）
