@@ -63,9 +63,9 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.dynamic.datasource.master.password", mysql::getPassword);
         registry.add("spring.datasource.dynamic.datasource.master.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
         // 覆盖 Redis 连接配置
+        // 注意：不注入 password，Testcontainers Redis 无密码，保持 null → Redisson 跳过 AUTH
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
-        registry.add("spring.data.redis.password", () -> "");
     }
 
     @Autowired

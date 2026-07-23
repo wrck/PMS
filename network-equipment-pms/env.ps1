@@ -99,13 +99,17 @@ function Set-PmsEnvironment {
     $env:SPRING_DATASOURCE_URL = "jdbc:mysql://localhost:$MysqlPort/${MysqlDatabase}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true"
     $env:MYSQL_USER      = $MysqlUser
     $env:MYSQL_PASSWORD  = $MysqlPassword
-    # Redis: 仅当密码非空时设置 REDIS_PASSWORD，否则清除（空字符串会让 Redisson 误发 AUTH）
+    # Redis: 仅当密码非空时设置 SPRING_DATA_REDIS_PASSWORD，否则清除
+    # 不能用空字符串：Spring Boot @ConfigurationProperties 不处理 SpEL #{null}，
+    # 空字符串会让 Redisson 误发 AUTH 命令到无密码 Redis
+    # 用 SPRING_DATA_REDIS_PASSWORD 环境变量（relaxed binding 绑定到 spring.data.redis.password）
+    # 未设环境变量 → 属性为 null → Redisson 跳过 AUTH
     $env:REDIS_HOST      = "localhost"
     $env:REDIS_PORT      = "$RedisPort"
     if ($RedisPassword) {
-        $env:REDIS_PASSWORD = $RedisPassword
+        $env:SPRING_DATA_REDIS_PASSWORD = $RedisPassword
     } else {
-        Remove-Item Env:\REDIS_PASSWORD -ErrorAction SilentlyContinue
+        Remove-Item Env:\SPRING_DATA_REDIS_PASSWORD -ErrorAction SilentlyContinue
     }
     $env:JWT_SECRET      = $JwtSecret
     $env:APP_ENCRYPT_KEY = $AppEncryptKey

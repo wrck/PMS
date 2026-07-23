@@ -26,7 +26,8 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: ""
+      # password 不设置：Testcontainers Redis 无密码，留空会让 Redisson 误发 AUTH
+      # @DynamicPropertySource 也不注入 password，保持 null → Redisson 跳过 AUTH
       timeout: 3000
   # Flyway：保持开启，应用启动时自动对 Testcontainers MySQL 执行迁移
   flyway:
