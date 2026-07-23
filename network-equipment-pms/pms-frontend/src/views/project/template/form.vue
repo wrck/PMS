@@ -275,6 +275,10 @@ const taskTreeProps = {
   children: 'children'
 }
 
+/** el-tree 实例引用：用 append/remove 方法同步内部 Node 树与 data，
+ *  避免直接 push/splice children 数组导致 el-tree 渲染错乱 */
+const taskTreeRef = ref()
+
 // 任务树最大深度：父任务 + 一级子任务（共 2 层），避免子任务内再嵌套子任务
 const MAX_TASK_DEPTH = 2
 
@@ -308,17 +312,29 @@ function addTask(parent?: TaskNode) {
     description: '',
     children: []
   }
-  if (parent) {
-    parent.children = parent.children ?? []
-    parent.children.push(newTask)
+  // 用 el-tree 的 append 同步内部 Node 树与 data。
+  // 原实现直接 push 到 parent.children，el-tree 内部 Node 树不会同步更新，
+  // 导致后续渲染/拖拽时布局错乱（节点位置错位、子任务不展开等）。
+  if (taskTreeRef.value) {
+    taskTreeRef.value.append(newTask, parent ?? null)
   } else {
-    tasks.value.push(newTask)
+    // 兜底：el-tree 未渲染（如初次加载无数据时）直接操作 data
+    if (parent) {
+      parent.children = parent.children ?? []
+      parent.children.push(newTask)
+    } else {
+      tasks.value.push(newTask)
+    }
   }
 }
 
 function removeTask(node: TaskNode) {
-  // 原实现恒以根数组 tasks 作为 list 查找，导致子任务 indexOf 返回 -1 无法删除。
-  // 改为在整棵树中递归查找并从其所在父节点的 children 中移除。
+  // 用 el-tree 的 remove 同步内部 Node 树与 data，避免直接 splice 导致渲染不同步。
+  // 兜底：el-tree 未挂载时递归整棵树从父节点 children 中移除。
+  if (taskTreeRef.value) {
+    taskTreeRef.value.remove(node)
+    return
+  }
   const removeFrom = (list: TaskNode[]): boolean => {
     const idx = list.indexOf(node)
     if (idx >= 0) {
@@ -615,6 +631,9 @@ async function handleSaveDraft() {
     // 持久化阶段/任务/交付件等详细配置到草稿快照
     await saveDraftSnapshot(form.id, buildSnapshot())
     ElMessage.success('草稿已保存')
+  } catch (e: any) {
+    // 原实现仅 try/finally 无 catch，保存失败时错误被静默吞掉，用户只看到按钮恢复但无任何提示。
+    ElMessage.error('保存失败：' + (e?.message || '未知错误'))
   } finally {
     submitting.value = false
   }
@@ -713,6 +732,8 @@ async function handleSave() {
     await saveDraftSnapshot(form.id, buildSnapshot())
     ElMessage.success('保存成功')
     router.back()
+  } catch (e: any) {
+    ElMessage.error('保存失败：' + (e?.message || '未知错误'))
   } finally {
     submitting.value = false
   }
@@ -899,6 +920,7 @@ onMounted(() => {
         <el-empty v-if="tasks.length === 0" description="暂无任务，点击「添加任务」开始配置" />
         <el-tree
           v-else
+          ref="taskTreeRef"
           :data="tasks"
           :props="taskTreeProps"
           node-key="id"
