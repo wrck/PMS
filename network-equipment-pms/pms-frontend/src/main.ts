@@ -3,6 +3,10 @@ import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import VxeUI from 'vxe-pc-ui'
+import 'vxe-pc-ui/es/style.css'
+import VxeUITable from 'vxe-table'
+import 'vxe-table/es/style.css'
 import App from './App.vue'
 import router from './router'
 import { registerDirectives } from './directives'
@@ -18,6 +22,9 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 app.use(ElementPlus)
+// vxe-table 4.x：先注册 vxe-pc-ui（基础能力），再注册 vxe-table（表格组件）
+app.use(VxeUI)
+app.use(VxeUITable)
 
 // 注册全局自定义指令（v-debounce / v-permission）
 registerDirectives(app)

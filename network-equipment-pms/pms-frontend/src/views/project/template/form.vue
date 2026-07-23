@@ -78,7 +78,7 @@ const form = reactive<ProjectTemplate>({
 // 阶段列表
 const phases = ref<PhaseDef[]>([])
 
-// 任务节点：el-table 树形数据，通过 parentId 关联父子关系，children 由 buildTaskTree 计算
+// 任务节点：扁平数据，通过 parentId 关联父子关系，由 vxe-grid treeConfig.transform 自动构建树
 interface TaskNode {
   id: string
   parentId: string | null
@@ -90,63 +90,55 @@ interface TaskNode {
   weight?: number
   priority?: string
   description?: string
-  children?: TaskNode[]
 }
 const tasks = ref<TaskNode[]>([])
 
-/** el-table 渲染用的树形数据：由扁平 tasks 按 parentId 实时计算 */
-const taskTree = computed(() => buildTaskTree(tasks.value))
+/** vxe-grid 实例引用：用于获取排序后的数据 */
+const taskGridRef = ref()
 
-/** 扁平可见行顺序（el-table 展开后的渲染顺序），用于拖拽时 DOM 行 ↔ TaskNode 映射 */
-const visibleRows = computed(() => {
-  const rows: TaskNode[] = []
-  const walk = (nodes: TaskNode[]) => {
-    for (const n of nodes) {
-      rows.push(n)
-      if (n.children?.length) walk(n.children)
-    }
+/** vxe-grid 树形配置：transform=true 自动将扁平 parentId 数据转为树形渲染 */
+const taskGridOptions = reactive({
+  border: true,
+  rowConfig: {
+    keyField: 'id',
+    drag: true // 启用行拖拽
+  },
+  rowDragConfig: {
+    isCrossDrag: true, // 允许跨层级拖拽
+    isSelfToChildDrag: true, // 允许自身拖为子级
+    isToChildDrag: true // 拖拽时按 Ctrl 成为目标行的子节点
+  },
+  columnConfig: {
+    useKey: true
+  },
+  treeConfig: {
+    transform: true, // 扁平数据自动转树形
+    rowField: 'id',
+    parentField: 'parentId',
+    expandAll: true // 默认展开所有节点
   }
-  walk(taskTree.value)
-  return rows
 })
 
-/** el-table 树形配置：children 字段渲染子行（非懒加载，不需要 hasChildren） */
-const taskTableTreeProps = { children: 'children' }
-
-/** 按 parentId 将扁平列表重建为 el-table 树形数据 */
-function buildTaskTree(flat: TaskNode[]): TaskNode[] {
-  const map = new Map<string, TaskNode>()
-  const roots: TaskNode[] = []
-  // 第一遍：克隆并清空 children，建立 id → node 索引
-  for (const t of flat) {
-    map.set(t.id, { ...t, children: [] })
-  }
-  // 第二遍：按 parentId 挂载，保留 tasks 中的原始顺序
-  for (const t of flat) {
-    const node = map.get(t.id)!
-    if (t.parentId && map.has(t.parentId)) {
-      map.get(t.parentId)!.children!.push(node)
-    } else {
-      roots.push(node)
-    }
-  }
-  return roots
-}
-
-/** 计算从 root 到指定 id 的祖先链（不含自身），用于检测循环引用 */
-function getAncestors(flat: TaskNode[], id: string): TaskNode[] {
-  const chain: TaskNode[] = []
-  const seen = new Set<string>()
-  let cur = flat.find((t) => t.id === id)
-  while (cur?.parentId && !seen.has(cur.parentId)) {
-    seen.add(cur.parentId)
-    const parent = flat.find((t) => t.id === cur!.parentId)
-    if (!parent) break
-    chain.push(parent)
-    cur = parent
-  }
-  return chain
-}
+/** vxe-grid 列配置：dragSort=true 的列作为拖拽触发区域（整行可拖） */
+const taskGridColumns = computed(() => [
+  { type: 'seq', width: 60, title: '序号' },
+  {
+    field: 'taskName',
+    title: '任务名称',
+    minWidth: 220,
+    treeNode: true, // 树形节点列（显示展开图标与缩进）
+    dragSort: true, // 该列作为拖拽把手
+    slots: { default: 'taskName_default' }
+  },
+  { field: 'taskCode', title: '任务编码', minWidth: 140, slots: { default: 'taskCode_default' } },
+  { field: 'phaseCode', title: '所属阶段', minWidth: 150, slots: { default: 'phaseCode_default' } },
+  { field: 'assigneeRole', title: '负责角色', minWidth: 150, slots: { default: 'assigneeRole_default' } },
+  { field: 'plannedHours', title: '工时', minWidth: 110, slots: { default: 'plannedHours_default' } },
+  { field: 'weight', title: '权重', minWidth: 110, slots: { default: 'weight_default' } },
+  { field: 'priority', title: '优先级', minWidth: 110, slots: { default: 'priority_default' } },
+  { field: 'description', title: '描述', minWidth: 200, slots: { default: 'description_default' } },
+  { title: '操作', width: 200, fixed: 'right', slots: { default: 'operation_default' } }
+])
 
 // 交付件
 interface DeliverableNode {
@@ -325,9 +317,6 @@ function updateExitCriteria(phase: PhaseDef, value: PhaseExitGate) {
 
 // ============== 任务操作 ==============
 
-/** el-table 实例引用：保留供 v-task-drag 指令挂载原生 HTML5 drag 事件 */
-const taskTableRef = ref()
-
 function newTask(parent?: TaskNode): TaskNode {
   return {
     id: genId('task'),
@@ -339,8 +328,7 @@ function newTask(parent?: TaskNode): TaskNode {
     plannedHours: 0,
     weight: 1,
     priority: 'NORMAL',
-    description: '',
-    children: []
+    description: ''
   }
 }
 
@@ -361,333 +349,17 @@ function removeTask(row: TaskNode) {
   tasks.value = tasks.value.filter((t) => !idsToRemove.has(t.id))
 }
 
-/** 升级：将 row 变为其当前祖父的子节点（减少一层嵌套） */
-function indentTask(row: TaskNode) {
-  if (!row.parentId) return
-  const parent = tasks.value.find((t) => t.id === row.parentId)
-  if (!parent) return
-  row.parentId = parent.parentId ?? null
-}
-
-/** 降级：将 row 变为前一个兄弟的子节点（增加一层嵌套） */
-function outdentTask(row: TaskNode) {
-  const siblings = tasks.value.filter((t) => t.parentId === row.parentId)
-  const idx = siblings.findIndex((t) => t.id === row.id)
-  if (idx <= 0) return // 无前一个兄弟
-  row.parentId = siblings[idx - 1].id
-}
-
-/** 上移/下移：在同兄弟间调整顺序（连同各自子树片段一起移动） */
-function moveTask(row: TaskNode, dir: 'up' | 'down') {
-  // 收集同级兄弟在扁平列表中的连续片段范围 [start, end)
-  const sibRanges: Array<{ id: string; start: number; end: number }> = []
-  for (let i = 0; i < tasks.value.length; i++) {
-    if (tasks.value[i].parentId === row.parentId) {
-      let end = i + 1
-      const childIds = new Set<string>([tasks.value[i].id])
-      while (end < tasks.value.length && childIds.has(tasks.value[end].parentId ?? '')) {
-        childIds.add(tasks.value[end].id)
-        end++
-      }
-      sibRanges.push({ id: tasks.value[i].id, start: i, end })
-    }
-  }
-  const pos = sibRanges.findIndex((r) => r.id === row.id)
-  const targetPos = dir === 'up' ? pos - 1 : pos + 1
-  if (targetPos < 0 || targetPos >= sibRanges.length) return
-  const a = sibRanges[pos]
-  const b = sibRanges[targetPos]
-  const segA = tasks.value.slice(a.start, a.end)
-  const segB = tasks.value.slice(b.start, b.end)
-  const newTasks = tasks.value.slice(0, Math.min(a.start, b.start))
-  if (a.start < b.start) {
-    newTasks.push(...segB, ...segA)
-    newTasks.push(...tasks.value.slice(a.end))
-  } else {
-    newTasks.push(...segA, ...segB)
-    newTasks.push(...tasks.value.slice(b.end))
-  }
-  tasks.value = newTasks
-}
-
-/** 判断 row 是否可上下移动（是否存在同父兄弟可交换） */
-function canMoveSibling(row: TaskNode, dir: 'up' | 'down'): boolean {
-  const sibIds = tasks.value.filter((t) => t.parentId === row.parentId).map((t) => t.id)
-  const pos = sibIds.indexOf(row.id)
-  if (pos < 0) return false
-  return dir === 'up' ? pos > 0 : pos < sibIds.length - 1
-}
-
-/** 判断 row 是否可降级（存在前一个兄弟） */
-function canOutdent(row: TaskNode): boolean {
-  const siblings = tasks.value.filter((t) => t.parentId === row.parentId)
-  const idx = siblings.findIndex((t) => t.id === row.id)
-  return idx > 0
-}
-
-/** tasks 变化或切换到任务配置步骤后，重置拖拽状态 */
-watch(
-  () => tasks.value.length,
-  () => {
-    dragState.dropIndicator = null
-  }
-)
-watch(activeStep, (step) => {
-  if (step === 2) dragState.dropIndicator = null
-})
-
 /**
- * 原生 HTML5 Drag & Drop 实现行拖拽，参照 el-tree 语义。
- *
- * 相比第三方库优势：不操作 DOM，完全由 Vue 数据驱动重渲染，
- * 不会出现 DOM 与数据错位导致的内容重置/乱序。
- *
- * 语义（对齐 el-tree 的 allow-drop）：
- *  - 鼠标在目标行上 1/4 区域：插入为前一个兄弟（before）
- *  - 鼠标在目标行下 1/4 区域：插入为后一个兄弟（after）
- *  - 鼠标在目标行中部 1/2 区域：成为其子节点（inner）
+ * vxe-grid 拖拽排序结束回调：从 grid 实例同步最新的层级数据到 tasks。
+ * vxe-table 内部已维护好拖拽后的 parentId 关系，getFullData 返回扁平数据。
  */
-const dragState = reactive({
-  draggingId: null as string | null,
-  /** 目标行 id */
-  targetId: null as string | null,
-  /** 放置位置：before/inner/after */
-  position: null as 'before' | 'inner' | 'after' | null,
-  /** 用于模板显示指示器的行 id */
-  dropIndicator: null as string | null
-})
-
-function onRowDragStart(e: DragEvent, row: TaskNode) {
-  dragState.draggingId = row.id
-  if (e.dataTransfer) {
-    e.dataTransfer.effectAllowed = 'move'
-    // Firefox 需要 setData 才能触发 dragover
-    e.dataTransfer.setData('text/plain', row.id)
-  }
-}
-
-function onRowDragOver(e: DragEvent, row: TaskNode) {
-  if (!dragState.draggingId || dragState.draggingId === row.id) return
-  e.preventDefault()
-  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
-  // 根据鼠标 Y 坐标在行内的相对位置判断 before/inner/after
-  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-  const relY = e.clientY - rect.top
-  const h = rect.height
-  if (relY < h * 0.25) {
-    dragState.position = 'before'
-  } else if (relY > h * 0.75) {
-    dragState.position = 'after'
-  } else {
-    dragState.position = 'inner'
-  }
-  dragState.targetId = row.id
-  dragState.dropIndicator = row.id
-}
-
-function onRowDragLeave(_e: DragEvent, row: TaskNode) {
-  if (dragState.dropIndicator === row.id) {
-    dragState.dropIndicator = null
-  }
-}
-
-function onRowDrop(_e: DragEvent, row: TaskNode) {
-  if (!dragState.draggingId || !dragState.position) {
-    clearDragState()
-    return
-  }
-  applyTaskDrop(dragState.draggingId, row.id, dragState.position)
-  clearDragState()
-}
-
-function clearDragState() {
-  dragState.draggingId = null
-  dragState.targetId = null
-  dragState.position = null
-  dragState.dropIndicator = null
-}
-
-/** 应用拖拽结果：更新 dragged 节点的 parentId 和顺序，完全基于数据操作 */
-function applyTaskDrop(draggedId: string, targetId: string, position: 'before' | 'inner' | 'after') {
-  const snapshot = tasks.value.map((t) => ({ ...t }))
-  const dragged = snapshot.find((t) => t.id === draggedId)
-  const target = snapshot.find((t) => t.id === targetId)
-  if (!dragged || !target) return
-
-  // 防止拖入自身或后代（会形成环）
-  const ancestorIds = new Set(getAncestors(snapshot, targetId).map((a) => a.id))
-  if (ancestorIds.has(draggedId) || draggedId === targetId) {
-    ElMessage.warning('不能拖入自身或后代任务')
-    return
-  }
-
-  // 移除被拖节点
-  const without = snapshot.filter((t) => t.id !== draggedId)
-
-  // 根据放置位置计算新 parentId 和插入位置
-  let newParentId: string | null
-  let insertBeforeId: string | null
-
-  if (position === 'inner') {
-    // 成为 target 的子节点：插到 target 之后、其现有子树之前
-    newParentId = target.id
-    insertBeforeId = firstChildId(without, target.id)
-  } else {
-    // before/after：成为 target 的同级兄弟
-    newParentId = target.parentId
-    if (position === 'before') {
-      insertBeforeId = target.id
-    } else {
-      // after：插到 target 之后、target 的下一个兄弟之前
-      insertBeforeId = nextSiblingId(without, target.id)
-    }
-  }
-
-  dragged.parentId = newParentId
-  if (insertBeforeId) {
-    const idx = without.findIndex((t) => t.id === insertBeforeId)
-    without.splice(idx, 0, dragged)
-  } else {
-    without.push(dragged)
-  }
-  tasks.value = without
-}
-
-/** 获取节点在扁平列表中第一个直接子节点的 id */
-function firstChildId(flat: TaskNode[], parentId: string): string | null {
-  const idx = flat.findIndex((t) => t.id === parentId)
-  if (idx < 0) return null
-  for (let i = idx + 1; i < flat.length; i++) {
-    if (flat[i].parentId === parentId) return flat[i].id
-    // 遇到同级或更高级节点，说明无子节点
-    if (flat[i].parentId === flat[idx].parentId) break
-  }
-  return null
-}
-
-/** 获取节点的下一个兄弟节点 id（在扁平列表中跳过其子树） */
-function nextSiblingId(flat: TaskNode[], id: string): string | null {
-  const idx = flat.findIndex((t) => t.id === id)
-  if (idx < 0) return null
-  const parentId = flat[idx].parentId
-  // 跳过子树
-  let i = idx + 1
-  const childIds = new Set<string>([id])
-  while (i < flat.length && childIds.has(flat[i].parentId ?? '')) {
-    childIds.add(flat[i].id)
-    i++
-  }
-  // i 现在指向子树之后的第一个节点
-  if (i < flat.length && flat[i].parentId === parentId) {
-    return flat[i].id
-  }
-  return null
-}
-
-/** 行的拖拽指示器 class */
-function dropIndicatorClass(row: TaskNode): string {
-  if (dragState.dropIndicator !== row.id || !dragState.position) return ''
-  return `drop-indicator-${dragState.position}`
-}
-
-/** el-table row-class-name：为每行标记可拖拽 + 拖拽指示器 class */
-function taskRowClassName({ row }: { row: TaskNode }): string {
-  const indicator = dropIndicatorClass(row)
-  return indicator ? `task-drag-row ${indicator}` : 'task-drag-row'
-}
-
-/** el-table 展开变化时的事件（占位，保持展开状态由 default-expand-all 管理） */
-function onTaskExpandChange() {
-  // default-expand-all 已处理展开，无需额外逻辑
-}
-
-/**
- * 自定义指令 v-task-drag：在 el-table 行 DOM 上绑定原生 HTML5 drag 事件。
- * el-table 不提供原生 drag 事件，需通过指令操作行 DOM。
- *
- * 通过事件委托在 tbody 上监听，el-table 行 DOM 重建时无需重新绑定。
- * 使用 el.__taskDragBound 标记确保监听只挂载一次，并在 unmounted 时清理。
- */
-const vTaskDrag = {
-  mounted(el: HTMLElement & { __taskDragCleanup?: () => void }) {
-    bindDragEvents(el)
-  },
-  updated(el: HTMLElement & { __taskDragCleanup?: () => void }) {
-    // 行 DOM 重建后重新设置 draggable，并补绑事件（防止 mounted 时 tbody 未就绪）
-    bindDragEvents(el)
-    el.querySelectorAll('tr').forEach((tr) => {
-      tr.setAttribute('draggable', 'true')
-    })
-  },
-  unmounted(el: HTMLElement & { __taskDragCleanup?: () => void }) {
-    el.__taskDragCleanup?.()
-    el.__taskDragCleanup = undefined
-  }
-}
-
-/** 在 el-table 的 tbody 上绑定原生 drag 事件（仅绑定一次，通过事件委托处理行级事件） */
-function bindDragEvents(el: HTMLElement & { __taskDragCleanup?: () => void }) {
-  if (el.__taskDragCleanup) return // 已绑定
-  const tbody = el.querySelector('.el-table__body-wrapper tbody')
-  if (!tbody) return // tbody 未就绪，等 updated 再试
-
-  const findRow = (target: EventTarget | null): HTMLElement | null => {
-    let node = target as HTMLElement | null
-    while (node && node !== tbody) {
-      if (node.tagName === 'TR') return node
-      node = node.parentElement
-    }
-    return null
-  }
-  // 建立 row DOM → TaskNode 的映射：DOM 行顺序与 visibleRows 一致（default-expand-all）
-  const getRowId = (tr: HTMLElement | null): string | null => {
-    if (!tr) return null
-    const rows = Array.from(tbody.querySelectorAll('tr'))
-    const idx = rows.indexOf(tr)
-    if (idx < 0) return null
-    return visibleRows.value[idx]?.id ?? null
-  }
-
-  const onDragStart = (e: DragEvent) => {
-    const tr = findRow(e.target)
-    const rowId = getRowId(tr)
-    if (!rowId) return
-    const row = tasks.value.find((t) => t.id === rowId)
-    if (row) onRowDragStart(e, row)
-  }
-  const onDragOver = (e: DragEvent) => {
-    const tr = findRow(e.target)
-    const rowId = getRowId(tr)
-    if (!rowId) return
-    const row = tasks.value.find((t) => t.id === rowId)
-    if (row) onRowDragOver(e, row)
-  }
-  const onDragLeave = (e: DragEvent) => {
-    const tr = findRow(e.target)
-    const rowId = getRowId(tr)
-    if (!rowId) return
-    const row = tasks.value.find((t) => t.id === rowId)
-    if (row) onRowDragLeave(e, row)
-  }
-  const onDrop = (e: DragEvent) => {
-    e.preventDefault()
-    const tr = findRow(e.target)
-    const rowId = getRowId(tr)
-    if (!rowId) return
-    const row = tasks.value.find((t) => t.id === rowId)
-    if (row) onRowDrop(e, row)
-  }
-
-  tbody.addEventListener('dragstart', onDragStart)
-  tbody.addEventListener('dragover', onDragOver)
-  tbody.addEventListener('dragleave', onDragLeave)
-  tbody.addEventListener('drop', onDrop)
-
-  el.__taskDragCleanup = () => {
-    tbody.removeEventListener('dragstart', onDragStart)
-    tbody.removeEventListener('dragover', onDragOver)
-    tbody.removeEventListener('dragleave', onDragLeave)
-    tbody.removeEventListener('drop', onDrop)
+function onTaskDragEnd() {
+  const $grid = taskGridRef.value
+  if (!$grid) return
+  const fullData = $grid.getFullData() as TaskNode[]
+  if (fullData && fullData.length) {
+    // 保留原 tasks 中可能存在的额外字段，仅更新 parentId 和顺序
+    tasks.value = fullData
   }
 }
 
@@ -828,7 +500,7 @@ function applySnapshot(snap?: TemplateSnapshot) {
 
   // 任务：后端 TaskDef 为扁平列表（通过 parentTaskName 引用父任务）。
   // 加载时按 parentTaskName 转换为前端 parentId（id 引用），存入扁平 tasks，
-  // 渲染用的树由 computed taskTree 实时构建，避免层级丢失或回显异常。
+  // vxe-grid treeConfig.transform 自动构建树形渲染，避免层级丢失或回显异常。
   const flatTasks = (snap.tasks ?? []) as any[]
   // 第一遍：为每个 TaskDef 生成 node 并记录 taskName → id
   const nameToId = new Map<string, string>()
@@ -845,8 +517,7 @@ function applySnapshot(snap?: TemplateSnapshot) {
       plannedHours: t.plannedHours ?? 0,
       weight: t.weight ?? 1,
       priority: t.priority ?? 'NORMAL',
-      description: t.description ?? '',
-      children: []
+      description: t.description ?? ''
     }
     nodes.push(node)
     if (node.taskName) nameToId.set(node.taskName, id)
@@ -1143,15 +814,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="template-form-page" v-loading="loading">
+  <div v-loading="loading" class="template-form-page">
     <PageHeader :title="isEdit ? '编辑模板' : '新建模板'" description="按 7 步分步配置模板内容">
       <template #actions>
-        <el-button :icon="RefreshLeft" @click="router.back()">取消</el-button>
-        <el-button v-permission="'project:template:add'" :icon="Check" :loading="submitting" @click="handleSaveDraft">保存草稿</el-button>
+        <el-button :icon="RefreshLeft" @click="router.back()">
+          取消
+        </el-button>
+        <el-button v-permission="'project:template:add'" :icon="Check" :loading="submitting" @click="handleSaveDraft">
+          保存草稿
+        </el-button>
         <el-button v-if="form.id" v-permission="'project:template:publish'" type="success" :icon="Promotion" @click="openPublishDialog">
           发布版本
         </el-button>
-        <el-button v-permission="'project:template:add'" type="primary" :icon="Check" :loading="submitting" @click="handleSave">保存</el-button>
+        <el-button v-permission="'project:template:add'" type="primary" :icon="Check" :loading="submitting" @click="handleSave">
+          保存
+        </el-button>
       </template>
     </PageHeader>
 
@@ -1214,11 +891,15 @@ onMounted(() => {
       <div v-else-if="activeStep === 1" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ phases.length }} 个阶段 · 使用上下箭头调整顺序</span>
-          <el-button type="primary" :icon="Plus" @click="addPhase">添加阶段</el-button>
+          <el-button type="primary" :icon="Plus" @click="addPhase">
+            添加阶段
+          </el-button>
         </div>
         <el-empty v-if="phases.length === 0" description="暂无阶段，点击「添加阶段」开始配置" />
         <div v-for="(phase, idx) in phases" :key="idx" class="phase-row">
-          <div class="phase-order">{{ idx + 1 }}</div>
+          <div class="phase-order">
+            {{ idx + 1 }}
+          </div>
           <div class="phase-fields">
             <el-input v-model="phase.phaseCode" placeholder="阶段编码 PREPARE" style="width: 180px" />
             <el-input v-model="phase.phaseName" placeholder="阶段名称" style="width: 200px" />
@@ -1241,92 +922,72 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Step 3: 任务配置（el-table 树形数据，支持拖拽排序与父子关系变更） -->
+      <!-- Step 3: 任务配置（vxe-grid 树形表格，内置行拖拽与父子关系变更） -->
       <div v-else-if="activeStep === 2" class="step-panel">
         <div class="panel-toolbar">
-          <span class="panel-tip">拖拽行变更排序与父子关系 · 升降级调整层级</span>
-          <el-button type="primary" :icon="Plus" @click="addTask()">添加任务</el-button>
+          <span class="panel-tip">拖拽任务名称列变更排序 · 按住 Ctrl 拖拽成为子任务</span>
+          <el-button type="primary" :icon="Plus" @click="addTask()">
+            添加任务
+          </el-button>
         </div>
         <el-empty v-if="tasks.length === 0" description="暂无任务，点击「添加任务」开始配置" />
-        <el-table
+        <vxe-grid
           v-else
-          v-task-drag
-          ref="taskTableRef"
-          :data="taskTree"
-          row-key="id"
-          border
-          default-expand-all
-          :tree-props="taskTableTreeProps"
-          class="task-tree-table"
-          :row-class-name="taskRowClassName"
-          @expand-change="onTaskExpandChange"
+          ref="taskGridRef"
+          class="task-tree-grid"
+          v-bind="taskGridOptions"
+          :columns="taskGridColumns"
+          :data="tasks"
+          @row-drag-end="onTaskDragEnd"
         >
-          <el-table-column label="任务名称" prop="taskName" min-width="220" class-name="task-name-col">
-            <template #default="{ row }">
-              <el-input v-model="row.taskName" size="small" placeholder="任务名称" />
-            </template>
-          </el-table-column>
-          <el-table-column label="任务编码" min-width="140">
-            <template #default="{ row }">
-              <el-input v-model="row.taskCode" size="small" placeholder="任务编码" />
-            </template>
-          </el-table-column>
-          <el-table-column label="所属阶段" min-width="150">
-            <template #default="{ row }">
-              <el-select v-model="row.phaseCode" size="small" placeholder="请选择阶段" style="width: 100%">
-                <el-option v-for="p in phases" :key="p.phaseCode" :label="p.phaseName" :value="p.phaseCode" />
-              </el-select>
-            </template>
-          </el-table-column>
-          <el-table-column label="负责角色" min-width="150">
-            <template #default="{ row }">
-              <el-select v-model="row.assigneeRole" size="small" filterable clearable placeholder="请选择角色" style="width: 100%">
-                <el-option v-for="r in roles" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
-              </el-select>
-            </template>
-          </el-table-column>
-          <el-table-column label="工时" min-width="110">
-            <template #default="{ row }">
-              <el-input-number v-model="row.plannedHours" :min="0" size="small" controls-position="right" style="width: 100%" />
-            </template>
-          </el-table-column>
-          <el-table-column label="权重" min-width="110">
-            <template #default="{ row }">
-              <el-input-number v-model="row.weight" :min="0" :max="100" :precision="2" size="small" controls-position="right" style="width: 100%" />
-            </template>
-          </el-table-column>
-          <el-table-column label="优先级" min-width="110">
-            <template #default="{ row }">
-              <el-select v-model="row.priority" size="small" placeholder="请选择" style="width: 100%">
-                <el-option label="高" value="HIGH" />
-                <el-option label="中" value="NORMAL" />
-                <el-option label="低" value="LOW" />
-              </el-select>
-            </template>
-          </el-table-column>
-          <el-table-column label="描述" min-width="200">
-            <template #default="{ row }">
-              <el-input v-model="row.description" size="small" placeholder="任务详细描述" />
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="200" fixed="right">
-            <template #default="{ row }">
-              <el-button link type="primary" size="small" :icon="CirclePlus" @click.stop="addTask(row)">子任务</el-button>
-              <el-button link size="small" :icon="ArrowUp" :disabled="!canMoveSibling(row, 'up')" @click.stop="moveTask(row, 'up')" />
-              <el-button link size="small" :icon="ArrowDown" :disabled="!canMoveSibling(row, 'down')" @click.stop="moveTask(row, 'down')" />
-              <el-button link size="small" :icon="Promotion" :disabled="!row.parentId" @click.stop="indentTask(row)" title="升级" />
-              <el-button link size="small" :icon="ArrowDown" :disabled="!canOutdent(row)" @click.stop="outdentTask(row)" title="降级" />
-              <el-button link type="danger" size="small" :icon="Close" @click.stop="removeTask(row)" />
-            </template>
-          </el-table-column>
-        </el-table>
+          <template #taskName_default="{ row }">
+            <el-input v-model="row.taskName" size="small" placeholder="任务名称" />
+          </template>
+          <template #taskCode_default="{ row }">
+            <el-input v-model="row.taskCode" size="small" placeholder="任务编码" />
+          </template>
+          <template #phaseCode_default="{ row }">
+            <el-select v-model="row.phaseCode" size="small" placeholder="请选择阶段" style="width: 100%">
+              <el-option v-for="p in phases" :key="p.phaseCode" :label="p.phaseName" :value="p.phaseCode" />
+            </el-select>
+          </template>
+          <template #assigneeRole_default="{ row }">
+            <el-select v-model="row.assigneeRole" size="small" filterable clearable placeholder="请选择角色" style="width: 100%">
+              <el-option v-for="r in roles" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
+            </el-select>
+          </template>
+          <template #plannedHours_default="{ row }">
+            <el-input-number v-model="row.plannedHours" :min="0" size="small" controls-position="right" style="width: 100%" />
+          </template>
+          <template #weight_default="{ row }">
+            <el-input-number v-model="row.weight" :min="0" :max="100" :precision="2" size="small" controls-position="right" style="width: 100%" />
+          </template>
+          <template #priority_default="{ row }">
+            <el-select v-model="row.priority" size="small" placeholder="请选择" style="width: 100%">
+              <el-option label="高" value="HIGH" />
+              <el-option label="中" value="NORMAL" />
+              <el-option label="低" value="LOW" />
+            </el-select>
+          </template>
+          <template #description_default="{ row }">
+            <el-input v-model="row.description" size="small" placeholder="任务详细描述" />
+          </template>
+          <template #operation_default="{ row }">
+            <el-button link type="primary" size="small" :icon="CirclePlus" @click="addTask(row)">
+              子任务
+            </el-button>
+            <el-button link type="danger" size="small" :icon="Close" @click="removeTask(row)" />
+          </template>
+        </vxe-grid>
       </div>
 
       <!-- Step 4: 交付件配置 -->
       <div v-else-if="activeStep === 3" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ deliverables.length }} 个交付件</span>
-          <el-button type="primary" :icon="Plus" @click="addDeliverable">添加交付件</el-button>
+          <el-button type="primary" :icon="Plus" @click="addDeliverable">
+            添加交付件
+          </el-button>
         </div>
         <el-empty v-if="deliverables.length === 0" description="暂无交付件" />
         <el-table v-else :data="deliverables" border stripe>
@@ -1394,7 +1055,9 @@ onMounted(() => {
       <div v-else-if="activeStep === 4" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ dependencies.length }} 条依赖关系</span>
-          <el-button type="primary" :icon="Plus" @click="addDependency">添加依赖</el-button>
+          <el-button type="primary" :icon="Plus" @click="addDependency">
+            添加依赖
+          </el-button>
         </div>
         <el-empty v-if="dependencies.length === 0" description="暂无依赖关系" />
         <el-table v-else :data="dependencies" border stripe>
@@ -1444,7 +1107,9 @@ onMounted(() => {
       <div v-else-if="activeStep === 5" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ approvalPlans.length }} 个审批计划</span>
-          <el-button type="primary" :icon="Plus" @click="addApprovalPlan">添加审批计划</el-button>
+          <el-button type="primary" :icon="Plus" @click="addApprovalPlan">
+            添加审批计划
+          </el-button>
         </div>
         <el-empty v-if="approvalPlans.length === 0" description="暂无审批计划" />
         <el-table v-else :data="approvalPlans" border stripe>
@@ -1488,7 +1153,9 @@ onMounted(() => {
       <div v-else-if="activeStep === 6" class="step-panel">
         <div class="panel-toolbar">
           <span class="panel-tip">共 {{ milestones.length }} 个里程碑</span>
-          <el-button type="primary" :icon="Plus" @click="addMilestone">添加里程碑</el-button>
+          <el-button type="primary" :icon="Plus" @click="addMilestone">
+            添加里程碑
+          </el-button>
         </div>
         <el-empty v-if="milestones.length === 0" description="暂无里程碑" />
         <el-table v-else :data="milestones" border stripe>
@@ -1535,14 +1202,18 @@ onMounted(() => {
         </div>
         <el-empty v-if="phases.length === 0" description="请先在「阶段定义」中添加阶段" />
         <div v-for="(phase, idx) in phases" :key="idx" class="phase-row">
-          <div class="phase-order">{{ idx + 1 }}</div>
+          <div class="phase-order">
+            {{ idx + 1 }}
+          </div>
           <div class="phase-fields">
             <span class="phase-name-label">{{ phase.phaseName || phase.phaseCode || `阶段 ${idx + 1}` }}</span>
             <span class="phase-code-label">{{ phase.phaseCode }}</span>
           </div>
           <div class="phase-criteria-block">
             <div class="criteria-group">
-              <div class="criteria-title">进入条件</div>
+              <div class="criteria-title">
+                进入条件
+              </div>
               <div class="criteria-body">
                 <el-checkbox
                   :model-value="phase.entryCriteria?.requirePreviousPhaseComplete ?? false"
@@ -1559,7 +1230,9 @@ onMounted(() => {
               </div>
             </div>
             <div class="criteria-group">
-              <div class="criteria-title">退出条件</div>
+              <div class="criteria-title">
+                退出条件
+              </div>
               <div class="criteria-body">
                 <PhaseExitGateEditor
                   :model-value="phase.exitCriteria"
@@ -1576,7 +1249,9 @@ onMounted(() => {
 
       <!-- 步骤导航 -->
       <div class="step-actions">
-        <el-button v-if="activeStep > 0" @click="handlePrev">上一步</el-button>
+        <el-button v-if="activeStep > 0" @click="handlePrev">
+          上一步
+        </el-button>
         <el-button v-if="activeStep < steps.length - 1" type="primary" @click="handleNext">
           下一步
         </el-button>
@@ -1597,8 +1272,12 @@ onMounted(() => {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="publishDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="publishing" @click="handlePublish">发布</el-button>
+        <el-button @click="publishDialogVisible = false">
+          取消
+        </el-button>
+        <el-button type="primary" :loading="publishing" @click="handlePublish">
+          发布
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -1718,43 +1397,16 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-/* 任务树形表格：整行拖拽 + 层级展示（原生 HTML5 Drag&Drop） */
-.task-tree-table .el-table__row.task-drag-row {
+/* 任务树形表格（vxe-grid）：拖拽把手 + 层级展示 */
+.task-tree-grid .vxe-body--row {
   cursor: grab;
 }
-.task-tree-table .el-table__row.task-drag-row:active {
+.task-tree-grid .vxe-body--row:active {
   cursor: grabbing;
 }
-/* 拖拽放置指示器：参照 el-tree 的 drop-indicator 样式 */
-.task-drag-row.drop-indicator-before > td {
-  border-top: 2px solid var(--el-color-primary) !important;
-}
-.task-drag-row.drop-indicator-after > td {
-  border-bottom: 2px solid var(--el-color-primary) !important;
-}
-.task-drag-row.drop-indicator-inner > td {
-  background-color: var(--el-color-primary-light-9) !important;
-  outline: 1px solid var(--el-color-primary);
-  outline-offset: -1px;
-}
-/* 拖拽中（被拖行）半透明 */
-.task-drag-row[style*='opacity'] {
-  opacity: 0.5;
-}
-/* 任务名称列：展开图标与输入框对齐 */
-.task-name-col .el-table__expand-icon {
-  margin-right: 6px;
-}
-.task-name-col .cell {
-  display: flex;
-  align-items: center;
-}
-/* 子行通过层级背景色增强视觉区分 */
-.el-table .el-table__row--level-1 .task-name-col {
-  background-color: var(--el-fill-color-light);
-}
-.el-table .el-table__row--level-2 .task-name-col {
-  background-color: var(--el-fill-color-lighter);
+/* 拖拽把手列（任务名称）样式增强 */
+.task-tree-grid .vxe-header--column .vxe-cell {
+  font-weight: 600;
 }
 .text-muted {
   color: var(--el-text-color-secondary);

@@ -35,6 +35,8 @@
     "tslib": "^2.8.1",
     "vue": "^3.5.39",
     "vue-router": "^4.6.4",
+    "vxe-pc-ui": "^4.16.20",
+    "vxe-table": "^4.20.6",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
