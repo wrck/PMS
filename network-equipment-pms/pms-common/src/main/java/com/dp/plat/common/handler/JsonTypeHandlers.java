@@ -9,6 +9,7 @@ import com.dp.plat.common.dto.TemplateSnapshot;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -25,6 +26,13 @@ import java.util.List;
  * </pre>
  *
  * <p>注意：autoResultMap = true 必须开启，否则字段级 typeHandler 在 BaseMapper 方法中不生效。
+ *
+ * <p>构造函数说明：
+ * <ul>
+ *   <li>{@code (Class<?> type)} — MP 3.5.10+ 走此构造函数（newJsonTypeHandler 反射查找）</li>
+ *   <li>{@code (Class<?> type, Field field)} — MP 3.5.10+ 优先走此构造函数（含字段元信息，泛型擦除场景下更优）</li>
+ *   <li>no-arg — MP 3.5.9 及更早版本走此构造函数（向后兼容）</li>
+ * </ul>
  */
 public final class JsonTypeHandlers {
 
@@ -38,6 +46,14 @@ public final class JsonTypeHandlers {
         public PhaseCriteriaHandler() {
             super(PhaseCriteria.class);
         }
+
+        public PhaseCriteriaHandler(Class<?> type) {
+            super(PhaseCriteria.class);
+        }
+
+        public PhaseCriteriaHandler(Class<?> type, Field field) {
+            super(PhaseCriteria.class, field);
+        }
     }
 
     /**
@@ -46,6 +62,14 @@ public final class JsonTypeHandlers {
     public static class PhaseExitGateHandler extends JacksonTypeHandler {
         public PhaseExitGateHandler() {
             super(PhaseExitGate.class);
+        }
+
+        public PhaseExitGateHandler(Class<?> type) {
+            super(PhaseExitGate.class);
+        }
+
+        public PhaseExitGateHandler(Class<?> type, Field field) {
+            super(PhaseExitGate.class, field);
         }
     }
 
@@ -66,6 +90,14 @@ public final class JsonTypeHandlers {
             super(List.class);
         }
 
+        public TaskPlanSnapshotListHandler(Class<?> type) {
+            super(List.class);
+        }
+
+        public TaskPlanSnapshotListHandler(Class<?> type, Field field) {
+            super(List.class, field);
+        }
+
         @Override
         public Object parse(String json) {
             try {
@@ -82,6 +114,14 @@ public final class JsonTypeHandlers {
     public static class TemplateSnapshotHandler extends JacksonTypeHandler {
         public TemplateSnapshotHandler() {
             super(TemplateSnapshot.class);
+        }
+
+        public TemplateSnapshotHandler(Class<?> type) {
+            super(TemplateSnapshot.class);
+        }
+
+        public TemplateSnapshotHandler(Class<?> type, Field field) {
+            super(TemplateSnapshot.class, field);
         }
     }
 
@@ -100,6 +140,14 @@ public final class JsonTypeHandlers {
 
         public DeliverableContentBlockListHandler() {
             super(List.class);
+        }
+
+        public DeliverableContentBlockListHandler(Class<?> type) {
+            super(List.class);
+        }
+
+        public DeliverableContentBlockListHandler(Class<?> type, Field field) {
+            super(List.class, field);
         }
 
         @Override
