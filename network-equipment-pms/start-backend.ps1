@@ -25,12 +25,12 @@ Write-Host "Starting pms-admin (spring-boot:run)..." -ForegroundColor Cyan
 Write-Host "NOTE: Skips 'mvn install'. If you changed yudao-framework / pms-common / pms-system etc.," -ForegroundColor Yellow
 Write-Host "      run '.\rebuild-common.ps1' first, then re-run this script." -ForegroundColor Yellow
 
-# 项目根目录存在 maven-settings.xml 时自动启用
+# Maven 选项：默认使用系统 Maven settings（~/.m2/settings.xml）。
+# 如需使用项目自带沙箱专用配置（仅 Linux 沙箱），可手动改为：
+#   $MvnArgs = @("-s", "maven-settings.sandbox.xml") + $MvnArgs
+# 注意：maven-settings.sandbox.xml 内含 127.0.0.1:18080 代理与 Linux 本地仓库路径，
+# 在 Windows 或其他无该代理的环境下会因 Connection refused 导致依赖无法下载。
 $MvnArgs = @("spring-boot:run", "-pl", "pms-admin", "-Dmaven.test.skip=true",
              "-Dspring-boot.run.jvmArguments=-Dotel.sdk.disabled=true -Dotel.traces.exporter=none -Dotel.metrics.exporter=none -Dotel.logs.exporter=none")
-if (Test-Path "$PSScriptRoot\maven-settings.xml") {
-    $MvnArgs = @("-s", "maven-settings.xml") + $MvnArgs
-    Write-Host "Using maven-settings.xml" -ForegroundColor DarkGray
-}
 
 & mvn @MvnArgs
