@@ -117,8 +117,11 @@ if (Test-PortListening -Port $BackendPort) {
     # Modules are already installed in local repo from previous builds; spring-boot:run compiles as needed.
     # 底层已迁移到 yudao framework：如修改 yudao-framework / pms-common / pms-system 等，
     # 请先在主窗口执行 .\rebuild-common.ps1，再运行 start-all.ps1。
-    $useSettings = Test-Path (Join-Path $ProjectRoot "maven-settings.xml")
-    $settingsArg = if ($useSettings) "-s maven-settings.xml" else ""
+    # Maven 选项：默认使用系统 Maven settings（~/.m2/settings.xml）。
+    # 如需使用项目自带沙箱专用配置（仅 Linux 沙箱），可手动改为 $settingsArg = '-s maven-settings.sandbox.xml'。
+    # 注意：maven-settings.sandbox.xml 内含 127.0.0.1:18080 代理与 Linux 本地仓库路径，
+    # 在 Windows 或其他无该代理的环境下会因 Connection refused 导致依赖无法下载。
+    $settingsArg = ""
     $backendCmd = @"
 `$env:JAVA_HOME = 'C:\Program Files\Java\jdk-17.0.9'
 `$env:Path = "`$env:JAVA_HOME\bin;`$env:Path"

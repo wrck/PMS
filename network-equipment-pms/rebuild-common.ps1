@@ -16,12 +16,13 @@
 $env:JAVA_HOME = "C:\Program Files\Java\jdk-17.0.9"
 $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 
-# 项目根目录存在 maven-settings.xml 时自动启用（本地仓库 + 镜像配置）
+# Maven 选项：
+#   - 默认使用系统 Maven settings（~/.m2/settings.xml），用户可在其中配置本地仓库 / 镜像 / 代理。
+#   - 如需使用项目自带沙箱专用配置（仅 Linux 沙箱环境），可手动改为：
+#       $MvnArgs = @("-s", "maven-settings.sandbox.xml") + $MvnArgs
+#     注意：maven-settings.sandbox.xml 内含 127.0.0.1:18080 代理与 Linux 本地仓库路径，
+#     在 Windows 或其他无该代理的环境下会因 Connection refused 导致依赖无法下载。
 $MvnArgs = @("-Dmaven.test.skip=true", "-q")
-if (Test-Path "$PSScriptRoot\maven-settings.xml") {
-    $MvnArgs = @("-s", "maven-settings.xml") + $MvnArgs
-    Write-Host "Using maven-settings.xml" -ForegroundColor DarkGray
-}
 
 # ---------- 1. yudao framework 底层模块 ----------
 Write-Host "Rebuilding yudao framework (yudao-dependencies + yudao-framework)..."
