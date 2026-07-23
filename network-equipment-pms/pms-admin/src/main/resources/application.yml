@@ -1,12 +1,34 @@
 server:
   port: 8080
   context-path: /
+  servlet:
+    encoding:
+      enabled: true
+      charset: UTF-8 # 必须设置 UTF-8，避免 WebFlux 流式返回（AI 场景）会乱码问题
+      force: true
 spring:
   application:
     name: network-equipment-pms
   # yudao 三层架构存在循环依赖（如 OAuth2TokenServiceImpl ↔ AdminUserService），必须允许
   main:
     allow-circular-references: true
+  # Servlet 文件上传
+  servlet:
+    multipart:
+      max-file-size: 16MB
+      max-request-size: 32MB
+  # Jackson 序列化
+  jackson:
+    serialization:
+      write-dates-as-timestamps: true
+      write-date-timestamps-as-nanoseconds: false
+      write-durations-as-timestamps: true
+      fail-on-empty-beans: false
+  # Spring Cache（使用 Redis）
+  cache:
+    type: REDIS
+    redis:
+      time-to-live: 1h
   # yudao 使用 dynamic-datasource-spring-boot3-starter（来自 yudao-spring-boot-starter-mybatis）
   # 必须用 spring.datasource.dynamic.datasource.master.* 配置，不能用 spring.datasource.*
   # 否则启动时报 "dynamic-datasource initial loaded [0] datasource"
@@ -36,6 +58,8 @@ spring:
       # 环境变量未设 → spring.data.redis.password 为 null → Redisson 跳过 AUTH
       # 环境变量已设 → Redisson 发 AUTH
       timeout: 3000
+      repositories:
+        enabled: false # 项目未使用到 Spring Data Redis 的 Repository，直接禁用，保证启动速度
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -54,7 +78,10 @@ spring:
       org.quartz.threadPool.threadCount: 5
 # Flowable 工作流引擎配置：启动时自动创建/更新 act_* 表结构
 flowable:
-  database-schema-update: true
+  database-schema-update: true # true: 启动时自动创建/更新表结构
+  db-history-used: true # 生成历史信息表
+  check-process-definitions: false # 禁用 /resources/processes 自动部署 BPMN XML
+  history-level: audit # 历史数据保存级别：audit 保存流程流转各节点参数
   async-executor-activate: false
   process-definition-cache-limit: 100
 # yudao framework 配置
@@ -70,8 +97,15 @@ yudao:
       controller: "**.controller.app.**"
     admin-ui:
       url: http://localhost:3000
+  # XSS 过滤
+  xss:
+    enable: false
+    exclude-urls:
+      - ${management.endpoints.web.base-path}/** # 不处理 Actuator 的请求
   security:
     mock-enable: true
+    permit-all-urls: # 免登录 URL 列表
+      - /admin-api/mp/open/** # 微信公众号回调
   swagger:
     title: 网络设备 PMS 管理后台
     description: 网络设备 PMS 管理后台接口文档
@@ -143,9 +177,33 @@ mybatis-plus:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+    banner: false # 关闭控制台 Banner
   # yudao MyBatis-Plus 字段加密插件密钥（生产环境必须覆盖）
   encryptor:
     password: XDV71a+xqStEA3WH
+# MyBatis-Plus Join 配置
+mybatis-plus-join:
+  banner: false
+  sub-table-logic: true # 全局启用副表逻辑删除
+  ms-cache: true # MappedStatement 缓存
+  table-alias: t # 表别名
+  logic-del-type: on # 副表逻辑删除条件位置：ON
+# VO 转换（数据翻译）
+easy-trans:
+  is-enable-global: false # 默认禁用全局翻译，对性能要求高可关闭
+# 滑动验证码配置（yudao 默认使用 aj-captcha）
+aj:
+  captcha:
+    cache-type: redis # 缓存类型 local/redis
+    type: blockPuzzle # 验证码类型：blockPuzzle 滑块拼图、clickWord 文字点选
+    water-mark: PMS # 右下角水印文字
+    interference-options: 0 # 滑动干扰项(0/1/2)
+    req-frequency-limit-enable: false # 接口请求次数一分钟限制
+    req-get-lock-limit: 5 # 验证失败 5 次锁定
+    req-get-lock-seconds: 10 # 锁定时间间隔
+    req-get-minute-limit: 30 # get 接口一分钟内请求数
+    req-check-minute-limit: 60 # check 接口一分钟内请求数
+    req-verify-minute-limit: 60 # verify 接口一分钟内请求数
 jwt:
   # Base64 编码的开发默认密钥；生产环境必须通过 JWT_SECRET 覆盖。
   secret: ${JWT_SECRET:ZGV2ZWxvcG1lbnQtand0LXNlY3JldC1rZXktY2hhbmdlLW1lLTMydC1ieXRlcw==}
@@ -215,6 +273,11 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+  default-flat-param-object: true # 参见 knife4j 文档，参数对象扁平化
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
 d365:
   base-url: https://d365.example.com/api
   token-url: https://d365.example.com/oauth2/token
