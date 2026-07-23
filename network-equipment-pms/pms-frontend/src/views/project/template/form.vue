@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import Sortable from 'sortablejs'
 import {
   ArrowDown,
   ArrowUp,
@@ -97,6 +96,19 @@ const tasks = ref<TaskNode[]>([])
 
 /** el-table 渲染用的树形数据：由扁平 tasks 按 parentId 实时计算 */
 const taskTree = computed(() => buildTaskTree(tasks.value))
+
+/** 扁平可见行顺序（el-table 展开后的渲染顺序），用于拖拽时 DOM 行 ↔ TaskNode 映射 */
+const visibleRows = computed(() => {
+  const rows: TaskNode[] = []
+  const walk = (nodes: TaskNode[]) => {
+    for (const n of nodes) {
+      rows.push(n)
+      if (n.children?.length) walk(n.children)
+    }
+  }
+  walk(taskTree.value)
+  return rows
+})
 
 /** el-table 树形配置：children 字段渲染子行（非懒加载，不需要 hasChildren） */
 const taskTableTreeProps = { children: 'children' }
@@ -313,7 +325,7 @@ function updateExitCriteria(phase: PhaseDef, value: PhaseExitGate) {
 
 // ============== 任务操作 ==============
 
-/** el-table 实例引用：用于初始化 sortablejs 拖拽 */
+/** el-table 实例引用：保留供 v-task-drag 指令挂载原生 HTML5 drag 事件 */
 const taskTableRef = ref()
 
 function newTask(parent?: TaskNode): TaskNode {
@@ -413,108 +425,270 @@ function canOutdent(row: TaskNode): boolean {
   return idx > 0
 }
 
-/** tasks 变化或切换到任务配置步骤后，重新初始化 sortablejs（el-table 行 DOM 会重建） */
+/** tasks 变化或切换到任务配置步骤后，重置拖拽状态 */
 watch(
   () => tasks.value.length,
   () => {
-    initTaskSortable()
+    dragState.dropIndicator = null
   }
 )
 watch(activeStep, (step) => {
-  if (step === 2) initTaskSortable()
+  if (step === 2) dragState.dropIndicator = null
 })
 
 /**
- * 初始化 sortablejs：在 el-table tbody 上启用整行拖拽，参照 el-tree 拖拽模型。
+ * 原生 HTML5 Drag & Drop 实现行拖拽，参照 el-tree 语义。
  *
- * el-tree 拖拽原理：内部维护 Node 树，拖拽时操作 Node 数据再渲染，
- * DOM 完全由数据驱动。el-table 无原生拖拽，这里用 sortablejs 捕获拖拽意图，
- * 在 onEnd 中先撤销 sortablejs 对 DOM 的移动，再更新 tasks 数据，
- * 由 Vue 响应式重渲染接管 DOM，避免 DOM 与数据错位导致内容重置/乱序。
+ * 相比第三方库优势：不操作 DOM，完全由 Vue 数据驱动重渲染，
+ * 不会出现 DOM 与数据错位导致的内容重置/乱序。
+ *
+ * 语义（对齐 el-tree 的 allow-drop）：
+ *  - 鼠标在目标行上 1/4 区域：插入为前一个兄弟（before）
+ *  - 鼠标在目标行下 1/4 区域：插入为后一个兄弟（after）
+ *  - 鼠标在目标行中部 1/2 区域：成为其子节点（inner）
  */
-let taskSortable: Sortable | null = null
-function initTaskSortable() {
-  if (taskSortable) {
-    taskSortable.destroy()
-    taskSortable = null
+const dragState = reactive({
+  draggingId: null as string | null,
+  /** 目标行 id */
+  targetId: null as string | null,
+  /** 放置位置：before/inner/after */
+  position: null as 'before' | 'inner' | 'after' | null,
+  /** 用于模板显示指示器的行 id */
+  dropIndicator: null as string | null
+})
+
+function onRowDragStart(e: DragEvent, row: TaskNode) {
+  dragState.draggingId = row.id
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+    // Firefox 需要 setData 才能触发 dragover
+    e.dataTransfer.setData('text/plain', row.id)
   }
-  nextTick(() => {
-    const tableEl = taskTableRef.value?.$el as HTMLElement | undefined
-    const tbody = tableEl?.querySelector('.el-table__body-wrapper tbody') as HTMLElement | undefined
-    if (!tbody) return
-    taskSortable = Sortable.create(tbody, {
-      animation: 150,
-      ghostClass: 'task-drag-ghost',
-      chosenClass: 'task-drag-chosen',
-      onEnd(evt) {
-        // sortablejs 已移动 DOM，但 el-table 行内容由 Vue 数据驱动。
-        // 这里先记录拖拽意图，再还原 DOM，最后更新数据让 Vue 重渲染。
-        const { oldIndex, newIndex, item } = evt
-        if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) {
-          restoreSortableDom(tbody, oldIndex, newIndex, item)
-          return
-        }
-        // 先还原 DOM：把被拖元素插回原位置，让 Vue 按原数据重新渲染
-        restoreSortableDom(tbody, oldIndex, newIndex, item)
-        // 再更新数据，Vue 重渲染会按新数据顺序重建 DOM
-        handleTaskRowDrop(oldIndex, newIndex)
-      }
-    })
-  })
 }
 
-/** 将 sortablejs 移动的 DOM 还原到拖拽前状态 */
-function restoreSortableDom(tbody: HTMLElement, oldIndex: number | undefined, newIndex: number | undefined, item: HTMLElement | undefined) {
-  if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return
-  const rows = Array.from(tbody.querySelectorAll('tr'))
-  // 当前 rows 顺序是 sortablejs 移动后的（item 在 newIndex 位置）
-  // 还原：把 item 从当前位置移回 oldIndex 位置
-  const refRow = rows[oldIndex > newIndex ? oldIndex + 1 : oldIndex]
-  if (refRow) {
-    tbody.insertBefore(item!, refRow)
+function onRowDragOver(e: DragEvent, row: TaskNode) {
+  if (!dragState.draggingId || dragState.draggingId === row.id) return
+  e.preventDefault()
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
+  // 根据鼠标 Y 坐标在行内的相对位置判断 before/inner/after
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+  const relY = e.clientY - rect.top
+  const h = rect.height
+  if (relY < h * 0.25) {
+    dragState.position = 'before'
+  } else if (relY > h * 0.75) {
+    dragState.position = 'after'
   } else {
-    tbody.appendChild(item!)
+    dragState.position = 'inner'
+  }
+  dragState.targetId = row.id
+  dragState.dropIndicator = row.id
+}
+
+function onRowDragLeave(_e: DragEvent, row: TaskNode) {
+  if (dragState.dropIndicator === row.id) {
+    dragState.dropIndicator = null
   }
 }
 
-/**
- * 根据 oldIndex/newIndex 计算新的 parentId 与顺序，更新 tasks 数据。
- * 参照 el-tree 的 allow-drop 语义：
- *  - 向下拖（newIndex > oldIndex）：成为目标行的子节点
- *  - 向上拖（newIndex < oldIndex）：成为目标行的前一个兄弟（同级）
- */
-function handleTaskRowDrop(oldIndex: number, newIndex: number) {
-  // 用浅拷贝快照操作，避免原对象引用在过程中被污染
-  const snapshot = tasks.value.map((t) => ({ ...t }))
-  const dragged = snapshot[oldIndex]
-  const target = snapshot[newIndex]
-  if (!dragged || !target || dragged.id === target.id) {
-    tasks.value = [...tasks.value]
+function onRowDrop(_e: DragEvent, row: TaskNode) {
+  if (!dragState.draggingId || !dragState.position) {
+    clearDragState()
     return
   }
+  applyTaskDrop(dragState.draggingId, row.id, dragState.position)
+  clearDragState()
+}
+
+function clearDragState() {
+  dragState.draggingId = null
+  dragState.targetId = null
+  dragState.position = null
+  dragState.dropIndicator = null
+}
+
+/** 应用拖拽结果：更新 dragged 节点的 parentId 和顺序，完全基于数据操作 */
+function applyTaskDrop(draggedId: string, targetId: string, position: 'before' | 'inner' | 'after') {
+  const snapshot = tasks.value.map((t) => ({ ...t }))
+  const dragged = snapshot.find((t) => t.id === draggedId)
+  const target = snapshot.find((t) => t.id === targetId)
+  if (!dragged || !target) return
 
   // 防止拖入自身或后代（会形成环）
-  const ancestorIds = new Set(getAncestors(snapshot, target.id).map((a) => a.id))
-  if (ancestorIds.has(dragged.id)) {
+  const ancestorIds = new Set(getAncestors(snapshot, targetId).map((a) => a.id))
+  if (ancestorIds.has(draggedId) || draggedId === targetId) {
     ElMessage.warning('不能拖入自身或后代任务')
     return
   }
 
-  // 移除被拖节点，重新插入到目标位置
-  const without = snapshot.filter((t) => t.id !== dragged.id)
-  const targetIdx = without.findIndex((t) => t.id === target.id)
+  // 移除被拖节点
+  const without = snapshot.filter((t) => t.id !== draggedId)
 
-  if (newIndex > oldIndex) {
-    // 向下拖：作为 target 的子节点（插到 target 之后、其现有子树之前）
-    dragged.parentId = target.id
-    without.splice(targetIdx + 1, 0, dragged)
+  // 根据放置位置计算新 parentId 和插入位置
+  let newParentId: string | null
+  let insertBeforeId: string | null
+
+  if (position === 'inner') {
+    // 成为 target 的子节点：插到 target 之后、其现有子树之前
+    newParentId = target.id
+    insertBeforeId = firstChildId(without, target.id)
   } else {
-    // 向上拖：作为 target 的前一个兄弟（同级）
-    dragged.parentId = target.parentId
-    without.splice(targetIdx, 0, dragged)
+    // before/after：成为 target 的同级兄弟
+    newParentId = target.parentId
+    if (position === 'before') {
+      insertBeforeId = target.id
+    } else {
+      // after：插到 target 之后、target 的下一个兄弟之前
+      insertBeforeId = nextSiblingId(without, target.id)
+    }
   }
 
+  dragged.parentId = newParentId
+  if (insertBeforeId) {
+    const idx = without.findIndex((t) => t.id === insertBeforeId)
+    without.splice(idx, 0, dragged)
+  } else {
+    without.push(dragged)
+  }
   tasks.value = without
+}
+
+/** 获取节点在扁平列表中第一个直接子节点的 id */
+function firstChildId(flat: TaskNode[], parentId: string): string | null {
+  const idx = flat.findIndex((t) => t.id === parentId)
+  if (idx < 0) return null
+  for (let i = idx + 1; i < flat.length; i++) {
+    if (flat[i].parentId === parentId) return flat[i].id
+    // 遇到同级或更高级节点，说明无子节点
+    if (flat[i].parentId === flat[idx].parentId) break
+  }
+  return null
+}
+
+/** 获取节点的下一个兄弟节点 id（在扁平列表中跳过其子树） */
+function nextSiblingId(flat: TaskNode[], id: string): string | null {
+  const idx = flat.findIndex((t) => t.id === id)
+  if (idx < 0) return null
+  const parentId = flat[idx].parentId
+  // 跳过子树
+  let i = idx + 1
+  const childIds = new Set<string>([id])
+  while (i < flat.length && childIds.has(flat[i].parentId ?? '')) {
+    childIds.add(flat[i].id)
+    i++
+  }
+  // i 现在指向子树之后的第一个节点
+  if (i < flat.length && flat[i].parentId === parentId) {
+    return flat[i].id
+  }
+  return null
+}
+
+/** 行的拖拽指示器 class */
+function dropIndicatorClass(row: TaskNode): string {
+  if (dragState.dropIndicator !== row.id || !dragState.position) return ''
+  return `drop-indicator-${dragState.position}`
+}
+
+/** el-table row-class-name：为每行标记可拖拽 + 拖拽指示器 class */
+function taskRowClassName({ row }: { row: TaskNode }): string {
+  const indicator = dropIndicatorClass(row)
+  return indicator ? `task-drag-row ${indicator}` : 'task-drag-row'
+}
+
+/** el-table 展开变化时的事件（占位，保持展开状态由 default-expand-all 管理） */
+function onTaskExpandChange() {
+  // default-expand-all 已处理展开，无需额外逻辑
+}
+
+/**
+ * 自定义指令 v-task-drag：在 el-table 行 DOM 上绑定原生 HTML5 drag 事件。
+ * el-table 不提供原生 drag 事件，需通过指令操作行 DOM。
+ *
+ * 通过事件委托在 tbody 上监听，el-table 行 DOM 重建时无需重新绑定。
+ * 使用 el.__taskDragBound 标记确保监听只挂载一次，并在 unmounted 时清理。
+ */
+const vTaskDrag = {
+  mounted(el: HTMLElement & { __taskDragCleanup?: () => void }) {
+    bindDragEvents(el)
+  },
+  updated(el: HTMLElement & { __taskDragCleanup?: () => void }) {
+    // 行 DOM 重建后重新设置 draggable，并补绑事件（防止 mounted 时 tbody 未就绪）
+    bindDragEvents(el)
+    el.querySelectorAll('tr').forEach((tr) => {
+      tr.setAttribute('draggable', 'true')
+    })
+  },
+  unmounted(el: HTMLElement & { __taskDragCleanup?: () => void }) {
+    el.__taskDragCleanup?.()
+    el.__taskDragCleanup = undefined
+  }
+}
+
+/** 在 el-table 的 tbody 上绑定原生 drag 事件（仅绑定一次，通过事件委托处理行级事件） */
+function bindDragEvents(el: HTMLElement & { __taskDragCleanup?: () => void }) {
+  if (el.__taskDragCleanup) return // 已绑定
+  const tbody = el.querySelector('.el-table__body-wrapper tbody')
+  if (!tbody) return // tbody 未就绪，等 updated 再试
+
+  const findRow = (target: EventTarget | null): HTMLElement | null => {
+    let node = target as HTMLElement | null
+    while (node && node !== tbody) {
+      if (node.tagName === 'TR') return node
+      node = node.parentElement
+    }
+    return null
+  }
+  // 建立 row DOM → TaskNode 的映射：DOM 行顺序与 visibleRows 一致（default-expand-all）
+  const getRowId = (tr: HTMLElement | null): string | null => {
+    if (!tr) return null
+    const rows = Array.from(tbody.querySelectorAll('tr'))
+    const idx = rows.indexOf(tr)
+    if (idx < 0) return null
+    return visibleRows.value[idx]?.id ?? null
+  }
+
+  const onDragStart = (e: DragEvent) => {
+    const tr = findRow(e.target)
+    const rowId = getRowId(tr)
+    if (!rowId) return
+    const row = tasks.value.find((t) => t.id === rowId)
+    if (row) onRowDragStart(e, row)
+  }
+  const onDragOver = (e: DragEvent) => {
+    const tr = findRow(e.target)
+    const rowId = getRowId(tr)
+    if (!rowId) return
+    const row = tasks.value.find((t) => t.id === rowId)
+    if (row) onRowDragOver(e, row)
+  }
+  const onDragLeave = (e: DragEvent) => {
+    const tr = findRow(e.target)
+    const rowId = getRowId(tr)
+    if (!rowId) return
+    const row = tasks.value.find((t) => t.id === rowId)
+    if (row) onRowDragLeave(e, row)
+  }
+  const onDrop = (e: DragEvent) => {
+    e.preventDefault()
+    const tr = findRow(e.target)
+    const rowId = getRowId(tr)
+    if (!rowId) return
+    const row = tasks.value.find((t) => t.id === rowId)
+    if (row) onRowDrop(e, row)
+  }
+
+  tbody.addEventListener('dragstart', onDragStart)
+  tbody.addEventListener('dragover', onDragOver)
+  tbody.addEventListener('dragleave', onDragLeave)
+  tbody.addEventListener('drop', onDrop)
+
+  el.__taskDragCleanup = () => {
+    tbody.removeEventListener('dragstart', onDragStart)
+    tbody.removeEventListener('dragover', onDragOver)
+    tbody.removeEventListener('dragleave', onDragLeave)
+    tbody.removeEventListener('drop', onDrop)
+  }
 }
 
 // ============== 交付件操作 ==============
@@ -1076,15 +1250,16 @@ onMounted(() => {
         <el-empty v-if="tasks.length === 0" description="暂无任务，点击「添加任务」开始配置" />
         <el-table
           v-else
+          v-task-drag
           ref="taskTableRef"
-          v-show="tasks.length > 0"
           :data="taskTree"
           row-key="id"
           border
           default-expand-all
           :tree-props="taskTableTreeProps"
           class="task-tree-table"
-          @expand-change="initTaskSortable"
+          :row-class-name="taskRowClassName"
+          @expand-change="onTaskExpandChange"
         >
           <el-table-column label="任务名称" prop="taskName" min-width="220" class-name="task-name-col">
             <template #default="{ row }">
@@ -1543,20 +1718,28 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-/* 任务树形表格：整行拖拽 + 层级展示 */
-.task-tree-table .el-table__row {
+/* 任务树形表格：整行拖拽 + 层级展示（原生 HTML5 Drag&Drop） */
+.task-tree-table .el-table__row.task-drag-row {
   cursor: grab;
 }
-.task-tree-table .el-table__row:active {
+.task-tree-table .el-table__row.task-drag-row:active {
   cursor: grabbing;
 }
-/* 拖拽占位与选中样式 */
-.task-drag-ghost {
-  opacity: 0.5;
-  background: var(--el-color-primary-light-9) !important;
+/* 拖拽放置指示器：参照 el-tree 的 drop-indicator 样式 */
+.task-drag-row.drop-indicator-before > td {
+  border-top: 2px solid var(--el-color-primary) !important;
 }
-.task-drag-chosen {
-  background: var(--el-color-primary-light-9) !important;
+.task-drag-row.drop-indicator-after > td {
+  border-bottom: 2px solid var(--el-color-primary) !important;
+}
+.task-drag-row.drop-indicator-inner > td {
+  background-color: var(--el-color-primary-light-9) !important;
+  outline: 1px solid var(--el-color-primary);
+  outline-offset: -1px;
+}
+/* 拖拽中（被拖行）半透明 */
+.task-drag-row[style*='opacity'] {
+  opacity: 0.5;
 }
 /* 任务名称列：展开图标与输入框对齐 */
 .task-name-col .el-table__expand-icon {
