@@ -99,7 +99,14 @@ function Set-PmsEnvironment {
     $env:SPRING_DATASOURCE_URL = "jdbc:mysql://localhost:$MysqlPort/${MysqlDatabase}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true"
     $env:MYSQL_USER      = $MysqlUser
     $env:MYSQL_PASSWORD  = $MysqlPassword
-    $env:REDIS_PASSWORD  = $RedisPassword
+    # Redis: 仅当密码非空时设置 REDIS_PASSWORD，否则清除（空字符串会让 Redisson 误发 AUTH）
+    $env:REDIS_HOST      = "localhost"
+    $env:REDIS_PORT      = "$RedisPort"
+    if ($RedisPassword) {
+        $env:REDIS_PASSWORD = $RedisPassword
+    } else {
+        Remove-Item Env:\REDIS_PASSWORD -ErrorAction SilentlyContinue
+    }
     $env:JWT_SECRET      = $JwtSecret
     $env:APP_ENCRYPT_KEY = $AppEncryptKey
     # Spring Boot relaxed binding: SERVER_PORT 覆盖 application.yml 中的 server.port
