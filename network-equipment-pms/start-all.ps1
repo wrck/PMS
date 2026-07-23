@@ -128,6 +128,7 @@ if (Test-PortListening -Port $BackendPort) {
 `$env:REDIS_PASSWORD  = '$RedisPassword'
 `$env:JWT_SECRET      = '$JwtSecret'
 `$env:APP_ENCRYPT_KEY = '$AppEncryptKey'
+`$env:SERVER_PORT     = '$BackendPort'
 Set-Location '$ProjectRoot'
 Write-Host 'Starting pms-admin (spring-boot:run) on port $BackendPort...'
 Write-Host 'NOTE: If you changed yudao-framework / pms-common / pms-system, run .\rebuild-common.ps1 first.'

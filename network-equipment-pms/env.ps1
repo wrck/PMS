@@ -102,6 +102,8 @@ function Set-PmsEnvironment {
     $env:REDIS_PASSWORD  = $RedisPassword
     $env:JWT_SECRET      = $JwtSecret
     $env:APP_ENCRYPT_KEY = $AppEncryptKey
+    # Spring Boot relaxed binding: SERVER_PORT 覆盖 application.yml 中的 server.port
+    $env:SERVER_PORT     = "$BackendPort"
 }
 
 # ============================================================================
