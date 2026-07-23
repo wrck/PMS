@@ -127,7 +127,7 @@ if (Test-PortListening -Port $BackendPort) {
 `$env:MYSQL_PASSWORD  = '$MysqlPassword'
 `$env:REDIS_HOST      = 'localhost'
 `$env:REDIS_PORT      = '$RedisPort'
-if ('$RedisPassword') { `$env:REDIS_PASSWORD = '$RedisPassword' } else { Remove-Item Env:\REDIS_PASSWORD -ErrorAction SilentlyContinue }
+if ('$RedisPassword') { `$env:SPRING_DATA_REDIS_PASSWORD = '$RedisPassword' } else { Remove-Item Env:\SPRING_DATA_REDIS_PASSWORD -ErrorAction SilentlyContinue }
 `$env:JWT_SECRET      = '$JwtSecret'
 `$env:APP_ENCRYPT_KEY = '$AppEncryptKey'
 `$env:SERVER_PORT     = '$BackendPort'

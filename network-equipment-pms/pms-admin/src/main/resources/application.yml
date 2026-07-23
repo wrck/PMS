@@ -31,7 +31,10 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       database: 0
-      password: ${REDIS_PASSWORD:#{null}}
+      # password 不在此设置：留空会让 Redisson 误发 AUTH 命令到无密码 Redis
+      # 改用 SPRING_DATA_REDIS_PASSWORD 环境变量（Spring Boot relaxed binding 自动绑定）
+      # 环境变量未设 → spring.data.redis.password 为 null → Redisson 跳过 AUTH
+      # 环境变量已设 → Redisson 发 AUTH
       timeout: 3000
   flyway:
     enabled: true
