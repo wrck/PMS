@@ -1,9 +1,6 @@
 package com.dp.plat.system.controller;
 
 import com.dp.plat.common.annotation.OperLog;
-import com.dp.plat.common.exception.GlobalExceptionHandler;
-import com.dp.plat.common.result.Result;
-import com.dp.plat.common.result.ResultCode;
 import com.dp.plat.system.aop.OperLogAspect;
 import com.dp.plat.system.entity.SysOperLog;
 import com.dp.plat.system.service.ISysOperLogService;
@@ -30,15 +27,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Controller 权限/审计单元测试。
+ * Controller 审计单元测试。
  *
- * <p>验证两个核心安全行为：</p>
- * <ol>
- *   <li>{@code @PreAuthorize} 拒绝访问时抛出 {@link AccessDeniedException}，
- *       由 {@link GlobalExceptionHandler} 统一转换为 HTTP 403。</li>
- *   <li>{@link OperLogAspect} 在方法成功/失败时均记录审计日志，
- *       失败时（如权限拒绝）记录 status=1 + errorMsg。</li>
- * </ol>
+ * <p>验证 {@link OperLogAspect} 在方法成功/失败时均记录审计日志，
+ * 失败时（如权限拒绝）记录 status=1 + errorMsg。</p>
+ *
+ * <p>注意：原 GlobalExceptionHandler 已随 PMS 自建安全体系一并移除，
+ * 异常 → HTTP 状态码的统一转换现由 yudao-spring-boot-starter-web 的
+ * GlobalExceptionHandler 全局组件接管，不再在业务模块单独测试。</p>
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -57,23 +53,10 @@ class ControllerPermissionTest {
     private MethodSignature methodSignature;
 
     private OperLogAspect operLogAspect;
-    private GlobalExceptionHandler globalExceptionHandler;
 
     @BeforeEach
     void setUp() {
         operLogAspect = new OperLogAspect(sysOperLogService, objectMapper);
-        globalExceptionHandler = new GlobalExceptionHandler();
-    }
-
-    @Test
-    @DisplayName("AccessDeniedException 应被 GlobalExceptionHandler 转换为 403")
-    void shouldReturn403WhenAccessDenied() {
-        AccessDeniedException ex = new AccessDeniedException("无权限访问");
-
-        Result<Void> result = globalExceptionHandler.handleAccessDeniedException(ex);
-
-        assertEquals(ResultCode.FORBIDDEN.getCode(), result.getCode());
-        assertEquals(ResultCode.FORBIDDEN.getMessage(), result.getMessage());
     }
 
     @Test

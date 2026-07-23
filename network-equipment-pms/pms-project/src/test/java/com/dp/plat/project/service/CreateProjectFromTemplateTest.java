@@ -62,7 +62,7 @@ class CreateProjectFromTemplateTest {
 
         when(versionMapper.selectById(10L)).thenReturn(version);
         when(templateMapper.selectById(1L)).thenReturn(template);
-        when(projectMapper.insert(any())).thenAnswer(invocation -> {
+        when(projectMapper.insert(any(Project.class))).thenAnswer(invocation -> {
             Project p = invocation.getArgument(0);
             p.setId(1001L);
             return 1;
@@ -104,7 +104,7 @@ class CreateProjectFromTemplateTest {
 
         when(versionMapper.selectById(10L)).thenReturn(version);
         when(templateMapper.selectById(1L)).thenReturn(template());
-        when(projectMapper.insert(any())).thenAnswer(invocation -> {
+        when(projectMapper.insert(any(Project.class))).thenAnswer(invocation -> {
             Project p = invocation.getArgument(0);
             p.setId(1001L);
             return 1;
@@ -143,7 +143,7 @@ class CreateProjectFromTemplateTest {
 
         when(versionMapper.selectById(10L)).thenReturn(version);
         when(templateMapper.selectById(1L)).thenReturn(template());
-        when(projectMapper.insert(any())).thenAnswer(invocation -> {
+        when(projectMapper.insert(any(Project.class))).thenAnswer(invocation -> {
             Project p = invocation.getArgument(0);
             p.setId(1001L);
             return 1;

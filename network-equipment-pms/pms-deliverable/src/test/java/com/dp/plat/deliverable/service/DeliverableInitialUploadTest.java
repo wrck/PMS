@@ -8,6 +8,7 @@ import com.dp.plat.deliverable.entity.DeliverableVersion;
 import com.dp.plat.deliverable.mapper.DeliverableMapper;
 import com.dp.plat.deliverable.mapper.DeliverableReferenceMapper;
 import com.dp.plat.deliverable.mapper.DeliverableSignatureMapper;
+import com.dp.plat.deliverable.mapper.DeliverableTypeTemplateMapper;
 import com.dp.plat.deliverable.mapper.DeliverableVersionMapper;
 import com.dp.plat.deliverable.service.impl.DeliverableServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +35,7 @@ class DeliverableInitialUploadTest {
                 versionMapper,
                 mock(DeliverableSignatureMapper.class),
                 mock(DeliverableReferenceMapper.class),
+                mock(DeliverableTypeTemplateMapper.class),
                 fileStorage,
                 mock(ProjectPhaseLookup.class));
         ReflectionTestUtils.setField(service, "baseMapper", deliverableMapper);

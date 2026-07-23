@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -205,18 +206,18 @@ class NotificationTemplateServiceImplTest {
     @Test
     @DisplayName("removeById: 删除成功返回 true")
     void removeById_success() {
-        when(templateMapper.deleteById(1L)).thenReturn(1);
+        when(templateMapper.deleteById(any(), anyBoolean())).thenReturn(1);
 
         boolean result = templateService.removeById(1L, false);
 
         assertTrue(result);
-        verify(templateMapper, times(1)).deleteById(1L);
+        verify(templateMapper, times(1)).deleteById(any(), anyBoolean());
     }
 
     @Test
     @DisplayName("removeById: deleteById 返回 0 时返回 false")
     void removeById_failure_returnsFalse() {
-        when(templateMapper.deleteById(99L)).thenReturn(0);
+        when(templateMapper.deleteById(any(), anyBoolean())).thenReturn(0);
 
         boolean result = templateService.removeById(99L, false);
 

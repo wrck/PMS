@@ -80,6 +80,19 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Mockito 5 inline mock maker（Spring Boot 3.2+ 默认）：
+             替换已被 yudao framework 接管的旧 PMS 安全/Filter 框架测试用例后，
+             剩余的 aspect/retry/saga/crypto 等业务单测仍需 Mockito 支持 -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

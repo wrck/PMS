@@ -43,6 +43,26 @@ flowable:
   database-schema-update: true
   async-executor-activate: false
   process-definition-cache-limit: 100
+# yudao framework 配置
+yudao:
+  info:
+    base-package: com.dp.plat
+  web:
+    admin-api:
+      prefix: /admin-api
+      controller: "**.controller.admin.**"
+    app-api:
+      prefix: /app-api
+      controller: "**.controller.app.**"
+    admin-ui:
+      url: http://localhost:3000
+  security:
+    mock-enable: true
+  swagger:
+    title: 网络设备 PMS 管理后台
+    description: 网络设备 PMS 管理后台接口文档
+    version: ${revision}
+    base-package: com.dp.plat
 mybatis-plus:
   mapper-locations: classpath*:com/dp/plat/**/mapper/**/*.xml
   configuration:

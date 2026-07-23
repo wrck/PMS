@@ -14,7 +14,7 @@ import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.mapper.ProjectMapper;
 import com.dp.plat.system.entity.LoginLog;
 import com.dp.plat.system.entity.SysOperLog;
-import com.dp.plat.system.mapper.LoginLogMapper;
+import com.dp.plat.system.mapper.PmsLoginLogMapper;
 import com.dp.plat.system.mapper.SysOperLogMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,7 +55,7 @@ class ReportServiceTest {
     @Mock
     private SysOperLogMapper sysOperLogMapper;
     @Mock
-    private LoginLogMapper loginLogMapper;
+    private PmsLoginLogMapper loginLogMapper;
 
     private ReportService reportService;
 

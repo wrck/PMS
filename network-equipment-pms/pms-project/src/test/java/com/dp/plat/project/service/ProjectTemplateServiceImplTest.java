@@ -33,12 +33,12 @@ class ProjectTemplateServiceImplTest {
         template.setTemplateCode("TPL-001");
         template.setTemplateName("测试模板");
 
-        when(templateMapper.insert(any())).thenReturn(1);
+        when(templateMapper.insert(any(ProjectTemplate.class))).thenReturn(1);
 
         ProjectTemplate result = templateService.create(template);
 
         assertEquals("DRAFT", result.getStatus(), "新模板默认状态应为 DRAFT");
-        verify(templateMapper).insert(any());
+        verify(templateMapper).insert(any(ProjectTemplate.class));
     }
 
     @Test
@@ -52,7 +52,7 @@ class ProjectTemplateServiceImplTest {
         template.setId(templateId);
         template.setStatus("DRAFT");
         when(templateMapper.selectById(templateId)).thenReturn(template);
-        when(versionMapper.insert(any())).thenAnswer(invocation -> {
+        when(versionMapper.insert(any(ProjectTemplateVersion.class))).thenAnswer(invocation -> {
             ProjectTemplateVersion v = invocation.getArgument(0);
             v.setId(100L);
             return 1;
