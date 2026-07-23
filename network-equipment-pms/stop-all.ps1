@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     network-equipment-pms one-click stop script
 .DESCRIPTION

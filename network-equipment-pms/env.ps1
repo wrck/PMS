@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     network-equipment-pms 统一环境配置文件
 .DESCRIPTION
