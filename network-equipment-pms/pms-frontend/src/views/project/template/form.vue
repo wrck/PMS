@@ -102,8 +102,8 @@ const taskTree = computed(() => buildTaskTree(tasks.value))
 /** 任务树最大深度：父任务 + 一级子任务（共 2 层），避免子任务内再嵌套子任务 */
 const MAX_TASK_DEPTH = 2
 
-/** el-table 树形配置：用 parentId 关联，children 字段渲染子行 */
-const taskTableTreeProps = { children: 'children', hasChildren: 'hasChildren' }
+/** el-table 树形配置：children 字段渲染子行（非懒加载，不需要 hasChildren） */
+const taskTableTreeProps = { children: 'children' }
 
 /** 按 parentId 将扁平列表重建为 el-table 树形数据 */
 function buildTaskTree(flat: TaskNode[]): TaskNode[] {
@@ -113,7 +113,7 @@ function buildTaskTree(flat: TaskNode[]): TaskNode[] {
   for (const t of flat) {
     map.set(t.id, { ...t, children: [] })
   }
-  // 第二遍：按 parentId 挂载
+  // 第二遍：按 parentId 挂载，保留 tasks 中的原始顺序
   for (const t of flat) {
     const node = map.get(t.id)!
     if (t.parentId && map.has(t.parentId)) {
@@ -1071,12 +1071,12 @@ onMounted(() => {
           :tree-props="taskTableTreeProps"
           @expand-change="initTaskSortable"
         >
-          <el-table-column :width="DRAG_HANDLE_WIDTH" align="center">
+          <el-table-column :width="DRAG_HANDLE_WIDTH" align="center" class-name="drag-col">
             <template #default>
               <el-icon class="task-drag-handle" title="拖拽变更排序与父子关系"><Rank /></el-icon>
             </template>
           </el-table-column>
-          <el-table-column label="任务名称" min-width="220">
+          <el-table-column label="任务名称" prop="taskName" min-width="220" class-name="task-name-col">
             <template #default="{ row }">
               <el-input v-model="row.taskName" size="small" placeholder="任务名称" />
             </template>
@@ -1545,6 +1545,18 @@ onMounted(() => {
 .task-drag-ghost {
   opacity: 0.5;
   background: var(--el-color-primary-light-9);
+}
+/* el-table 树形层级展示：展开图标与缩进 */
+.task-name-col .el-table__expand-icon {
+  margin-right: 6px;
+}
+.task-name-col .cell {
+  display: flex;
+  align-items: center;
+}
+/* 子行通过层级背景色增强视觉区分 */
+.el-table .el-table__row--level-1 .task-name-col {
+  background-color: var(--el-fill-color-light);
 }
 .text-muted {
   color: var(--el-text-color-secondary);
