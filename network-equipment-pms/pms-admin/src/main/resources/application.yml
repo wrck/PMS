@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: network-equipment-pms
+  # yudao 三层架构存在循环依赖（如 OAuth2TokenServiceImpl ↔ AdminUserService），必须允许
+  main:
+    allow-circular-references: true
   # yudao 使用 dynamic-datasource-spring-boot3-starter（来自 yudao-spring-boot-starter-mybatis）
   # 必须用 spring.datasource.dynamic.datasource.master.* 配置，不能用 spring.datasource.*
   # 否则启动时报 "dynamic-datasource initial loaded [0] datasource"
@@ -78,6 +81,12 @@ yudao:
     enable: false
 mybatis-plus:
   mapper-locations: classpath*:com/dp/plat/**/mapper/**/*.xml
+  # yudao Entity 类型别名扫描（用于 ResultMap 自动映射 yudao-module-system/infra 的 DO）
+  # 注意：只扫描 yudao DO 包，不扫描 PMS Entity 包。
+  # PMS 中 pms-project 和 pms-deliverable 都有同名 Deliverable 类，扫描 com.dp.plat.**.entity
+  # 会导致 MyBatis 类型别名冲突（The alias 'Deliverable' is already mapped）。
+  # PMS 业务 Mapper 通过 @Param 全限定类型传递，无需依赖 type-aliases。
+  type-aliases-package: cn.iocoder.yudao.module.**.dal.dataobject
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
@@ -87,6 +96,9 @@ mybatis-plus:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+  # yudao MyBatis-Plus 字段加密插件密钥（生产环境必须覆盖）
+  encryptor:
+    password: XDV71a+xqStEA3WH
 jwt:
   # Base64 编码的开发默认密钥；生产环境必须通过 JWT_SECRET 覆盖。
   secret: ${JWT_SECRET:ZGV2ZWxvcG1lbnQtand0LXNlY3JldC1rZXktY2hhbmdlLW1lLTMydC1ieXRlcw==}
