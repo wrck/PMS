@@ -27,7 +27,7 @@ public class ProjectConfigController {
     }
 
     @PutMapping("/{projectId}")
-    @PreAuthorize("hasAuthority('workflow:approval:config')")
+    @PreAuthorize("@ss.hasPermission('workflow:approval:config')")
     public Result<Void> update(@PathVariable Long projectId, @RequestBody Map<String, String> configs) {
         // 批量更新项目级配置
         // 实现略：删除旧项目级配置 + 插入新配置

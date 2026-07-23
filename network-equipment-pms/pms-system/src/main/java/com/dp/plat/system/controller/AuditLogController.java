@@ -32,7 +32,7 @@ public class AuditLogController {
 
     @Operation(summary = "分页查询登录日志")
     @GetMapping("/login/page")
-    @PreAuthorize("hasAuthority('system:audit:list')")
+    @PreAuthorize("@ss.hasPermission('system:audit:list')")
     public Result<IPage<LoginLog>> loginPage(@RequestParam(defaultValue = "1") int page,
                                              @RequestParam(defaultValue = "10") int size,
                                              @RequestParam(required = false) String username,
@@ -45,7 +45,7 @@ public class AuditLogController {
 
     @Operation(summary = "分页查询异常日志")
     @GetMapping("/exception/page")
-    @PreAuthorize("hasAuthority('system:audit:list')")
+    @PreAuthorize("@ss.hasPermission('system:audit:list')")
     public Result<IPage<ExceptionLog>> exceptionPage(@RequestParam(defaultValue = "1") int page,
                                                      @RequestParam(defaultValue = "10") int size,
                                                      @RequestParam(required = false) String username,
@@ -58,7 +58,7 @@ public class AuditLogController {
 
     @Operation(summary = "分页查询定时任务日志")
     @GetMapping("/schedule/page")
-    @PreAuthorize("hasAuthority('system:audit:list')")
+    @PreAuthorize("@ss.hasPermission('system:audit:list')")
     public Result<IPage<ScheduleLog>> schedulePage(@RequestParam(defaultValue = "1") int page,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(required = false) String taskName,
@@ -71,7 +71,7 @@ public class AuditLogController {
 
     @Operation(summary = "查询失败的定时任务列表")
     @GetMapping("/schedule/failed")
-    @PreAuthorize("hasAuthority('system:audit:list')")
+    @PreAuthorize("@ss.hasPermission('system:audit:list')")
     public Result<IPage<ScheduleLog>> scheduleFailed(@RequestParam(defaultValue = "1") int page,
                                                      @RequestParam(defaultValue = "10") int size) {
         return Result.ok(scheduleLogService.listFailed(page, size));

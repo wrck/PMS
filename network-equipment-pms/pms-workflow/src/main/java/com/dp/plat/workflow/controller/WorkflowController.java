@@ -39,7 +39,7 @@ public class WorkflowController {
 
     @Operation(summary = "部署流程定义")
     @PostMapping("/deploy")
-    @PreAuthorize("hasAuthority('workflow:definition:deploy')")
+    @PreAuthorize("@ss.hasPermission('workflow:definition:deploy')")
     @OperLog(title = "工作流管理", businessType = 1)
     public Result<Map<String, Object>> deploy(@RequestParam("file") MultipartFile file) {
         return workflowService.deployProcess(file);
@@ -54,7 +54,7 @@ public class WorkflowController {
 
     @Operation(summary = "删除部署")
     @DeleteMapping("/deployment/{deploymentId}")
-    @PreAuthorize("hasAuthority('workflow:definition:remove')")
+    @PreAuthorize("@ss.hasPermission('workflow:definition:remove')")
     @OperLog(title = "工作流管理", businessType = 3)
     public Result<Void> deleteDeployment(@PathVariable String deploymentId) {
         return workflowService.deleteDeployment(deploymentId);
@@ -62,7 +62,7 @@ public class WorkflowController {
 
     @Operation(summary = "启动流程实例")
     @PostMapping("/start")
-    @PreAuthorize("hasAuthority('workflow:instance:start')")
+    @PreAuthorize("@ss.hasPermission('workflow:instance:start')")
     @OperLog(title = "工作流管理", businessType = 1)
     public Result<ProcessInstanceDTO> start(@Valid @RequestBody StartProcessRequest request) {
         return workflowService.startProcess(request);
@@ -70,7 +70,7 @@ public class WorkflowController {
 
     @Operation(summary = "完成任务")
     @PostMapping("/task/complete")
-    @PreAuthorize("hasAuthority('workflow:task:complete')")
+    @PreAuthorize("@ss.hasPermission('workflow:task:complete')")
     @OperLog(title = "工作流管理", businessType = 2)
     public Result<Void> completeTask(@Valid @RequestBody CompleteTaskRequest request) {
         return workflowService.completeTask(request);
@@ -78,7 +78,7 @@ public class WorkflowController {
 
     @Operation(summary = "撤回任务")
     @PostMapping("/task/withdraw")
-    @PreAuthorize("hasAuthority('workflow:task:withdraw')")
+    @PreAuthorize("@ss.hasPermission('workflow:task:withdraw')")
     @OperLog(title = "工作流管理", businessType = 2)
     public Result<Void> withdrawTask(@RequestParam String processInstanceId,
                                      @RequestParam String currentTaskId) {
@@ -87,7 +87,7 @@ public class WorkflowController {
 
     @Operation(summary = "转办任务")
     @PostMapping("/task/transfer")
-    @PreAuthorize("hasAuthority('workflow:task:transfer')")
+    @PreAuthorize("@ss.hasPermission('workflow:task:transfer')")
     @OperLog(title = "工作流管理", businessType = 2)
     public Result<Void> transferTask(@RequestParam String taskId,
                                      @RequestParam String targetUserId) {

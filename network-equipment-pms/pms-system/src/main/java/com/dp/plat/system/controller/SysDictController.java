@@ -37,7 +37,7 @@ public class SysDictController {
 
     @Operation(summary = "Paginated dict query")
     @GetMapping("/page")
-    @PreAuthorize("hasAuthority('system:dict:list')")
+    @PreAuthorize("@ss.hasPermission('system:dict:list')")
     public Result<Page<SysDict>> page(@RequestParam(defaultValue = "1") Integer pageNum,
                                       @RequestParam(defaultValue = "10") Integer pageSize,
                                       @RequestParam(required = false) String dictName) {
@@ -49,14 +49,14 @@ public class SysDictController {
 
     @Operation(summary = "Get dict by id")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:dict:list')")
+    @PreAuthorize("@ss.hasPermission('system:dict:list')")
     public Result<SysDict> get(@PathVariable Long id) {
         return Result.ok(sysDictService.getById(id));
     }
 
     @Operation(summary = "Create dict")
     @PostMapping
-    @PreAuthorize("hasAuthority('system:dict:add')")
+    @PreAuthorize("@ss.hasPermission('system:dict:add')")
     @OperLog(title = "字典管理", businessType = 1)
     public Result<Boolean> add(@Valid @RequestBody SysDict dict) {
         return Result.ok(sysDictService.save(dict));
@@ -64,7 +64,7 @@ public class SysDictController {
 
     @Operation(summary = "Update dict")
     @PutMapping
-    @PreAuthorize("hasAuthority('system:dict:edit')")
+    @PreAuthorize("@ss.hasPermission('system:dict:edit')")
     @OperLog(title = "字典管理", businessType = 2)
     public Result<Boolean> update(@Valid @RequestBody SysDict dict) {
         return Result.ok(sysDictService.updateById(dict));
@@ -72,7 +72,7 @@ public class SysDictController {
 
     @Operation(summary = "Delete dict")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:dict:remove')")
+    @PreAuthorize("@ss.hasPermission('system:dict:remove')")
     @OperLog(title = "字典管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(sysDictService.removeById(id));

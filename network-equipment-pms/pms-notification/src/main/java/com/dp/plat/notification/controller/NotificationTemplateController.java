@@ -52,7 +52,7 @@ public class NotificationTemplateController {
 
     @Operation(summary = "新增通知模板")
     @PostMapping
-    @PreAuthorize("hasAuthority('notification:template:add')")
+    @PreAuthorize("@ss.hasPermission('notification:template:add')")
     @OperLog(title = "通知模板", businessType = 1)
     public Result<NotificationTemplate> create(@Valid @RequestBody NotificationTemplate template) {
         templateService.save(template);
@@ -61,7 +61,7 @@ public class NotificationTemplateController {
 
     @Operation(summary = "修改通知模板")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('notification:template:edit')")
+    @PreAuthorize("@ss.hasPermission('notification:template:edit')")
     @OperLog(title = "通知模板", businessType = 2)
     public Result<NotificationTemplate> update(@PathVariable Long id, @Valid @RequestBody NotificationTemplate template) {
         template.setId(id);
@@ -71,7 +71,7 @@ public class NotificationTemplateController {
 
     @Operation(summary = "删除通知模板")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('notification:template:remove')")
+    @PreAuthorize("@ss.hasPermission('notification:template:remove')")
     @OperLog(title = "通知模板", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(templateService.removeById(id));

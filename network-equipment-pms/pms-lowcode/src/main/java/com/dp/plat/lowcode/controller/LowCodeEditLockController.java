@@ -23,7 +23,7 @@ public class LowCodeEditLockController {
 
     @Operation(summary = "获取编辑锁")
     @PostMapping("/acquire")
-    @PreAuthorize("hasAuthority('lowcode:editlock:acquire')")
+    @PreAuthorize("@ss.hasPermission('lowcode:editlock:acquire')")
     public Result<EditLockInfo> acquire(@RequestParam String configType,
                                         @RequestParam Long configId,
                                         @RequestParam Long userId,
@@ -41,7 +41,7 @@ public class LowCodeEditLockController {
 
     @Operation(summary = "释放编辑锁")
     @PostMapping("/release")
-    @PreAuthorize("hasAuthority('lowcode:editlock:release')")
+    @PreAuthorize("@ss.hasPermission('lowcode:editlock:release')")
     public Result<Void> release(@RequestParam String configType,
                                 @RequestParam Long configId,
                                 @RequestParam Long userId) {

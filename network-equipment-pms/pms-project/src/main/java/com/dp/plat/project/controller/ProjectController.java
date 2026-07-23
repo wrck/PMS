@@ -39,7 +39,7 @@ public class ProjectController {
 
     @Operation(summary = "创建项目")
     @PostMapping
-    @PreAuthorize("hasAuthority('project:project:add')")
+    @PreAuthorize("@ss.hasPermission('project:project:add')")
     @OperLog(title = "项目管理", businessType = 1)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     @Idempotent
@@ -49,14 +49,14 @@ public class ProjectController {
 
     @Operation(summary = "根据ID查询项目")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:project:list')")
+    @PreAuthorize("@ss.hasPermission('project:project:list')")
     public Result<Project> get(@PathVariable Long id) {
         return projectService.getProjectById(id);
     }
 
     @Operation(summary = "分页查询项目列表")
     @GetMapping("/list")
-    @PreAuthorize("hasAuthority('project:project:list')")
+    @PreAuthorize("@ss.hasPermission('project:project:list')")
     public Result<?> list(@RequestParam(defaultValue = "1") int page,
                           @RequestParam(defaultValue = "10") int size,
                           @RequestParam(required = false) String projectName,
@@ -66,7 +66,7 @@ public class ProjectController {
 
     @Operation(summary = "更新项目")
     @PutMapping
-    @PreAuthorize("hasAuthority('project:project:edit')")
+    @PreAuthorize("@ss.hasPermission('project:project:edit')")
     @OperLog(title = "项目管理", businessType = 2)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 30, refillTokens = 30, refillPeriodSeconds = 60)
     @Idempotent
@@ -76,7 +76,7 @@ public class ProjectController {
 
     @Operation(summary = "删除项目")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:project:remove')")
+    @PreAuthorize("@ss.hasPermission('project:project:remove')")
     @OperLog(title = "项目管理", businessType = 3)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<?> delete(@PathVariable Long id) {
@@ -85,7 +85,7 @@ public class ProjectController {
 
     @Operation(summary = "审批立项项目")
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAuthority('project:project:approve')")
+    @PreAuthorize("@ss.hasPermission('project:project:approve')")
     @OperLog(title = "项目管理", businessType = 2)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     public Result<Project> approve(@PathVariable Long id) {
@@ -94,7 +94,7 @@ public class ProjectController {
 
     @Operation(summary = "获取项目仪表盘数据")
     @GetMapping("/dashboard")
-    @PreAuthorize("hasAuthority('project:project:list')")
+    @PreAuthorize("@ss.hasPermission('project:project:list')")
     public Result<Map<String, List<Project>>> dashboard(@RequestParam(required = false) String status) {
         return projectService.dashboard(status);
     }
@@ -103,14 +103,14 @@ public class ProjectController {
 
     @Operation(summary = "主子项目树（递归）")
     @GetMapping("/{id}/tree")
-    @PreAuthorize("hasAuthority('project:project:list')")
+    @PreAuthorize("@ss.hasPermission('project:project:list')")
     public Result<ProjectTreeNode> tree(@PathVariable Long id) {
         return projectService.getProjectTree(id);
     }
 
     @Operation(summary = "创建子项目")
     @PostMapping("/{id}/subproject")
-    @PreAuthorize("hasAuthority('project:subproject:manage')")
+    @PreAuthorize("@ss.hasPermission('project:subproject:manage')")
     @OperLog(title = "项目管理-创建子项目", businessType = 1)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 10, refillTokens = 10, refillPeriodSeconds = 60)
     @Idempotent
@@ -121,7 +121,7 @@ public class ProjectController {
 
     @Operation(summary = "关闭主项目（含子项目校验）")
     @PostMapping("/{id}/close")
-    @PreAuthorize("hasAuthority('project:close')")
+    @PreAuthorize("@ss.hasPermission('project:close')")
     @OperLog(title = "项目管理-关闭项目", businessType = 2)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 5, refillTokens = 5, refillPeriodSeconds = 60)
     public Result<Project> close(@PathVariable Long id) {
@@ -130,7 +130,7 @@ public class ProjectController {
 
     @Operation(summary = "取消项目")
     @PostMapping("/{id}/cancel")
-    @PreAuthorize("hasAuthority('project:close')")
+    @PreAuthorize("@ss.hasPermission('project:close')")
     @OperLog(title = "项目管理-取消项目", businessType = 2)
     @RateLimit(key = "T(com.dp.plat.common.util.SecurityUtils).getCurrentUserId()", capacity = 5, refillTokens = 5, refillPeriodSeconds = 60)
     public Result<Project> cancel(@PathVariable Long id) {
@@ -139,7 +139,7 @@ public class ProjectController {
 
     @Operation(summary = "项目进度汇总（含子项目）")
     @GetMapping("/{id}/progress")
-    @PreAuthorize("hasAuthority('project:project:list')")
+    @PreAuthorize("@ss.hasPermission('project:project:list')")
     public Result<Map<String, Object>> progress(@PathVariable Long id) {
         return projectService.getProjectProgress(id);
     }

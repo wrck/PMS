@@ -36,7 +36,7 @@ public class DeliverableChecklistController {
 
     @Operation(summary = "创建交付物清单项")
     @PostMapping
-    @PreAuthorize("hasAuthority('project:deliverable:add')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:add')")
     @OperLog(title = "终验交付物清单", businessType = 1)
     public Result<DeliverableChecklist> create(@Valid @RequestBody DeliverableChecklist checklist) {
         return deliverableChecklistService.create(checklist);
@@ -44,7 +44,7 @@ public class DeliverableChecklistController {
 
     @Operation(summary = "更新交付物清单项")
     @PutMapping
-    @PreAuthorize("hasAuthority('project:deliverable:edit')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:edit')")
     @OperLog(title = "终验交付物清单", businessType = 2)
     public Result<?> update(@Valid @RequestBody DeliverableChecklist checklist) {
         return deliverableChecklistService.update(checklist);
@@ -52,7 +52,7 @@ public class DeliverableChecklistController {
 
     @Operation(summary = "删除交付物清单项")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:deliverable:remove')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:remove')")
     @OperLog(title = "终验交付物清单", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         return deliverableChecklistService.delete(id);
@@ -72,7 +72,7 @@ public class DeliverableChecklistController {
 
     @Operation(summary = "初始化项目标准交付物清单")
     @PostMapping("/project/{projectId}/init")
-    @PreAuthorize("hasAuthority('project:deliverable:add')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:add')")
     @OperLog(title = "终验交付物清单", businessType = 1)
     public Result<List<DeliverableChecklist>> initChecklist(@PathVariable Long projectId) {
         return deliverableChecklistService.initChecklist(projectId);
@@ -89,7 +89,7 @@ public class DeliverableChecklistController {
      */
     @Operation(summary = "标记交付物已上传附件")
     @PutMapping("/{id}/mark-uploaded")
-    @PreAuthorize("hasAuthority('project:deliverable:edit')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:edit')")
     @OperLog(title = "终验交付物清单", businessType = 2)
     public Result<?> markUploaded(@PathVariable Long id,
                                    @RequestBody MarkUploadedRequest body) {
@@ -101,7 +101,7 @@ public class DeliverableChecklistController {
      */
     @Operation(summary = "取消交付物上传标记")
     @PutMapping("/{id}/cancel-uploaded")
-    @PreAuthorize("hasAuthority('project:deliverable:edit')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:edit')")
     @OperLog(title = "终验交付物清单", businessType = 2)
     public Result<?> cancelUploaded(@PathVariable Long id) {
         return deliverableChecklistService.cancelUploaded(id);

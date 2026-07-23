@@ -34,7 +34,7 @@ public class IssueController {
 
     @Operation(summary = "创建问题")
     @PostMapping
-    @PreAuthorize("hasAuthority('governance:issue:add')")
+    @PreAuthorize("@ss.hasPermission('governance:issue:add')")
     @OperLog(title = "问题管理", businessType = 1)
     public Result<Issue> create(@Valid @RequestBody Issue issue) {
         return issueService.create(issue);
@@ -42,7 +42,7 @@ public class IssueController {
 
     @Operation(summary = "更新问题")
     @PutMapping
-    @PreAuthorize("hasAuthority('governance:issue:edit')")
+    @PreAuthorize("@ss.hasPermission('governance:issue:edit')")
     @OperLog(title = "问题管理", businessType = 2)
     public Result<?> update(@Valid @RequestBody Issue issue) {
         return issueService.update(issue);
@@ -50,7 +50,7 @@ public class IssueController {
 
     @Operation(summary = "删除问题")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('governance:issue:remove')")
+    @PreAuthorize("@ss.hasPermission('governance:issue:remove')")
     @OperLog(title = "问题管理", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         return issueService.delete(id);
@@ -76,7 +76,7 @@ public class IssueController {
 
     @Operation(summary = "分配问题处理人")
     @PostMapping("/{id}/assign")
-    @PreAuthorize("hasAuthority('governance:issue:process')")
+    @PreAuthorize("@ss.hasPermission('governance:issue:process')")
     @OperLog(title = "问题管理", businessType = 2)
     public Result<Issue> assign(@PathVariable Long id,
                                 @RequestParam Long assigneeId,
@@ -86,7 +86,7 @@ public class IssueController {
 
     @Operation(summary = "解决问题")
     @PostMapping("/{id}/resolve")
-    @PreAuthorize("hasAuthority('governance:issue:process')")
+    @PreAuthorize("@ss.hasPermission('governance:issue:process')")
     @OperLog(title = "问题管理", businessType = 2)
     public Result<Issue> resolve(@PathVariable Long id,
                                  @RequestParam(required = false) String resolution) {
@@ -95,7 +95,7 @@ public class IssueController {
 
     @Operation(summary = "关闭问题")
     @PostMapping("/{id}/close")
-    @PreAuthorize("hasAuthority('governance:issue:process')")
+    @PreAuthorize("@ss.hasPermission('governance:issue:process')")
     @OperLog(title = "问题管理", businessType = 2)
     public Result<Issue> close(@PathVariable Long id) {
         return issueService.close(id);
@@ -103,7 +103,7 @@ public class IssueController {
 
     @Operation(summary = "升级问题为变更请求")
     @PostMapping("/{id}/escalate")
-    @PreAuthorize("hasAuthority('governance:issue:process')")
+    @PreAuthorize("@ss.hasPermission('governance:issue:process')")
     @OperLog(title = "问题管理", businessType = 2)
     public Result<?> escalate(@PathVariable Long id) {
         return issueService.escalate(id);

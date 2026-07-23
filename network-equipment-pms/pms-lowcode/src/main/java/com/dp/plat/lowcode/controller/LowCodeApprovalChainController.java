@@ -35,28 +35,28 @@ public class LowCodeApprovalChainController {
 
     @Operation(summary = "按配置类型查询审批链列表")
     @GetMapping("/config-type/{configType}")
-    @PreAuthorize("hasAuthority('lowcode:approval-chain:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:approval-chain:list')")
     public Result<List<LowCodeApprovalChain>> listByConfigType(@PathVariable String configType) {
         return Result.ok(approvalChainService.listByConfigType(configType));
     }
 
     @Operation(summary = "审批链列表（全部）")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:approval-chain:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:approval-chain:list')")
     public Result<List<LowCodeApprovalChain>> list() {
         return Result.ok(approvalChainService.list());
     }
 
     @Operation(summary = "审批链详情")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:approval-chain:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:approval-chain:list')")
     public Result<LowCodeApprovalChain> get(@PathVariable Long id) {
         return Result.ok(approvalChainService.getById(id));
     }
 
     @Operation(summary = "新建审批链")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:approval-chain:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:approval-chain:edit')")
     @OperLog(title = "低代码审批链", businessType = 1)
     public Result<LowCodeApprovalChain> create(@RequestBody LowCodeApprovalChain chain) {
         if (chain.getEnabled() == null) {
@@ -68,7 +68,7 @@ public class LowCodeApprovalChainController {
 
     @Operation(summary = "更新审批链")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:approval-chain:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:approval-chain:edit')")
     @OperLog(title = "低代码审批链", businessType = 2)
     public Result<Void> update(@PathVariable Long id, @RequestBody LowCodeApprovalChain chain) {
         chain.setId(id);
@@ -78,7 +78,7 @@ public class LowCodeApprovalChainController {
 
     @Operation(summary = "删除审批链")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:approval-chain:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:approval-chain:edit')")
     @OperLog(title = "低代码审批链", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         approvalChainService.removeById(id);

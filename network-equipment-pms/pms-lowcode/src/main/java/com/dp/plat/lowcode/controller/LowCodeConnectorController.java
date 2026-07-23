@@ -38,21 +38,21 @@ public class LowCodeConnectorController {
 
     @Operation(summary = "连接器列表")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:connector:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:connector:list')")
     public Result<List<LowCodeConnector>> list() {
         return Result.ok(connectorService.list());
     }
 
     @Operation(summary = "连接器详情")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:connector:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:connector:list')")
     public Result<LowCodeConnector> get(@PathVariable Long id) {
         return Result.ok(connectorService.getById(id));
     }
 
     @Operation(summary = "保存连接器")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:connector:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:connector:edit')")
     @OperLog(title = "低代码连接器", businessType = 1)
     public Result<LowCodeConnector> save(@RequestBody LowCodeConnector connector) {
         connectorService.saveOrUpdate(connector);
@@ -61,7 +61,7 @@ public class LowCodeConnectorController {
 
     @Operation(summary = "删除连接器")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:connector:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:connector:edit')")
     @OperLog(title = "低代码连接器", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         connectorService.removeById(id);
@@ -70,7 +70,7 @@ public class LowCodeConnectorController {
 
     @Operation(summary = "测试连接器")
     @PostMapping("/{code}/test")
-    @PreAuthorize("hasAuthority('lowcode:connector:test')")
+    @PreAuthorize("@ss.hasPermission('lowcode:connector:test')")
     @OperLog(title = "低代码连接器-测试", businessType = 9)
     public Result<ConnectorResult> test(@PathVariable String code) {
         return Result.ok(connectorService.test(code));
@@ -78,7 +78,7 @@ public class LowCodeConnectorController {
 
     @Operation(summary = "执行连接器")
     @PostMapping("/{code}/execute")
-    @PreAuthorize("hasAuthority('lowcode:connector:test')")
+    @PreAuthorize("@ss.hasPermission('lowcode:connector:test')")
     public Result<ConnectorResult> execute(@PathVariable String code,
                                            @RequestBody(required = false) Map<String, Object> params) {
         return Result.ok(connectorService.execute(code, params == null ? Map.of() : params));
@@ -86,7 +86,7 @@ public class LowCodeConnectorController {
 
     @Operation(summary = "测试单个操作（设计器实时测试，按操作名执行已保存连接器的指定操作）")
     @PostMapping("/{code}/test-operation")
-    @PreAuthorize("hasAuthority('lowcode:connector:test')")
+    @PreAuthorize("@ss.hasPermission('lowcode:connector:test')")
     public Result<ConnectorResult> testOperation(@PathVariable String code,
                                                    @RequestBody TestOperationRequest request) {
         return Result.ok(connectorService.testOperation(
@@ -104,7 +104,7 @@ public class LowCodeConnectorController {
      */
     @Operation(summary = "解析 OpenAPI 文档提取操作清单")
     @PostMapping("/parse-openapi")
-    @PreAuthorize("hasAuthority('lowcode:connector:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:connector:edit')")
     public Result<List<OpenApiOperation>> parseOpenApi(@RequestBody ParseOpenApiRequest request) {
         return Result.ok(openApiImporter.parse(request.getContent()));
     }

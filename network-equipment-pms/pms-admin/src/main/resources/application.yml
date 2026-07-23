@@ -63,6 +63,11 @@ yudao:
     description: 网络设备 PMS 管理后台接口文档
     version: ${revision}
     base-package: com.dp.plat
+  # 多租户：PMS 业务表（pms_*）与自研 sys_* 表均无 tenant_id 列，
+  # yudao-spring-boot-starter-biz-tenant 默认启用会注入 tenant_id 条件导致查询失败。
+  # 这里显式禁用，未来如需 SaaS 化再开启并补齐 tenant_id 列。
+  tenant:
+    enable: false
 mybatis-plus:
   mapper-locations: classpath*:com/dp/plat/**/mapper/**/*.xml
   configuration:

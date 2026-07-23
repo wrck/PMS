@@ -63,7 +63,7 @@ public class LowCodeTabController {
 
     @Operation(summary = "创建标签页配置")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:tab:add')")
+    @PreAuthorize("@ss.hasPermission('lowcode:tab:add')")
     @OperLog(title = "低代码标签页配置", businessType = 1)
     public Result<LowCodeTab> create(@Valid @RequestBody LowCodeTab tab) {
         return Result.ok(lowCodeTabService.create(tab));
@@ -71,7 +71,7 @@ public class LowCodeTabController {
 
     @Operation(summary = "更新标签页配置")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:tab:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:tab:edit')")
     @OperLog(title = "低代码标签页配置", businessType = 2)
     public Result<LowCodeTab> update(@PathVariable Long id, @Valid @RequestBody LowCodeTab tab) {
         tab.setId(id);
@@ -80,7 +80,7 @@ public class LowCodeTabController {
 
     @Operation(summary = "删除标签页配置")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:tab:remove')")
+    @PreAuthorize("@ss.hasPermission('lowcode:tab:remove')")
     @OperLog(title = "低代码标签页配置", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         lowCodeTabService.delete(id);
@@ -89,7 +89,7 @@ public class LowCodeTabController {
 
     @Operation(summary = "发布标签页配置")
     @PostMapping("/{id}/publish")
-    @PreAuthorize("hasAuthority('lowcode:tab:publish')")
+    @PreAuthorize("@ss.hasPermission('lowcode:tab:publish')")
     @OperLog(title = "低代码标签页配置", businessType = 2)
     public Result<?> publish(@PathVariable Long id) {
         lowCodeTabService.publish(id);
@@ -98,7 +98,7 @@ public class LowCodeTabController {
 
     @Operation(summary = "归档标签页配置")
     @PostMapping("/{id}/archive")
-    @PreAuthorize("hasAuthority('lowcode:tab:archive')")
+    @PreAuthorize("@ss.hasPermission('lowcode:tab:archive')")
     @OperLog(title = "低代码标签页配置", businessType = 2)
     public Result<?> archive(@PathVariable Long id) {
         lowCodeTabService.archive(id);
@@ -107,7 +107,7 @@ public class LowCodeTabController {
 
     @Operation(summary = "导出标签页配置 JSON")
     @GetMapping("/{code}/export")
-    @PreAuthorize("hasAuthority('lowcode:tab:export')")
+    @PreAuthorize("@ss.hasPermission('lowcode:tab:export')")
     @OperLog(title = "低代码标签页配置", businessType = 4)
     public ResponseEntity<byte[]> exportConfig(@PathVariable String code) {
         byte[] data = lowCodeTabService.exportConfig(code);
@@ -119,7 +119,7 @@ public class LowCodeTabController {
 
     @Operation(summary = "导入标签页配置 JSON")
     @PostMapping("/import")
-    @PreAuthorize("hasAuthority('lowcode:tab:import')")
+    @PreAuthorize("@ss.hasPermission('lowcode:tab:import')")
     @OperLog(title = "低代码标签页配置", businessType = 5)
     public Result<LowCodeTab> importConfig(@RequestBody String json) {
         return Result.ok(lowCodeTabService.importConfig(json));

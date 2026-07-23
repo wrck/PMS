@@ -43,7 +43,7 @@ public class CacheManagementController {
 
     @Operation(summary = "清空全部缓存")
     @PostMapping("/clearAll")
-    @PreAuthorize("hasAuthority('system:cache:clear')")
+    @PreAuthorize("@ss.hasPermission('system:cache:clear')")
     @OperLog(title = "缓存管理", businessType = 2)
     public Result<Void> clearAll() {
         for (String name : cacheManager.getCacheNames()) {
@@ -58,7 +58,7 @@ public class CacheManagementController {
 
     @Operation(summary = "按名称清空指定缓存")
     @PostMapping("/clear/{cacheName}")
-    @PreAuthorize("hasAuthority('system:cache:clear')")
+    @PreAuthorize("@ss.hasPermission('system:cache:clear')")
     @OperLog(title = "缓存管理", businessType = 2)
     public Result<Void> clearByName(@PathVariable String cacheName) {
         Cache cache = cacheManager.getCache(cacheName);

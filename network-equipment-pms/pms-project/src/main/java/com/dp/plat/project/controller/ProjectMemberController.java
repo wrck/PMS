@@ -22,19 +22,19 @@ public class ProjectMemberController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('project:subproject:manage')")
+    @PreAuthorize("@ss.hasPermission('project:subproject:manage')")
     public Result<ProjectMember> create(@RequestBody ProjectMember member) {
         return Result.ok(memberService.create(member));
     }
 
     @PutMapping
-    @PreAuthorize("hasAuthority('project:subproject:manage')")
+    @PreAuthorize("@ss.hasPermission('project:subproject:manage')")
     public Result<ProjectMember> update(@RequestBody ProjectMember member) {
         return Result.ok(memberService.update(member));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:subproject:manage')")
+    @PreAuthorize("@ss.hasPermission('project:subproject:manage')")
     public Result<Void> delete(@PathVariable Long id) {
         memberService.delete(id);
         return Result.ok();

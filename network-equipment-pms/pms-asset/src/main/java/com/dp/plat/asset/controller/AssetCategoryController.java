@@ -39,7 +39,7 @@ public class AssetCategoryController {
 
     @Operation(summary = "Create category")
     @PostMapping
-    @PreAuthorize("hasAuthority('asset:category:add')")
+    @PreAuthorize("@ss.hasPermission('asset:category:add')")
     @OperLog(title = "设备分类管理", businessType = 1)
     public Result<Boolean> create(@Valid @RequestBody AssetCategory category) {
         return Result.ok(assetCategoryService.create(category));
@@ -47,7 +47,7 @@ public class AssetCategoryController {
 
     @Operation(summary = "Update category")
     @PutMapping
-    @PreAuthorize("hasAuthority('asset:category:edit')")
+    @PreAuthorize("@ss.hasPermission('asset:category:edit')")
     @OperLog(title = "设备分类管理", businessType = 2)
     public Result<Boolean> update(@Valid @RequestBody AssetCategory category) {
         return Result.ok(assetCategoryService.update(category));
@@ -55,7 +55,7 @@ public class AssetCategoryController {
 
     @Operation(summary = "Delete category")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('asset:category:remove')")
+    @PreAuthorize("@ss.hasPermission('asset:category:remove')")
     @OperLog(title = "设备分类管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(assetCategoryService.delete(id));

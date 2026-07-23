@@ -63,7 +63,7 @@ public class LowCodeFormController {
 
     @Operation(summary = "创建表单配置")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:form:add')")
+    @PreAuthorize("@ss.hasPermission('lowcode:form:add')")
     @OperLog(title = "低代码表单配置", businessType = 1)
     public Result<LowCodeForm> create(@Valid @RequestBody LowCodeForm form) {
         return Result.ok(lowCodeFormService.create(form));
@@ -71,7 +71,7 @@ public class LowCodeFormController {
 
     @Operation(summary = "更新表单配置")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:form:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:form:edit')")
     @OperLog(title = "低代码表单配置", businessType = 2)
     public Result<LowCodeForm> update(@PathVariable Long id, @Valid @RequestBody LowCodeForm form) {
         form.setId(id);
@@ -80,7 +80,7 @@ public class LowCodeFormController {
 
     @Operation(summary = "删除表单配置")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:form:remove')")
+    @PreAuthorize("@ss.hasPermission('lowcode:form:remove')")
     @OperLog(title = "低代码表单配置", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         lowCodeFormService.delete(id);
@@ -89,7 +89,7 @@ public class LowCodeFormController {
 
     @Operation(summary = "发布表单配置")
     @PostMapping("/{id}/publish")
-    @PreAuthorize("hasAuthority('lowcode:form:publish')")
+    @PreAuthorize("@ss.hasPermission('lowcode:form:publish')")
     @OperLog(title = "低代码表单配置", businessType = 2)
     public Result<?> publish(@PathVariable Long id) {
         lowCodeFormService.publish(id);
@@ -98,7 +98,7 @@ public class LowCodeFormController {
 
     @Operation(summary = "归档表单配置")
     @PostMapping("/{id}/archive")
-    @PreAuthorize("hasAuthority('lowcode:form:archive')")
+    @PreAuthorize("@ss.hasPermission('lowcode:form:archive')")
     @OperLog(title = "低代码表单配置", businessType = 2)
     public Result<?> archive(@PathVariable Long id) {
         lowCodeFormService.archive(id);
@@ -107,7 +107,7 @@ public class LowCodeFormController {
 
     @Operation(summary = "导出表单配置 JSON")
     @GetMapping("/{code}/export")
-    @PreAuthorize("hasAuthority('lowcode:form:export')")
+    @PreAuthorize("@ss.hasPermission('lowcode:form:export')")
     @OperLog(title = "低代码表单配置", businessType = 4)
     public ResponseEntity<byte[]> exportConfig(@PathVariable String code) {
         byte[] data = lowCodeFormService.exportConfig(code);
@@ -119,7 +119,7 @@ public class LowCodeFormController {
 
     @Operation(summary = "导入表单配置 JSON")
     @PostMapping("/import")
-    @PreAuthorize("hasAuthority('lowcode:form:import')")
+    @PreAuthorize("@ss.hasPermission('lowcode:form:import')")
     @OperLog(title = "低代码表单配置", businessType = 5)
     public Result<LowCodeForm> importConfig(@RequestBody String json) {
         return Result.ok(lowCodeFormService.importConfig(json));

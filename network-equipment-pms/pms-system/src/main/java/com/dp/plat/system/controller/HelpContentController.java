@@ -66,7 +66,7 @@ public class HelpContentController {
 
     @Operation(summary = "Create help content (admin)")
     @PostMapping
-    @PreAuthorize("hasAuthority('system:help:create')")
+    @PreAuthorize("@ss.hasPermission('system:help:create')")
     @OperLog(title = "帮助中心", businessType = 1)
     @RateLimit(capacity = 20, refillTokens = 20, refillPeriodSeconds = 60)
     public Result<Boolean> create(@Valid @RequestBody HelpContent content) {
@@ -84,7 +84,7 @@ public class HelpContentController {
 
     @Operation(summary = "Update help content (admin)")
     @PutMapping
-    @PreAuthorize("hasAuthority('system:help:edit')")
+    @PreAuthorize("@ss.hasPermission('system:help:edit')")
     @OperLog(title = "帮助中心", businessType = 2)
     @RateLimit(capacity = 30, refillTokens = 30, refillPeriodSeconds = 60)
     public Result<Boolean> update(@Valid @RequestBody HelpContent content) {
@@ -93,7 +93,7 @@ public class HelpContentController {
 
     @Operation(summary = "Delete help content (admin)")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:help:remove')")
+    @PreAuthorize("@ss.hasPermission('system:help:remove')")
     @OperLog(title = "帮助中心", businessType = 3)
     @RateLimit(capacity = 20, refillTokens = 20, refillPeriodSeconds = 60)
     public Result<Boolean> delete(@PathVariable Long id) {

@@ -35,7 +35,7 @@ public class SysMenuController {
 
     @Operation(summary = "List all menus")
     @GetMapping("/list")
-    @PreAuthorize("hasAuthority('system:menu:list')")
+    @PreAuthorize("@ss.hasPermission('system:menu:list')")
     public Result<List<SysMenu>> list() {
         return Result.ok(sysMenuService.list(new LambdaQueryWrapper<SysMenu>()
                 .orderByAsc(SysMenu::getOrderNum)));
@@ -43,7 +43,7 @@ public class SysMenuController {
 
     @Operation(summary = "Get the full menu tree")
     @GetMapping("/tree")
-    @PreAuthorize("hasAuthority('system:menu:list')")
+    @PreAuthorize("@ss.hasPermission('system:menu:list')")
     public Result<List<SysMenu>> getMenuTree() {
         List<SysMenu> menus = sysMenuService.list(new LambdaQueryWrapper<SysMenu>()
                 .orderByAsc(SysMenu::getOrderNum));
@@ -60,14 +60,14 @@ public class SysMenuController {
 
     @Operation(summary = "Get menu by id")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:menu:list')")
+    @PreAuthorize("@ss.hasPermission('system:menu:list')")
     public Result<SysMenu> get(@PathVariable Long id) {
         return Result.ok(sysMenuService.getById(id));
     }
 
     @Operation(summary = "Create menu")
     @PostMapping
-    @PreAuthorize("hasAuthority('system:menu:add')")
+    @PreAuthorize("@ss.hasPermission('system:menu:add')")
     @OperLog(title = "菜单管理", businessType = 1)
     public Result<Boolean> add(@Valid @RequestBody SysMenu menu) {
         return Result.ok(sysMenuService.save(menu));
@@ -75,7 +75,7 @@ public class SysMenuController {
 
     @Operation(summary = "Update menu")
     @PutMapping
-    @PreAuthorize("hasAuthority('system:menu:edit')")
+    @PreAuthorize("@ss.hasPermission('system:menu:edit')")
     @OperLog(title = "菜单管理", businessType = 2)
     public Result<Boolean> update(@Valid @RequestBody SysMenu menu) {
         return Result.ok(sysMenuService.updateById(menu));
@@ -83,7 +83,7 @@ public class SysMenuController {
 
     @Operation(summary = "Delete menu")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:menu:remove')")
+    @PreAuthorize("@ss.hasPermission('system:menu:remove')")
     @OperLog(title = "菜单管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(sysMenuService.removeById(id));

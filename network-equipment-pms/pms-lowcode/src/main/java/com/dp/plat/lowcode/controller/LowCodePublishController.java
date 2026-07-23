@@ -27,7 +27,7 @@ public class LowCodePublishController {
 
     @Operation(summary = "提交发布申请")
     @PostMapping("/submit")
-    @PreAuthorize("hasAuthority('lowcode:publish:submit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:publish:submit')")
     @OperLog(title = "低代码发布", businessType = 1)
     public Result<LowCodePublishRecord> submit(@RequestParam String configType,
                                                @RequestParam Long configId,
@@ -39,7 +39,7 @@ public class LowCodePublishController {
 
     @Operation(summary = "审批通过")
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAuthority('lowcode:publish:approve')")
+    @PreAuthorize("@ss.hasPermission('lowcode:publish:approve')")
     @OperLog(title = "低代码发布", businessType = 2)
     public Result<LowCodePublishRecord> approve(@PathVariable Long id,
                                                 @RequestParam Long approverId,
@@ -49,7 +49,7 @@ public class LowCodePublishController {
 
     @Operation(summary = "审批拒绝")
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAuthority('lowcode:publish:approve')")
+    @PreAuthorize("@ss.hasPermission('lowcode:publish:approve')")
     @OperLog(title = "低代码发布", businessType = 2)
     public Result<LowCodePublishRecord> reject(@PathVariable Long id,
                                                @RequestParam String reason,
@@ -60,7 +60,7 @@ public class LowCodePublishController {
 
     @Operation(summary = "回滚发布")
     @PostMapping("/{id}/rollback")
-    @PreAuthorize("hasAuthority('lowcode:publish:rollback')")
+    @PreAuthorize("@ss.hasPermission('lowcode:publish:rollback')")
     @OperLog(title = "低代码发布", businessType = 2)
     public Result<LowCodePublishRecord> rollback(@PathVariable Long id,
                                                  @RequestParam Long userId,
@@ -70,7 +70,7 @@ public class LowCodePublishController {
 
     @Operation(summary = "查询配置发布记录")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:publish:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:publish:list')")
     public Result<List<LowCodePublishRecord>> list(@RequestParam String configType,
                                                    @RequestParam Long configId) {
         return Result.ok(publishService.listByConfig(configType, configId));
@@ -78,7 +78,7 @@ public class LowCodePublishController {
 
     @Operation(summary = "查询待审批发布")
     @GetMapping("/pending")
-    @PreAuthorize("hasAuthority('lowcode:publish:approve')")
+    @PreAuthorize("@ss.hasPermission('lowcode:publish:approve')")
     public Result<List<LowCodePublishRecord>> pending() {
         return Result.ok(publishService.listPending());
     }

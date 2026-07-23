@@ -45,7 +45,7 @@ public class BaselineController {
 
     @Operation(summary = "保存基线（快照项目全部任务）")
     @PostMapping("/save")
-    @PreAuthorize("hasAuthority('project:baseline:save')")
+    @PreAuthorize("@ss.hasPermission('project:baseline:save')")
     @OperLog(title = "计划基线", businessType = 1)
     public Result<BaselineSnapshot> save(@RequestParam Long projectId,
                                          @RequestParam(required = false) String baselineName) {
@@ -54,7 +54,7 @@ public class BaselineController {
 
     @Operation(summary = "申请基线变更（双阈值 OR 触发审批）")
     @PostMapping("/{id}/request-change")
-    @PreAuthorize("hasAuthority('project:baseline:change')")
+    @PreAuthorize("@ss.hasPermission('project:baseline:change')")
     @OperLog(title = "计划基线-申请变更", businessType = 2)
     public Result<BaselineDiffResult> requestChange(@PathVariable Long id,
                                                     @RequestParam(required = false) String changeReason) {

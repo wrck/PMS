@@ -96,7 +96,7 @@ public class ScheduleMonitorController {
 
     @Operation(summary = "手动重试占位接口（仅记录日志，不真正触发任务）")
     @PostMapping("/retry/{id}")
-    @PreAuthorize("hasAuthority('system:schedule:retry')")
+    @PreAuthorize("@ss.hasPermission('system:schedule:retry')")
     @OperLog(title = "定时任务监控", businessType = 2)
     public Result<String> retry(@PathVariable Long id) {
         ScheduleLog original = scheduleLogMapper.selectById(id);

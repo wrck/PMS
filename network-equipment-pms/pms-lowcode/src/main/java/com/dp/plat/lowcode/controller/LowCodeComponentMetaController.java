@@ -36,21 +36,21 @@ public class LowCodeComponentMetaController {
 
     @Operation(summary = "查询所有组件元数据")
     @GetMapping
-    @PreAuthorize("hasAuthority('lowcode:component:market:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:component:market:list')")
     public Result<List<LowCodeComponentMeta>> list() {
         return Result.ok(mapper.selectList(null));
     }
 
     @Operation(summary = "组件详情")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:component:market:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:component:market:list')")
     public Result<LowCodeComponentMeta> get(@PathVariable Long id) {
         return Result.ok(mapper.selectById(id));
     }
 
     @Operation(summary = "保存组件（新增/更新）")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:component:market:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:component:market:edit')")
     @OperLog(title = "低代码组件", businessType = 1)
     public Result<LowCodeComponentMeta> save(@RequestBody LowCodeComponentMeta meta) {
         if (meta.getId() != null) {
@@ -75,7 +75,7 @@ public class LowCodeComponentMetaController {
 
     @Operation(summary = "删除组件（内置组件不可删）")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:component:market:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:component:market:edit')")
     @OperLog(title = "低代码组件", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         LowCodeComponentMeta meta = mapper.selectById(id);
@@ -90,7 +90,7 @@ public class LowCodeComponentMetaController {
 
     @Operation(summary = "市场列表（仅已发布组件）")
     @GetMapping("/marketplace")
-    @PreAuthorize("hasAuthority('lowcode:component:market:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:component:market:list')")
     public Result<List<LowCodeComponentMeta>> marketplace() {
         return Result.ok(mapper.selectList(
                 new LambdaQueryWrapper<LowCodeComponentMeta>()
@@ -100,7 +100,7 @@ public class LowCodeComponentMetaController {
 
     @Operation(summary = "搜索组件（按关键词/分类/标签）")
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('lowcode:component:market:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:component:market:list')")
     public Result<List<LowCodeComponentMeta>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
@@ -124,7 +124,7 @@ public class LowCodeComponentMetaController {
 
     @Operation(summary = "发布组件到市场")
     @PostMapping("/{id}/publish")
-    @PreAuthorize("hasAuthority('lowcode:component:market:publish')")
+    @PreAuthorize("@ss.hasPermission('lowcode:component:market:publish')")
     @OperLog(title = "低代码组件-发布", businessType = 2)
     public Result<Void> publish(@PathVariable Long id) {
         LowCodeComponentMeta meta = mapper.selectById(id);
@@ -138,7 +138,7 @@ public class LowCodeComponentMetaController {
 
     @Operation(summary = "下架组件")
     @PostMapping("/{id}/unpublish")
-    @PreAuthorize("hasAuthority('lowcode:component:market:publish')")
+    @PreAuthorize("@ss.hasPermission('lowcode:component:market:publish')")
     @OperLog(title = "低代码组件-下架", businessType = 2)
     public Result<Void> unpublish(@PathVariable Long id) {
         LowCodeComponentMeta meta = mapper.selectById(id);
@@ -152,7 +152,7 @@ public class LowCodeComponentMetaController {
 
     @Operation(summary = "下载组件（增加下载计数并返回组件信息）")
     @PostMapping("/{id}/download")
-    @PreAuthorize("hasAuthority('lowcode:component:market:list')")
+    @PreAuthorize("@ss.hasPermission('lowcode:component:market:list')")
     public Result<LowCodeComponentMeta> download(@PathVariable Long id) {
         LowCodeComponentMeta meta = mapper.selectById(id);
         if (meta == null) {

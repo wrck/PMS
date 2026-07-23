@@ -36,7 +36,7 @@ public class SysUserController {
 
     @Operation(summary = "Paginated user query")
     @GetMapping("/page")
-    @PreAuthorize("hasAuthority('system:user:list')")
+    @PreAuthorize("@ss.hasPermission('system:user:list')")
     public Result<Page<SysUser>> page(@RequestParam(defaultValue = "1") Integer pageNum,
                                       @RequestParam(defaultValue = "10") Integer pageSize,
                                       @RequestParam(required = false) String username) {
@@ -77,14 +77,14 @@ public class SysUserController {
 
     @Operation(summary = "Get user by id")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:user:list')")
+    @PreAuthorize("@ss.hasPermission('system:user:list')")
     public Result<SysUser> get(@PathVariable Long id) {
         return Result.ok(sysUserService.getById(id));
     }
 
     @Operation(summary = "Create user")
     @PostMapping
-    @PreAuthorize("hasAuthority('system:user:add')")
+    @PreAuthorize("@ss.hasPermission('system:user:add')")
     @OperLog(title = "用户管理", businessType = 1)
     public Result<Boolean> add(@Valid @RequestBody SysUser user) {
         return Result.ok(sysUserService.save(user));
@@ -92,7 +92,7 @@ public class SysUserController {
 
     @Operation(summary = "Update user")
     @PutMapping
-    @PreAuthorize("hasAuthority('system:user:edit')")
+    @PreAuthorize("@ss.hasPermission('system:user:edit')")
     @OperLog(title = "用户管理", businessType = 2)
     public Result<Boolean> update(@Valid @RequestBody SysUser user) {
         return Result.ok(sysUserService.updateById(user));
@@ -100,7 +100,7 @@ public class SysUserController {
 
     @Operation(summary = "Delete user")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:user:remove')")
+    @PreAuthorize("@ss.hasPermission('system:user:remove')")
     @OperLog(title = "用户管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(sysUserService.removeById(id));

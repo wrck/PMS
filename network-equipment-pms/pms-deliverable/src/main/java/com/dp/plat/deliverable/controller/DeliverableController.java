@@ -68,7 +68,7 @@ public class DeliverableController {
 
     @Operation(summary = "新建交付件（默认 DRAFT，若提供 filePath 则同步创建 v1 版本）")
     @PostMapping
-    @PreAuthorize("hasAuthority('project:deliverable:add')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:add')")
     @OperLog(title = "交付件", businessType = 1)
     public Result<Deliverable> create(@Valid @RequestBody Deliverable deliverable) {
         return Result.ok(deliverableService.create(deliverable));
@@ -76,7 +76,7 @@ public class DeliverableController {
 
     @Operation(summary = "上传交付件初始文件并创建 v1 版本")
     @PostMapping(value = "/{id}/upload", consumes = "multipart/form-data")
-    @PreAuthorize("hasAuthority('project:deliverable:upload')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:upload')")
     @OperLog(title = "交付件-上传初始版本", businessType = 1)
     public Result<DeliverableVersion> upload(@PathVariable Long id,
                                              @RequestParam("file") MultipartFile file,
@@ -86,7 +86,7 @@ public class DeliverableController {
 
     @Operation(summary = "更新交付件基础信息（不允许直接修改 status，请走状态流转接口）")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:deliverable:edit')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:edit')")
     @OperLog(title = "交付件", businessType = 2)
     public Result<Deliverable> update(@PathVariable Long id, @Valid @RequestBody Deliverable deliverable) {
         return Result.ok(deliverableService.updateBaseInfo(id, deliverable));
@@ -94,7 +94,7 @@ public class DeliverableController {
 
     @Operation(summary = "删除交付件（仅 DRAFT 状态建议删除）")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:deliverable:remove')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:remove')")
     @OperLog(title = "交付件", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         deliverableService.removeById(id);
@@ -105,7 +105,7 @@ public class DeliverableController {
 
     @Operation(summary = "提交：DRAFT → SUBMITTED")
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasAuthority('project:deliverable:submit')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:submit')")
     @OperLog(title = "交付件-提交", businessType = 2)
     public Result<Deliverable> submit(@PathVariable Long id) {
         return Result.ok(deliverableService.submit(id));
@@ -113,7 +113,7 @@ public class DeliverableController {
 
     @Operation(summary = "审核：SUBMITTED → REVIEWED（通过）/ DRAFT（退回）")
     @PostMapping("/{id}/review")
-    @PreAuthorize("hasAuthority('project:deliverable:review')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:review')")
     @OperLog(title = "交付件-审核", businessType = 2)
     public Result<Deliverable> review(@PathVariable Long id, @RequestParam boolean passed) {
         return Result.ok(deliverableService.review(id, passed));
@@ -121,7 +121,7 @@ public class DeliverableController {
 
     @Operation(summary = "签核：REVIEWED → SIGNED")
     @PostMapping("/{id}/sign")
-    @PreAuthorize("hasAuthority('project:deliverable:sign')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:sign')")
     @OperLog(title = "交付件-签核", businessType = 2)
     public Result<Deliverable> sign(@PathVariable Long id) {
         return Result.ok(deliverableService.sign(id));
@@ -129,7 +129,7 @@ public class DeliverableController {
 
     @Operation(summary = "发布：SIGNED → PUBLISHED（版本固化，写入 publishedAt）")
     @PostMapping("/{id}/publish")
-    @PreAuthorize("hasAuthority('project:deliverable:publish')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:publish')")
     @OperLog(title = "交付件-发布", businessType = 2)
     public Result<Deliverable> publish(@PathVariable Long id) {
         return Result.ok(deliverableService.publish(id));
@@ -137,7 +137,7 @@ public class DeliverableController {
 
     @Operation(summary = "归档：REFERENCED → ARCHIVED（写入 archivedAt）")
     @PostMapping("/{id}/archive")
-    @PreAuthorize("hasAuthority('project:deliverable:archive')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:archive')")
     @OperLog(title = "交付件-归档", businessType = 2)
     public Result<Deliverable> archive(@PathVariable Long id) {
         return Result.ok(deliverableService.archive(id));
@@ -153,7 +153,7 @@ public class DeliverableController {
 
     @Operation(summary = "修订：新建版本不覆盖旧版本（Story 5 验收 1）")
     @PostMapping("/{id}/revise")
-    @PreAuthorize("hasAuthority('project:deliverable:revise')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:revise')")
     @OperLog(title = "交付件-修订", businessType = 1)
     public Result<DeliverableVersion> revise(@PathVariable Long id,
                                              @RequestParam String filePath,
@@ -179,7 +179,7 @@ public class DeliverableController {
 
     @Operation(summary = "新增签名记录（REVIEWED → SIGNED 阶段的签核动作）")
     @PostMapping("/{id}/signatures")
-    @PreAuthorize("hasAuthority('project:deliverable:sign')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:sign')")
     @OperLog(title = "交付件-签名", businessType = 1)
     public Result<DeliverableSignature> addSignature(@PathVariable Long id,
                                                       @RequestBody DeliverableSignature signature) {
@@ -200,7 +200,7 @@ public class DeliverableController {
 
     @Operation(summary = "新增引用关系（PUBLISHED → REFERENCED 流转）")
     @PostMapping("/{id}/references")
-    @PreAuthorize("hasAuthority('project:deliverable:publish')")
+    @PreAuthorize("@ss.hasPermission('project:deliverable:publish')")
     @OperLog(title = "交付件-引用", businessType = 1)
     public Result<DeliverableReference> addReference(@PathVariable Long id,
                                                      @RequestBody DeliverableReference reference) {

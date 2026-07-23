@@ -36,7 +36,7 @@ public class SysRoleController {
 
     @Operation(summary = "Paginated role query")
     @GetMapping("/page")
-    @PreAuthorize("hasAuthority('system:role:list')")
+    @PreAuthorize("@ss.hasPermission('system:role:list')")
     public Result<Page<SysRole>> page(@RequestParam(defaultValue = "1") Integer pageNum,
                                       @RequestParam(defaultValue = "10") Integer pageSize,
                                       @RequestParam(required = false) String roleName) {
@@ -71,14 +71,14 @@ public class SysRoleController {
 
     @Operation(summary = "Get role by id")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:role:list')")
+    @PreAuthorize("@ss.hasPermission('system:role:list')")
     public Result<SysRole> get(@PathVariable Long id) {
         return Result.ok(sysRoleService.getById(id));
     }
 
     @Operation(summary = "Create role")
     @PostMapping
-    @PreAuthorize("hasAuthority('system:role:add')")
+    @PreAuthorize("@ss.hasPermission('system:role:add')")
     @OperLog(title = "角色管理", businessType = 1)
     public Result<Boolean> add(@Valid @RequestBody SysRole role) {
         return Result.ok(sysRoleService.save(role));
@@ -86,7 +86,7 @@ public class SysRoleController {
 
     @Operation(summary = "Update role")
     @PutMapping
-    @PreAuthorize("hasAuthority('system:role:edit')")
+    @PreAuthorize("@ss.hasPermission('system:role:edit')")
     @OperLog(title = "角色管理", businessType = 2)
     public Result<Boolean> update(@Valid @RequestBody SysRole role) {
         return Result.ok(sysRoleService.updateById(role));
@@ -94,7 +94,7 @@ public class SysRoleController {
 
     @Operation(summary = "Delete role")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:role:remove')")
+    @PreAuthorize("@ss.hasPermission('system:role:remove')")
     @OperLog(title = "角色管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(sysRoleService.removeById(id));
@@ -102,7 +102,7 @@ public class SysRoleController {
 
     @Operation(summary = "Assign menus to a role (replaces existing assignment)")
     @PostMapping("/{id}/menus")
-    @PreAuthorize("hasAuthority('system:role:edit')")
+    @PreAuthorize("@ss.hasPermission('system:role:edit')")
     @OperLog(title = "角色管理", businessType = 2)
     public Result<Void> assignMenus(@PathVariable Long id, @RequestBody List<Long> menuIds) {
         sysRoleService.assignMenus(id, menuIds);

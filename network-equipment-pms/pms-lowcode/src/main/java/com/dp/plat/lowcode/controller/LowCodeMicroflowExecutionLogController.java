@@ -33,7 +33,7 @@ public class LowCodeMicroflowExecutionLogController {
 
     @Operation(summary = "按执行ID查询节点轨迹")
     @GetMapping("/{executionId}")
-    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:exec')")
     public Result<List<LowCodeMicroflowExecutionLog>> getByExecutionId(@PathVariable String executionId) {
         List<LowCodeMicroflowExecutionLog> logs = executionLogMapper.selectList(
                 new LambdaQueryWrapper<LowCodeMicroflowExecutionLog>()
@@ -58,7 +58,7 @@ public class LowCodeMicroflowExecutionLogController {
      */
     @Operation(summary = "查询微流最近执行轨迹（支持全局时间窗口 / 按微流查询）")
     @GetMapping("/recent")
-    @PreAuthorize("hasAuthority('lowcode:microflow:exec')")
+    @PreAuthorize("@ss.hasPermission('lowcode:microflow:exec')")
     public Result<List<LowCodeMicroflowExecutionLog>> getRecent(
             @RequestParam(required = false) Long microflowId,
             @RequestParam(required = false) Integer hours,

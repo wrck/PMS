@@ -57,7 +57,7 @@ public class WarrantyController {
 
     @Operation(summary = "Create warranty")
     @PostMapping
-    @PreAuthorize("hasAuthority('asset:warranty:add')")
+    @PreAuthorize("@ss.hasPermission('asset:warranty:add')")
     @OperLog(title = "质保管理", businessType = 1)
     public Result<Boolean> add(@Valid @RequestBody Warranty warranty) {
         return Result.ok(warrantyService.save(warranty));
@@ -65,7 +65,7 @@ public class WarrantyController {
 
     @Operation(summary = "Update warranty")
     @PutMapping
-    @PreAuthorize("hasAuthority('asset:warranty:edit')")
+    @PreAuthorize("@ss.hasPermission('asset:warranty:edit')")
     @OperLog(title = "质保管理", businessType = 2)
     public Result<Boolean> update(@Valid @RequestBody Warranty warranty) {
         return Result.ok(warrantyService.updateById(warranty));
@@ -73,7 +73,7 @@ public class WarrantyController {
 
     @Operation(summary = "Delete warranty")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('asset:warranty:remove')")
+    @PreAuthorize("@ss.hasPermission('asset:warranty:remove')")
     @OperLog(title = "质保管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(warrantyService.removeById(id));
@@ -106,7 +106,7 @@ public class WarrantyController {
 
     @Operation(summary = "Initialize warranty records for all assets of a project")
     @PostMapping("/init-for-project")
-    @PreAuthorize("hasAuthority('asset:warranty:add')")
+    @PreAuthorize("@ss.hasPermission('asset:warranty:add')")
     @OperLog(title = "质保管理", businessType = 1)
     public Result<Boolean> initForProject(@RequestParam Long projectId,
                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate finalAcceptanceDate,

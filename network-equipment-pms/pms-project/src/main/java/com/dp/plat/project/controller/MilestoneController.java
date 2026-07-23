@@ -37,7 +37,7 @@ public class MilestoneController {
 
     @Operation(summary = "创建里程碑")
     @PostMapping
-    @PreAuthorize("hasAuthority('project:milestone:add')")
+    @PreAuthorize("@ss.hasPermission('project:milestone:add')")
     @OperLog(title = "里程碑管理", businessType = 1)
     public Result<Milestone> create(@Valid @RequestBody Milestone milestone) {
         return milestoneService.createMilestone(milestone);
@@ -45,7 +45,7 @@ public class MilestoneController {
 
     @Operation(summary = "更新里程碑")
     @PutMapping
-    @PreAuthorize("hasAuthority('project:milestone:edit')")
+    @PreAuthorize("@ss.hasPermission('project:milestone:edit')")
     @OperLog(title = "里程碑管理", businessType = 2)
     public Result<?> update(@Valid @RequestBody Milestone milestone) {
         return milestoneService.updateMilestone(milestone);
@@ -53,7 +53,7 @@ public class MilestoneController {
 
     @Operation(summary = "删除里程碑")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:milestone:remove')")
+    @PreAuthorize("@ss.hasPermission('project:milestone:remove')")
     @OperLog(title = "里程碑管理", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         return milestoneService.deleteMilestone(id);
@@ -67,7 +67,7 @@ public class MilestoneController {
 
     @Operation(summary = "更新里程碑进度")
     @PostMapping("/{id}/progress")
-    @PreAuthorize("hasAuthority('project:milestone:edit')")
+    @PreAuthorize("@ss.hasPermission('project:milestone:edit')")
     @OperLog(title = "里程碑管理", businessType = 2)
     public Result<Milestone> updateProgress(@PathVariable Long id,
                                             @RequestParam(required = false) String actualDate,
@@ -83,7 +83,7 @@ public class MilestoneController {
 
     @Operation(summary = "Batch import milestones from Excel")
     @PostMapping("/import")
-    @PreAuthorize("hasAuthority('project:milestone:import')")
+    @PreAuthorize("@ss.hasPermission('project:milestone:import')")
     @OperLog(title = "里程碑管理", businessType = 5)
     public Result<ExcelImportResult<MilestoneImportDTO>> importExcel(@RequestParam("file") MultipartFile file) {
         return Result.ok(milestoneService.batchImport(file));

@@ -73,7 +73,7 @@ public class NotificationController {
 
     @Operation(summary = "管理员手动发送通知（调试用）")
     @PostMapping("/send")
-    @PreAuthorize("hasAuthority('notification:notification:send')")
+    @PreAuthorize("@ss.hasPermission('notification:notification:send')")
     @OperLog(title = "通知中心", businessType = 1)
     public Result<Void> send(@Valid @RequestBody Notification notification,
                              @RequestParam(required = false) Set<String> channels) {

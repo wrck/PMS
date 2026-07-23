@@ -63,7 +63,7 @@ public class LowCodeListController {
 
     @Operation(summary = "创建列表配置")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:list:add')")
+    @PreAuthorize("@ss.hasPermission('lowcode:list:add')")
     @OperLog(title = "低代码列表配置", businessType = 1)
     public Result<LowCodeList> create(@Valid @RequestBody LowCodeList list) {
         return Result.ok(lowCodeListService.create(list));
@@ -71,7 +71,7 @@ public class LowCodeListController {
 
     @Operation(summary = "更新列表配置")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:list:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:list:edit')")
     @OperLog(title = "低代码列表配置", businessType = 2)
     public Result<LowCodeList> update(@PathVariable Long id, @Valid @RequestBody LowCodeList list) {
         list.setId(id);
@@ -80,7 +80,7 @@ public class LowCodeListController {
 
     @Operation(summary = "删除列表配置")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:list:remove')")
+    @PreAuthorize("@ss.hasPermission('lowcode:list:remove')")
     @OperLog(title = "低代码列表配置", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         lowCodeListService.delete(id);
@@ -89,7 +89,7 @@ public class LowCodeListController {
 
     @Operation(summary = "发布列表配置")
     @PostMapping("/{id}/publish")
-    @PreAuthorize("hasAuthority('lowcode:list:publish')")
+    @PreAuthorize("@ss.hasPermission('lowcode:list:publish')")
     @OperLog(title = "低代码列表配置", businessType = 2)
     public Result<?> publish(@PathVariable Long id) {
         lowCodeListService.publish(id);
@@ -98,7 +98,7 @@ public class LowCodeListController {
 
     @Operation(summary = "归档列表配置")
     @PostMapping("/{id}/archive")
-    @PreAuthorize("hasAuthority('lowcode:list:archive')")
+    @PreAuthorize("@ss.hasPermission('lowcode:list:archive')")
     @OperLog(title = "低代码列表配置", businessType = 2)
     public Result<?> archive(@PathVariable Long id) {
         lowCodeListService.archive(id);
@@ -107,7 +107,7 @@ public class LowCodeListController {
 
     @Operation(summary = "导出列表配置 JSON")
     @GetMapping("/{code}/export")
-    @PreAuthorize("hasAuthority('lowcode:list:export')")
+    @PreAuthorize("@ss.hasPermission('lowcode:list:export')")
     @OperLog(title = "低代码列表配置", businessType = 4)
     public ResponseEntity<byte[]> exportConfig(@PathVariable String code) {
         byte[] data = lowCodeListService.exportConfig(code);
@@ -119,7 +119,7 @@ public class LowCodeListController {
 
     @Operation(summary = "导入列表配置 JSON")
     @PostMapping("/import")
-    @PreAuthorize("hasAuthority('lowcode:list:import')")
+    @PreAuthorize("@ss.hasPermission('lowcode:list:import')")
     @OperLog(title = "低代码列表配置", businessType = 5)
     public Result<LowCodeList> importConfig(@RequestBody String json) {
         return Result.ok(lowCodeListService.importConfig(json));

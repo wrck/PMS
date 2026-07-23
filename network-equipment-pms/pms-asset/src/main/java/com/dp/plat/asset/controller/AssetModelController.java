@@ -40,7 +40,7 @@ public class AssetModelController {
 
     @Operation(summary = "Create model")
     @PostMapping
-    @PreAuthorize("hasAuthority('asset:model:add')")
+    @PreAuthorize("@ss.hasPermission('asset:model:add')")
     @OperLog(title = "设备型号管理", businessType = 1)
     public Result<Boolean> create(@Valid @RequestBody AssetModel model) {
         return Result.ok(assetModelService.create(model));
@@ -48,7 +48,7 @@ public class AssetModelController {
 
     @Operation(summary = "Update model")
     @PutMapping
-    @PreAuthorize("hasAuthority('asset:model:edit')")
+    @PreAuthorize("@ss.hasPermission('asset:model:edit')")
     @OperLog(title = "设备型号管理", businessType = 2)
     public Result<Boolean> update(@Valid @RequestBody AssetModel model) {
         return Result.ok(assetModelService.update(model));
@@ -56,7 +56,7 @@ public class AssetModelController {
 
     @Operation(summary = "Delete model")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('asset:model:remove')")
+    @PreAuthorize("@ss.hasPermission('asset:model:remove')")
     @OperLog(title = "设备型号管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(assetModelService.delete(id));

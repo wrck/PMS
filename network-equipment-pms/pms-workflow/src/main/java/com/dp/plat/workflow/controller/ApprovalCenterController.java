@@ -65,7 +65,7 @@ public class ApprovalCenterController {
 
     @Operation(summary = "我的待办审批")
     @GetMapping("/pending")
-    @PreAuthorize("hasAuthority('workflow:approval:handle')")
+    @PreAuthorize("@ss.hasPermission('workflow:approval:handle')")
     public Result<List<ApprovalRecord>> pending() {
         Long userId = currentUserId();
         return Result.ok(approvalCenterService.listPending(userId));
@@ -116,7 +116,7 @@ public class ApprovalCenterController {
 
     @Operation(summary = "审批详情（含字段脱敏）")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('workflow:approval:handle')")
+    @PreAuthorize("@ss.hasPermission('workflow:approval:handle')")
     public Result<ApprovalDetailVO> detail(@PathVariable Long id) {
         ApprovalRecord record = approvalCenterService.getById(id);
         if (record == null) {
@@ -164,7 +164,7 @@ public class ApprovalCenterController {
 
     @Operation(summary = "通过当前节点")
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAuthority('workflow:approval:handle')")
+    @PreAuthorize("@ss.hasPermission('workflow:approval:handle')")
     @OperLog(title = "审批-通过", businessType = 1)
     public Result<ApprovalRecord> approve(@PathVariable Long id,
                                           @RequestParam(required = false) String comment) {
@@ -175,7 +175,7 @@ public class ApprovalCenterController {
 
     @Operation(summary = "退回当前节点")
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAuthority('workflow:approval:handle')")
+    @PreAuthorize("@ss.hasPermission('workflow:approval:handle')")
     @OperLog(title = "审批-退回", businessType = 2)
     public Result<ApprovalRecord> reject(@PathVariable Long id,
                                          @RequestParam(required = false) String comment) {

@@ -46,7 +46,7 @@ public class RmaController {
 
     @Operation(summary = "Register a new RMA ticket")
     @PostMapping
-    @PreAuthorize("hasAuthority('asset:rma:add')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:add')")
     @OperLog(title = "RMA退货返修", businessType = 1)
     public Result<Rma> create(@Valid @RequestBody Rma rma) {
         rmaService.create(rma);
@@ -55,7 +55,7 @@ public class RmaController {
 
     @Operation(summary = "Check warranty status for the RMA asset")
     @PostMapping("/{id}/check-warranty")
-    @PreAuthorize("hasAuthority('asset:rma:process')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:process')")
     @OperLog(title = "RMA退货返修", businessType = 2)
     public Result<Boolean> checkWarranty(@PathVariable Long id) {
         return Result.ok(rmaService.checkWarranty(id));
@@ -63,7 +63,7 @@ public class RmaController {
 
     @Operation(summary = "Issue the RMA (RMA_ISSUED)")
     @PostMapping("/{id}/issue")
-    @PreAuthorize("hasAuthority('asset:rma:process')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:process')")
     @OperLog(title = "RMA退货返修", businessType = 2)
     public Result<Boolean> issueRma(@PathVariable Long id) {
         return Result.ok(rmaService.issueRma(id));
@@ -71,7 +71,7 @@ public class RmaController {
 
     @Operation(summary = "Mark the RMA as returning (RETURNING)")
     @PostMapping("/{id}/returning")
-    @PreAuthorize("hasAuthority('asset:rma:process')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:process')")
     @OperLog(title = "RMA退货返修", businessType = 2)
     public Result<Boolean> markReturning(@PathVariable Long id) {
         return Result.ok(rmaService.markReturning(id));
@@ -79,7 +79,7 @@ public class RmaController {
 
     @Operation(summary = "Inspect the returned asset (INSPECTED) and update asset status")
     @PostMapping("/{id}/inspect")
-    @PreAuthorize("hasAuthority('asset:rma:process')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:process')")
     @OperLog(title = "RMA退货返修", businessType = 2)
     public Result<Boolean> inspect(@PathVariable Long id,
                                    @RequestParam(required = false) String notes) {
@@ -88,7 +88,7 @@ public class RmaController {
 
     @Operation(summary = "Close the RMA ticket (CLOSED)")
     @PostMapping("/{id}/close")
-    @PreAuthorize("hasAuthority('asset:rma:close')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:close')")
     @OperLog(title = "RMA退货返修", businessType = 2)
     public Result<Boolean> close(@PathVariable Long id) {
         return Result.ok(rmaService.close(id));
@@ -96,7 +96,7 @@ public class RmaController {
 
     @Operation(summary = "Paginated list of RMA tickets with optional filters")
     @GetMapping("/list")
-    @PreAuthorize("hasAuthority('asset:rma:list')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:list')")
     public Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<Rma>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -112,28 +112,28 @@ public class RmaController {
 
     @Operation(summary = "Get RMA by id")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('asset:rma:list')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:list')")
     public Result<Rma> get(@PathVariable Long id) {
         return Result.ok(rmaService.getById(id));
     }
 
     @Operation(summary = "List RMA tickets for a project")
     @GetMapping("/by-project/{projectId}")
-    @PreAuthorize("hasAuthority('asset:rma:list')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:list')")
     public Result<List<Rma>> listByProject(@PathVariable Long projectId) {
         return Result.ok(rmaService.listByProject(projectId));
     }
 
     @Operation(summary = "List RMA tickets for an asset")
     @GetMapping("/by-asset/{assetId}")
-    @PreAuthorize("hasAuthority('asset:rma:list')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:list')")
     public Result<List<Rma>> listByAsset(@PathVariable Long assetId) {
         return Result.ok(rmaService.listByAsset(assetId));
     }
 
     @Operation(summary = "RMA KPIs (total, closed, MTTR, first-pass rate) for a date range")
     @GetMapping("/kpi")
-    @PreAuthorize("hasAuthority('asset:rma:list')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:list')")
     public Result<RmaKpiDto> kpi(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return Result.ok(rmaService.kpi(startDate, endDate));
@@ -141,7 +141,7 @@ public class RmaController {
 
     @Operation(summary = "Upload fault photos for an RMA ticket")
     @PostMapping("/{id}/photos")
-    @PreAuthorize("hasAuthority('asset:rma:process')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:process')")
     @OperLog(title = "RMA退货返修", businessType = 1)
     public Result<List<Attachment>> uploadPhotos(@PathVariable Long id,
                                                   @RequestParam("files") MultipartFile[] files) {
@@ -160,14 +160,14 @@ public class RmaController {
 
     @Operation(summary = "List all fault photos for an RMA ticket")
     @GetMapping("/{id}/photos")
-    @PreAuthorize("hasAuthority('asset:rma:list')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:list')")
     public Result<List<Attachment>> listPhotos(@PathVariable Long id) {
         return Result.ok(attachmentService.listByBiz(ATTACHMENT_BIZ_TYPE_RMA, id));
     }
 
     @Operation(summary = "Delete a single RMA fault photo")
     @DeleteMapping("/photos/{attachmentId}")
-    @PreAuthorize("hasAuthority('asset:rma:remove')")
+    @PreAuthorize("@ss.hasPermission('asset:rma:remove')")
     @OperLog(title = "RMA退货返修", businessType = 3)
     public Result<Boolean> deletePhoto(@PathVariable Long attachmentId) {
         return Result.ok(attachmentService.delete(attachmentId));

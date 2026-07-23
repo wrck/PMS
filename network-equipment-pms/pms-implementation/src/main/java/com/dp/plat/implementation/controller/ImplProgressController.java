@@ -49,7 +49,7 @@ public class ImplProgressController {
 
     @Operation(summary = "Create a progress log")
     @PostMapping
-    @PreAuthorize("hasAuthority('implementation:implProgress:add')")
+    @PreAuthorize("@ss.hasPermission('implementation:implProgress:add')")
     @OperLog(title = "实施进度管理", businessType = 1)
     public Result<ImplProgress> create(@Valid @RequestBody ImplProgress progress) {
         return Result.ok(implProgressService.create(progress));
@@ -57,7 +57,7 @@ public class ImplProgressController {
 
     @Operation(summary = "Upload implementation photos for a progress log")
     @PostMapping("/{id}/photos")
-    @PreAuthorize("hasAuthority('implementation:implProgress:edit')")
+    @PreAuthorize("@ss.hasPermission('implementation:implProgress:edit')")
     @OperLog(title = "实施进度管理", businessType = 1)
     public Result<List<Attachment>> uploadPhotos(@PathVariable Long id,
                                                   @RequestParam("files") MultipartFile[] files) {
@@ -82,7 +82,7 @@ public class ImplProgressController {
 
     @Operation(summary = "Delete a single implementation photo")
     @DeleteMapping("/photos/{attachmentId}")
-    @PreAuthorize("hasAuthority('implementation:implProgress:remove')")
+    @PreAuthorize("@ss.hasPermission('implementation:implProgress:remove')")
     @OperLog(title = "实施进度管理", businessType = 3)
     public Result<Boolean> deletePhoto(@PathVariable Long attachmentId) {
         return Result.ok(attachmentService.delete(attachmentId));

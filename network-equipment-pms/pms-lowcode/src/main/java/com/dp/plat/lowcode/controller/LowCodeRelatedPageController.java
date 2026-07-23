@@ -63,7 +63,7 @@ public class LowCodeRelatedPageController {
 
     @Operation(summary = "创建关联页配置")
     @PostMapping
-    @PreAuthorize("hasAuthority('lowcode:relatedPage:add')")
+    @PreAuthorize("@ss.hasPermission('lowcode:relatedPage:add')")
     @OperLog(title = "低代码关联页配置", businessType = 1)
     public Result<LowCodeRelatedPage> create(@Valid @RequestBody LowCodeRelatedPage relatedPage) {
         return Result.ok(lowCodeRelatedPageService.create(relatedPage));
@@ -71,7 +71,7 @@ public class LowCodeRelatedPageController {
 
     @Operation(summary = "更新关联页配置")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:relatedPage:edit')")
+    @PreAuthorize("@ss.hasPermission('lowcode:relatedPage:edit')")
     @OperLog(title = "低代码关联页配置", businessType = 2)
     public Result<LowCodeRelatedPage> update(@PathVariable Long id, @Valid @RequestBody LowCodeRelatedPage relatedPage) {
         relatedPage.setId(id);
@@ -80,7 +80,7 @@ public class LowCodeRelatedPageController {
 
     @Operation(summary = "删除关联页配置")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('lowcode:relatedPage:remove')")
+    @PreAuthorize("@ss.hasPermission('lowcode:relatedPage:remove')")
     @OperLog(title = "低代码关联页配置", businessType = 3)
     public Result<?> delete(@PathVariable Long id) {
         lowCodeRelatedPageService.delete(id);
@@ -89,7 +89,7 @@ public class LowCodeRelatedPageController {
 
     @Operation(summary = "发布关联页配置")
     @PostMapping("/{id}/publish")
-    @PreAuthorize("hasAuthority('lowcode:relatedPage:publish')")
+    @PreAuthorize("@ss.hasPermission('lowcode:relatedPage:publish')")
     @OperLog(title = "低代码关联页配置", businessType = 2)
     public Result<?> publish(@PathVariable Long id) {
         lowCodeRelatedPageService.publish(id);
@@ -98,7 +98,7 @@ public class LowCodeRelatedPageController {
 
     @Operation(summary = "归档关联页配置")
     @PostMapping("/{id}/archive")
-    @PreAuthorize("hasAuthority('lowcode:relatedPage:archive')")
+    @PreAuthorize("@ss.hasPermission('lowcode:relatedPage:archive')")
     @OperLog(title = "低代码关联页配置", businessType = 2)
     public Result<?> archive(@PathVariable Long id) {
         lowCodeRelatedPageService.archive(id);
@@ -107,7 +107,7 @@ public class LowCodeRelatedPageController {
 
     @Operation(summary = "导出关联页配置 JSON")
     @GetMapping("/{code}/export")
-    @PreAuthorize("hasAuthority('lowcode:relatedPage:export')")
+    @PreAuthorize("@ss.hasPermission('lowcode:relatedPage:export')")
     @OperLog(title = "低代码关联页配置", businessType = 4)
     public ResponseEntity<byte[]> exportConfig(@PathVariable String code) {
         byte[] data = lowCodeRelatedPageService.exportConfig(code);
@@ -119,7 +119,7 @@ public class LowCodeRelatedPageController {
 
     @Operation(summary = "导入关联页配置 JSON")
     @PostMapping("/import")
-    @PreAuthorize("hasAuthority('lowcode:relatedPage:import')")
+    @PreAuthorize("@ss.hasPermission('lowcode:relatedPage:import')")
     @OperLog(title = "低代码关联页配置", businessType = 5)
     public Result<LowCodeRelatedPage> importConfig(@RequestBody String json) {
         return Result.ok(lowCodeRelatedPageService.importConfig(json));

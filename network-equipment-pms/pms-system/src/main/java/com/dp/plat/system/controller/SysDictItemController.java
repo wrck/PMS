@@ -35,7 +35,7 @@ public class SysDictItemController {
 
     @Operation(summary = "List dict items by dict id")
     @GetMapping("/list")
-    @PreAuthorize("hasAuthority('system:dict:list')")
+    @PreAuthorize("@ss.hasPermission('system:dict:list')")
     public Result<List<SysDictItem>> list(@RequestParam("dictId") Long dictId) {
         return Result.ok(sysDictItemService.list(new LambdaQueryWrapper<SysDictItem>()
                 .eq(SysDictItem::getDictId, dictId)
@@ -44,7 +44,7 @@ public class SysDictItemController {
 
     @Operation(summary = "Create dict item")
     @PostMapping
-    @PreAuthorize("hasAuthority('system:dict:add')")
+    @PreAuthorize("@ss.hasPermission('system:dict:add')")
     @OperLog(title = "字典管理", businessType = 1)
     public Result<Boolean> add(@Valid @RequestBody SysDictItem item) {
         return Result.ok(sysDictItemService.create(item));
@@ -52,7 +52,7 @@ public class SysDictItemController {
 
     @Operation(summary = "Update dict item")
     @PutMapping
-    @PreAuthorize("hasAuthority('system:dict:edit')")
+    @PreAuthorize("@ss.hasPermission('system:dict:edit')")
     @OperLog(title = "字典管理", businessType = 2)
     public Result<Boolean> update(@Valid @RequestBody SysDictItem item) {
         return Result.ok(sysDictItemService.update(item));
@@ -60,7 +60,7 @@ public class SysDictItemController {
 
     @Operation(summary = "Delete dict item")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:dict:remove')")
+    @PreAuthorize("@ss.hasPermission('system:dict:remove')")
     @OperLog(title = "字典管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(sysDictItemService.deleteById(id));

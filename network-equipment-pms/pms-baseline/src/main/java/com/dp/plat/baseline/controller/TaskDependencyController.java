@@ -49,7 +49,7 @@ public class TaskDependencyController {
 
     @Operation(summary = "保存任务依赖（含循环检测）")
     @PostMapping
-    @PreAuthorize("hasAuthority('project:baseline:save')")
+    @PreAuthorize("@ss.hasPermission('project:baseline:save')")
     @OperLog(title = "任务依赖", businessType = 1)
     public Result<TaskDependency> save(@Valid @RequestBody TaskDependency dependency) {
         return Result.ok(taskDependencyService.saveDependency(dependency));
@@ -57,7 +57,7 @@ public class TaskDependencyController {
 
     @Operation(summary = "删除任务依赖")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('project:baseline:save')")
+    @PreAuthorize("@ss.hasPermission('project:baseline:save')")
     @OperLog(title = "任务依赖", businessType = 3)
     public Result<Void> delete(@PathVariable Long id) {
         taskDependencyService.deleteDependency(id);

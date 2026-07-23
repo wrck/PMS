@@ -35,7 +35,7 @@ public class AgentController {
 
     @Operation(summary = "Paginated agent query")
     @GetMapping("/list")
-    @PreAuthorize("hasAuthority('implementation:agent:list')")
+    @PreAuthorize("@ss.hasPermission('implementation:agent:list')")
     public Result<Page<Agent>> list(@RequestParam(defaultValue = "1") int page,
                                     @RequestParam(defaultValue = "10") int size,
                                     Agent filters) {
@@ -44,14 +44,14 @@ public class AgentController {
 
     @Operation(summary = "Get agent by id")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('implementation:agent:list')")
+    @PreAuthorize("@ss.hasPermission('implementation:agent:list')")
     public Result<Agent> get(@PathVariable Long id) {
         return Result.ok(agentService.getById(id));
     }
 
     @Operation(summary = "Create agent")
     @PostMapping
-    @PreAuthorize("hasAuthority('implementation:agent:add')")
+    @PreAuthorize("@ss.hasPermission('implementation:agent:add')")
     @OperLog(title = "代理商管理", businessType = 1)
     public Result<Boolean> add(@Valid @RequestBody Agent agent) {
         return Result.ok(agentService.save(agent));
@@ -59,7 +59,7 @@ public class AgentController {
 
     @Operation(summary = "Update agent")
     @PutMapping
-    @PreAuthorize("hasAuthority('implementation:agent:edit')")
+    @PreAuthorize("@ss.hasPermission('implementation:agent:edit')")
     @OperLog(title = "代理商管理", businessType = 2)
     public Result<Boolean> update(@Valid @RequestBody Agent agent) {
         return Result.ok(agentService.updateById(agent));
@@ -67,7 +67,7 @@ public class AgentController {
 
     @Operation(summary = "Delete agent")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('implementation:agent:remove')")
+    @PreAuthorize("@ss.hasPermission('implementation:agent:remove')")
     @OperLog(title = "代理商管理", businessType = 3)
     public Result<Boolean> delete(@PathVariable Long id) {
         return Result.ok(agentService.removeById(id));
@@ -75,7 +75,7 @@ public class AgentController {
 
     @Operation(summary = "Get average scores for an agent")
     @GetMapping("/{id}/scores")
-    @PreAuthorize("hasAuthority('implementation:agent:list')")
+    @PreAuthorize("@ss.hasPermission('implementation:agent:list')")
     public Result<Map<String, Object>> scores(@PathVariable Long id) {
         return Result.ok(agentService.getScore(id));
     }

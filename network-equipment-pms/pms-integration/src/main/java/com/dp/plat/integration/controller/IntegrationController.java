@@ -49,7 +49,7 @@ public class IntegrationController {
 
     @Operation(summary = "Manually retry a failed integration by log id")
     @PostMapping("/log/{id}/retry")
-    @PreAuthorize("hasAuthority('integration:log:retry')")
+    @PreAuthorize("@ss.hasPermission('integration:log:retry')")
     @OperLog(title = "集成管理", businessType = 2)
     public Result<IntegrationLog> retry(@PathVariable Long id) {
         return Result.ok(retryService.retryLog(id));
