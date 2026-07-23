@@ -7,6 +7,7 @@
       2. Backend service pms-admin (Spring Boot, port 8080)
       3. Frontend service pms-frontend (Vite, port 3000)
     MySQL must be started locally by the user (port 3307, database dpspms).
+    底层已迁移到 yudao framework，首次运行或修改底层模块后请先执行 .\rebuild-common.ps1。
 .NOTES
     Usage:
       powershell -ExecutionPolicy Bypass -File .\start-all.ps1
@@ -114,6 +115,10 @@ if (Test-PortListening -Port $BackendPort) {
     # Build commands to execute in the new window
     # NOTE: skip "mvn install" to avoid Maven repository write issues in sandbox/restricted environments.
     # Modules are already installed in local repo from previous builds; spring-boot:run compiles as needed.
+    # 底层已迁移到 yudao framework：如修改 yudao-framework / pms-common / pms-system 等，
+    # 请先在主窗口执行 .\rebuild-common.ps1，再运行 start-all.ps1。
+    $useSettings = Test-Path (Join-Path $ProjectRoot "maven-settings.xml")
+    $settingsArg = if ($useSettings) "-s maven-settings.xml" else ""
     $backendCmd = @"
 `$env:JAVA_HOME = 'C:\Program Files\Java\jdk-17.0.9'
 `$env:Path = "`$env:JAVA_HOME\bin;`$env:Path"
@@ -125,7 +130,8 @@ if (Test-PortListening -Port $BackendPort) {
 `$env:APP_ENCRYPT_KEY = 'MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY='
 Set-Location '$ProjectRoot'
 Write-Host 'Starting pms-admin (spring-boot:run)...'
-mvn spring-boot:run -pl pms-admin '-Dmaven.test.skip=true' '-Dspring-boot.run.jvmArguments=-Dotel.sdk.disabled=true -Dotel.traces.exporter=none -Dotel.metrics.exporter=none -Dotel.logs.exporter=none'
+Write-Host 'NOTE: If you changed yudao-framework / pms-common / pms-system, run .\rebuild-common.ps1 first.'
+mvn $settingsArg spring-boot:run -pl pms-admin '-Dmaven.test.skip=true' '-Dspring-boot.run.jvmArguments=-Dotel.sdk.disabled=true -Dotel.traces.exporter=none -Dotel.metrics.exporter=none -Dotel.logs.exporter=none'
 pause
 "@
 
