@@ -8,5 +8,5 @@ import org.apache.ibatis.annotations.Mapper;
  * Mapper for {@link LoginLog}.
  */
 @Mapper
-public interface LoginLogMapper extends BaseMapper<LoginLog> {
+public interface PmsLoginLogMapper extends BaseMapper<LoginLog> {
 }

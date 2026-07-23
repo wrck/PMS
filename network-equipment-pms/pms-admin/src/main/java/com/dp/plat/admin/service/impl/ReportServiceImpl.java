@@ -17,7 +17,7 @@ import com.dp.plat.project.entity.Project;
 import com.dp.plat.project.mapper.ProjectMapper;
 import com.dp.plat.system.entity.LoginLog;
 import com.dp.plat.system.entity.SysOperLog;
-import com.dp.plat.system.mapper.LoginLogMapper;
+import com.dp.plat.system.mapper.PmsLoginLogMapper;
 import com.dp.plat.system.mapper.SysOperLogMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +73,7 @@ public class ReportServiceImpl implements ReportService {
     private final ImplTaskMapper implTaskMapper;
     private final WarrantyMapper warrantyMapper;
     private final SysOperLogMapper sysOperLogMapper;
-    private final LoginLogMapper loginLogMapper;
+    private final PmsLoginLogMapper loginLogMapper;
 
     @Override
     public DashboardStats getDashboardStats() {

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dp.plat.system.entity.LoginLog;
-import com.dp.plat.system.mapper.LoginLogMapper;
+import com.dp.plat.system.mapper.PmsLoginLogMapper;
 import com.dp.plat.system.service.ILoginLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,12 +12,17 @@ import org.springframework.util.StringUtils;
 
 /**
  * 登录日志服务实现。
+ *
+ * <p>显式指定 Bean 名 {@code pmsLoginLogServiceImpl}，避免与 yudao-module-system
+ * 的 {@code loginLogServiceImpl} 同名冲突（两者类名相同，默认 Bean 名均为
+ * {@code loginLogServiceImpl}，启动时 {@code @ComponentScan} 会抛出
+ * BeanDefinitionConflictException）。</p>
  */
-@Service
+@Service("pmsLoginLogServiceImpl")
 @RequiredArgsConstructor
 public class LoginLogServiceImpl implements ILoginLogService {
 
-    private final LoginLogMapper loginLogMapper;
+    private final PmsLoginLogMapper loginLogMapper;
 
     @Override
     public boolean record(LoginLog loginLog) {
