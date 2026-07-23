@@ -5,14 +5,22 @@ server:
 
 spring:
   # 数据源默认值：实际值由 AbstractIntegrationTest 的 @DynamicPropertySource 注入 Testcontainers MySQL 地址
+  # 使用 dynamic-datasource 格式（与 yudao-spring-boot-starter-mybatis 引入的
+  # dynamic-datasource-spring-boot3-starter 兼容，否则报 "loaded [0] datasource"）
   datasource:
-    url: jdbc:mysql://localhost:3306/network_equipment_pms_test?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
-    username: test
-    password: test
-    hikari:
-      minimum-idle: 2
-      maximum-pool-size: 10
-      connection-timeout: 30000
+    dynamic:
+      primary: master
+      strict: false
+      datasource:
+        master:
+          url: jdbc:mysql://localhost:3306/network_equipment_pms_test?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+          username: test
+          password: test
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          hikari:
+            minimum-idle: 2
+            maximum-pool-size: 10
+            connection-timeout: 30000
   # Redis 默认值：实际值由 @DynamicPropertySource 注入 Testcontainers Redis 地址
   data:
     redis:
