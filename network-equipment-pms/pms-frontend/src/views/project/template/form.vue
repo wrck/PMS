@@ -424,7 +424,14 @@ watch(activeStep, (step) => {
   if (step === 2) initTaskSortable()
 })
 
-/** 初始化 sortablejs：在 el-table tbody 上启用整行拖拽，变更父子关系与排序 */
+/**
+ * 初始化 sortablejs：在 el-table tbody 上启用整行拖拽，参照 el-tree 拖拽模型。
+ *
+ * el-tree 拖拽原理：内部维护 Node 树，拖拽时操作 Node 数据再渲染，
+ * DOM 完全由数据驱动。el-table 无原生拖拽，这里用 sortablejs 捕获拖拽意图，
+ * 在 onEnd 中先撤销 sortablejs 对 DOM 的移动，再更新 tasks 数据，
+ * 由 Vue 响应式重渲染接管 DOM，避免 DOM 与数据错位导致内容重置/乱序。
+ */
 let taskSortable: Sortable | null = null
 function initTaskSortable() {
   if (taskSortable) {
@@ -440,68 +447,75 @@ function initTaskSortable() {
       ghostClass: 'task-drag-ghost',
       chosenClass: 'task-drag-chosen',
       onEnd(evt) {
-        handleTaskRowDrop(evt)
+        // sortablejs 已移动 DOM，但 el-table 行内容由 Vue 数据驱动。
+        // 这里先记录拖拽意图，再还原 DOM，最后更新数据让 Vue 重渲染。
+        const { oldIndex, newIndex, item } = evt
+        if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) {
+          restoreSortableDom(tbody, oldIndex, newIndex, item)
+          return
+        }
+        // 先还原 DOM：把被拖元素插回原位置，让 Vue 按原数据重新渲染
+        restoreSortableDom(tbody, oldIndex, newIndex, item)
+        // 再更新数据，Vue 重渲染会按新数据顺序重建 DOM
+        handleTaskRowDrop(oldIndex, newIndex)
       }
     })
   })
 }
 
-/**
- * 处理 el-table 行拖拽结束。
- *
- * 关键：sortablejs 已直接操作 DOM 移动了 <tr>，而 el-table 行内容由 Vue
- * 响应式数据驱动。若不处理，el-table 内部状态与 DOM 错位，导致输入框
- * 内容重置、行序混乱。
- *
- * 策略：以 sortablejs 提供的 oldIndex/newIndex 计算新的 parentId 与顺序，
- * 更新 tasks 数据，然后销毁并重建 sortable 实例 + 强制 Vue 重新渲染表格，
- * 确保 DOM 完全由 Vue 数据接管。
- */
-function handleTaskRowDrop(evt: Sortable.MoveEvent) {
-  const oldIndex = evt.oldIndex
-  const newIndex = evt.newIndex
+/** 将 sortablejs 移动的 DOM 还原到拖拽前状态 */
+function restoreSortableDom(tbody: HTMLElement, oldIndex: number | undefined, newIndex: number | undefined, item: HTMLElement | undefined) {
   if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return
+  const rows = Array.from(tbody.querySelectorAll('tr'))
+  // 当前 rows 顺序是 sortablejs 移动后的（item 在 newIndex 位置）
+  // 还原：把 item 从当前位置移回 oldIndex 位置
+  const refRow = rows[oldIndex > newIndex ? oldIndex + 1 : oldIndex]
+  if (refRow) {
+    tbody.insertBefore(item!, refRow)
+  } else {
+    tbody.appendChild(item!)
+  }
+}
 
-  // 复制当前数据快照（避免操作过程中引用变化）
+/**
+ * 根据 oldIndex/newIndex 计算新的 parentId 与顺序，更新 tasks 数据。
+ * 参照 el-tree 的 allow-drop 语义：
+ *  - 向下拖（newIndex > oldIndex）：成为目标行的子节点
+ *  - 向上拖（newIndex < oldIndex）：成为目标行的前一个兄弟（同级）
+ */
+function handleTaskRowDrop(oldIndex: number, newIndex: number) {
+  // 用浅拷贝快照操作，避免原对象引用在过程中被污染
   const snapshot = tasks.value.map((t) => ({ ...t }))
   const dragged = snapshot[oldIndex]
   const target = snapshot[newIndex]
   if (!dragged || !target || dragged.id === target.id) {
-    // 异常情况：强制重渲染恢复 DOM 与数据一致
     tasks.value = [...tasks.value]
     return
   }
 
-  // 防止拖入自己的后代（会形成环）
+  // 防止拖入自身或后代（会形成环）
   const ancestorIds = new Set(getAncestors(snapshot, target.id).map((a) => a.id))
   if (ancestorIds.has(dragged.id)) {
     ElMessage.warning('不能拖入自身或后代任务')
-    tasks.value = [...tasks.value]
     return
   }
 
-  // 移除被拖拽节点，准备重新插入
+  // 移除被拖节点，重新插入到目标位置
   const without = snapshot.filter((t) => t.id !== dragged.id)
   const targetIdx = without.findIndex((t) => t.id === target.id)
 
-  // 向下拖（newIndex > oldIndex）：作为 target 的子节点（插到 target 之后、target 现有子树之前）
-  // 向上拖（newIndex < oldIndex）：作为 target 的前一个兄弟（同级，插到 target 之前）
   if (newIndex > oldIndex) {
+    // 向下拖：作为 target 的子节点（插到 target 之后、其现有子树之前）
     dragged.parentId = target.id
     without.splice(targetIdx + 1, 0, dragged)
   } else {
+    // 向上拖：作为 target 的前一个兄弟（同级）
     dragged.parentId = target.parentId
     without.splice(targetIdx, 0, dragged)
   }
 
-  // 更新数据，触发 Vue 重渲染 el-table
   tasks.value = without
 }
-
-/** 强制 el-table 重新渲染（销毁并重建 sortable，确保 DOM 由 Vue 接管） */
-watch(taskTree, () => {
-  nextTick(() => initTaskSortable())
-})
 
 // ============== 交付件操作 ==============
 
