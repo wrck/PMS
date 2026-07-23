@@ -96,7 +96,7 @@ function Set-PmsEnvironment {
     $env:JAVA_HOME = $JavaHome
     $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 
-    $env:SPRING_DATASOURCE_URL = "jdbc:mysql://localhost:$MysqlPort/$MysqlDatabase?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true"
+    $env:SPRING_DATASOURCE_URL = "jdbc:mysql://localhost:$MysqlPort/${MysqlDatabase}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true"
     $env:MYSQL_USER      = $MysqlUser
     $env:MYSQL_PASSWORD  = $MysqlPassword
     $env:REDIS_PASSWORD  = $RedisPassword
