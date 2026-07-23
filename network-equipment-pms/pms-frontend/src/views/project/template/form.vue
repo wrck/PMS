@@ -275,8 +275,21 @@ const taskTreeProps = {
   children: 'children'
 }
 
-function allowDrop(_draggingNode: any, _dropNode: any, type: any) {
-  return type !== 'inner' || true
+// 任务树最大深度：父任务 + 一级子任务（共 2 层），避免子任务内再嵌套子任务
+const MAX_TASK_DEPTH = 2
+
+function allowDrop(draggingNode: any, dropNode: any, type: any) {
+  // 仅限制“拖入成为子节点”（inner）的情形，前后排序（prev/next）不受限
+  if (type !== 'inner') return true
+  // 原实现 `type !== 'inner' || true` 恒为 true，导致任意拖拽均可产生嵌套。
+  // 这里改为按深度校验：拖入 dropNode 后整棵子树的最终深度不得超过 MAX_TASK_DEPTH。
+  const subtreeDepth = (node: any): number => {
+    if (!node?.childNodes?.length) return 1
+    return 1 + Math.max(...node.childNodes.map((c: any) => subtreeDepth(c)))
+  }
+  // dropNode.level 为 1-based（根节点 = 1），拖入后该子树根节点深度 = dropNode.level + 1
+  const resultingDepth = dropNode.level + 1 + (subtreeDepth(draggingNode) - 1)
+  return resultingDepth <= MAX_TASK_DEPTH
 }
 
 function handleTaskDrop() {
@@ -303,9 +316,21 @@ function addTask(parent?: TaskNode) {
   }
 }
 
-function removeTask(node: TaskNode, list: TaskNode[]) {
-  const idx = list.indexOf(node)
-  if (idx >= 0) list.splice(idx, 1)
+function removeTask(node: TaskNode) {
+  // 原实现恒以根数组 tasks 作为 list 查找，导致子任务 indexOf 返回 -1 无法删除。
+  // 改为在整棵树中递归查找并从其所在父节点的 children 中移除。
+  const removeFrom = (list: TaskNode[]): boolean => {
+    const idx = list.indexOf(node)
+    if (idx >= 0) {
+      list.splice(idx, 1)
+      return true
+    }
+    for (const n of list) {
+      if (n.children && n.children.length > 0 && removeFrom(n.children)) return true
+    }
+    return false
+  }
+  removeFrom(tasks.value)
 }
 
 // ============== 交付件操作 ==============
@@ -443,19 +468,44 @@ function applySnapshot(snap?: TemplateSnapshot) {
     exitCriteria: normalizeExitCriteria(p.exitCriteria)
   }))
 
-  // 任务：字段名一致（id/children 等前端字段在加载时缺失，由 addTask 等生成）
-  tasks.value = ((snap.tasks ?? []) as any[]).map((t: any) => ({
-    id: genId('task'),
-    taskName: t.taskName ?? '',
-    taskCode: t.taskCode ?? '',
-    phaseCode: t.phaseCode ?? '',
-    assigneeRole: t.assigneeRole ?? '',
-    plannedHours: t.plannedHours ?? 0,
-    weight: t.weight ?? 1,
-    priority: t.priority ?? 'NORMAL',
-    description: t.description ?? '',
-    children: Array.isArray(t.children) ? t.children.map((c: any) => ({ ...c, id: genId('task') })) : []
-  })) as TaskNode[]
+  // 任务：后端 TaskDef 为扁平列表（通过 parentTaskName 引用父任务），
+  // 加载时需按 parentTaskName 重建为树，避免层级丢失或回显异常。
+  // 旧实现直接读 t.children（后端从不输出该字段），导致保存后重载时树结构丢失。
+  const flatTasks = (snap.tasks ?? []) as any[]
+  const taskNodeMap = new Map<string, TaskNode>()
+  const parentNameMap = new Map<string, string>()
+  const createdNodes: TaskNode[] = []
+  for (const t of flatTasks) {
+    const node: TaskNode = {
+      id: genId('task'),
+      taskName: t.taskName ?? '',
+      taskCode: t.taskCode ?? '',
+      phaseCode: t.phaseCode ?? '',
+      assigneeRole: t.assigneeRole ?? '',
+      plannedHours: t.plannedHours ?? 0,
+      weight: t.weight ?? 1,
+      priority: t.priority ?? 'NORMAL',
+      description: t.description ?? '',
+      children: []
+    }
+    createdNodes.push(node)
+    if (node.taskName) {
+      taskNodeMap.set(node.taskName, node)
+      if (t.parentTaskName) parentNameMap.set(node.taskName, t.parentTaskName)
+    }
+  }
+  // 第二遍：按 parentTaskName 挂载到父节点的 children，找不到父节点的归到根
+  const rootTasks: TaskNode[] = []
+  for (const n of createdNodes) {
+    const parentName = n.taskName ? parentNameMap.get(n.taskName) : undefined
+    const parent = parentName ? taskNodeMap.get(parentName) : undefined
+    if (parent && parent !== n) {
+      parent.children!.push(n)
+    } else {
+      rootTasks.push(n)
+    }
+  }
+  tasks.value = rootTasks
 
   // 交付件：name↔deliverableName, type↔deliverableType, required↔mandatory, signOffRole↔approverRole,
   // refEntityType/refEntityId 直接对齐
@@ -580,7 +630,8 @@ function buildSnapshot(): TemplateSnapshot {
       entryCriteria: normalizeEntryCriteria(p.entryCriteria),
       exitCriteria: normalizeExitCriteria(p.exitCriteria)
     })),
-    // 任务：taskCode 在后端 DTO 中不存在，转成 parentTaskName 由后端处理；保留前端 id/children 内部字段后端会忽略
+    // 任务：flattenTasks 将树扁平化为后端 TaskDef 列表，parentTaskName 引用父任务名称；
+    // 前端 id/children 为内部字段，不随 TaskDef 提交（后端 DTO 不含这两个字段）
     tasks: flattenTasks(tasks.value),
     // 交付件：name→deliverableName, type→deliverableType, required→mandatory, signOffRole→approverRole,
     // refEntityType/refEntityId 直接对齐后端 DeliverableDef
@@ -617,23 +668,28 @@ function buildSnapshot(): TemplateSnapshot {
 /** 将任务树扁平化为后端 TaskDef 列表（parentTaskName 关联父节点，补全所有字段） */
 function flattenTasks(nodes: TaskNode[], parent?: TaskNode): TaskDef[] {
   const result: TaskDef[] = []
+  // 原实现 `let order = 1` 在每次递归调用中重新声明，导致不同层级兄弟组 sortOrder 重复。
+  // 这里用闭包共享计数器，保证整棵树扁平化后 sortOrder 单调递增。
   let order = 1
-  for (const n of nodes) {
-    result.push({
-      taskName: n.taskName,
-      parentTaskName: parent?.taskName,
-      phaseCode: n.phaseCode,
-      plannedHours: n.plannedHours,
-      assigneeRole: n.assigneeRole,
-      weight: n.weight,
-      priority: n.priority,
-      description: n.description,
-      sortOrder: order++
-    })
-    if (n.children && n.children.length > 0) {
-      result.push(...flattenTasks(n.children, n))
+  const walk = (list: TaskNode[], parentNode?: TaskNode) => {
+    for (const n of list) {
+      result.push({
+        taskName: n.taskName,
+        parentTaskName: parentNode?.taskName,
+        phaseCode: n.phaseCode,
+        plannedHours: n.plannedHours,
+        assigneeRole: n.assigneeRole,
+        weight: n.weight,
+        priority: n.priority,
+        description: n.description,
+        sortOrder: order++
+      })
+      if (n.children && n.children.length > 0) {
+        walk(n.children, n)
+      }
     }
   }
+  walk(nodes, parent)
   return result
 }
 
@@ -861,7 +917,7 @@ onMounted(() => {
                 </div>
                 <div class="task-card-actions">
                   <el-button link type="primary" size="small" :icon="CirclePlus" @click.stop="addTask(data)">子任务</el-button>
-                  <el-button link type="danger" size="small" :icon="Close" @click.stop="removeTask(data, tasks)" />
+                  <el-button link type="danger" size="small" :icon="Close" @click.stop="removeTask(data)" />
                 </div>
               </div>
               <div class="task-card-body">
