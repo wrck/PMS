@@ -56,11 +56,12 @@ public abstract class AbstractIntegrationTest {
 
     @DynamicPropertySource
     static void registerContainerProperties(DynamicPropertyRegistry registry) {
-        // 覆盖 application.yml 中的本地 MySQL 数据源配置
-        registry.add("spring.datasource.url", mysql::getJdbcUrl);
-        registry.add("spring.datasource.username", mysql::getUsername);
-        registry.add("spring.datasource.password", mysql::getPassword);
-        registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
+        // 覆盖 application-test.yml 中的本地 MySQL 数据源配置
+        // 注意：yudao 用 dynamic-datasource，必须注入到 spring.datasource.dynamic.datasource.master.*
+        registry.add("spring.datasource.dynamic.datasource.master.url", mysql::getJdbcUrl);
+        registry.add("spring.datasource.dynamic.datasource.master.username", mysql::getUsername);
+        registry.add("spring.datasource.dynamic.datasource.master.password", mysql::getPassword);
+        registry.add("spring.datasource.dynamic.datasource.master.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
         // 覆盖 Redis 连接配置
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));

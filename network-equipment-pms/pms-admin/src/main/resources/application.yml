@@ -4,17 +4,25 @@ server:
 spring:
   application:
     name: network-equipment-pms
+  # yudao 使用 dynamic-datasource-spring-boot3-starter（来自 yudao-spring-boot-starter-mybatis）
+  # 必须用 spring.datasource.dynamic.datasource.master.* 配置，不能用 spring.datasource.*
+  # 否则启动时报 "dynamic-datasource initial loaded [0] datasource"
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/network_equipment_pms?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
-    username: ${MYSQL_USER:root}
-    password: ${MYSQL_PASSWORD:pmspassword}
-    hikari:
-      minimum-idle: 5
-      maximum-pool-size: 20
-      idle-timeout: 30000
-      max-lifetime: 1800000
-      connection-timeout: 30000
+    dynamic:
+      primary: master
+      strict: false            # 严格模式：未匹配数据源时报错；false 时回退到 master
+      datasource:
+        master:
+          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/network_equipment_pms?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+          username: ${MYSQL_USER:root}
+          password: ${MYSQL_PASSWORD:pmspassword}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          hikari:
+            minimum-idle: 5
+            maximum-pool-size: 20
+            idle-timeout: 30000
+            max-lifetime: 1800000
+            connection-timeout: 30000
   data:
     redis:
       host: localhost
