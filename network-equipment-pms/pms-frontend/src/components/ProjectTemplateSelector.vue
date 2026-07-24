@@ -162,7 +162,7 @@ async function handleSubmit() {
       const res = await createProjectFromTemplate(projectForm)
       ElMessage.success('项目创建成功')
       visible.value = false
-      emit('success', res.id!)
+      emit('success', res.id)
     } catch {
       /* handled by interceptor */
     } finally {

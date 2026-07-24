@@ -729,7 +729,7 @@ CREATE TABLE IF NOT EXISTS `infra_api_access_log` (
     `begin_time`         DATETIME     NOT NULL COMMENT '开始请求时间',
     `end_time`           DATETIME     DEFAULT NULL COMMENT '结束请求时间',
     `duration`           INT          DEFAULT NULL COMMENT '执行时长（毫秒）',
-    `resultCode`         INT          NOT NULL DEFAULT 0 COMMENT '结果码',
+    `result_code`        INT          NOT NULL DEFAULT 0 COMMENT '结果码',
     `result_msg`         VARCHAR(512) DEFAULT NULL COMMENT '结果提示',
     `creator`            VARCHAR(64)  DEFAULT '' COMMENT '创建者',
     `create_time`        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

@@ -2,6 +2,16 @@
 .env
 .env.*
 !.env.example
+env.ps1
+maven-settings.xml
+maven-settings.sandbox.xml
+
+# 敏感 SQL（含密码哈希等）
+update_pwd.sql
+
+# 测试产物
+*.har
+test-create.har
 
 # 日志文件
 logs/
@@ -29,3 +39,6 @@ pms-frontend/node_modules/
 # 操作系统文件
 .DS_Store
 Thumbs.db
+
+# yudao 参考实现（独立 git 仓库，不纳入主仓库）
+yudao-ui-reference/

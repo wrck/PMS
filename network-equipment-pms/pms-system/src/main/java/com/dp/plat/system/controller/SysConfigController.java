@@ -21,9 +21,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * System parameter configuration controller.
+ * <p><b>@Deprecated</b>：参数配置管理已由 yudao 底座提供，替代接口为 {@code /admin-api/infra/config/*}（yudao ConfigController）。</p>
+ *
+ * <p>System parameter configuration controller.</p>
  */
-@Tag(name = "参数配置", description = "System parameter configuration APIs")
+@Deprecated
+@Tag(name = "参数配置（已弃用）", description = "System parameter configuration APIs")
 @RestController
 @RequestMapping("/api/system/config")
 @RequiredArgsConstructor

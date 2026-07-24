@@ -24,14 +24,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 定时任务监控控制器：最近执行记录、失败记录、按任务名分组统计、手动重试占位。
+ * <p><b>@Deprecated</b>：定时任务管理已由 yudao 底座提供，替代接口为 {@code /admin-api/infra/job/*} + {@code /admin-api/infra/job-log/*}。</p>
+ *
+ * <p>定时任务监控控制器：最近执行记录、失败记录、按任务名分组统计、手动重试占位。</p>
  *
  * <p>统计与 24h 失败查询通过 {@link LambdaQueryWrapper} + Java Stream 实现，
  * 不改写 mapper XML。手动重试仅记录一条 {@code MANUAL_TRIGGER} 日志，
  * 实际重试需任务自身支持（本接口不真正触发任务执行）。</p>
  */
+@Deprecated
 @Slf4j
-@Tag(name = "定时任务监控", description = "Schedule task monitor APIs")
+@Tag(name = "定时任务监控（已弃用）", description = "Schedule task monitor APIs")
 @RestController
 @RequestMapping("/api/system/schedule")
 @RequiredArgsConstructor

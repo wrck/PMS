@@ -90,6 +90,8 @@ interface TaskNode {
   weight?: number
   priority?: string
   description?: string
+  /** 子任务（递归结构，用于树形遍历） */
+  children?: TaskNode[]
 }
 const tasks = ref<TaskNode[]>([])
 
@@ -120,7 +122,7 @@ const taskGridOptions = reactive({
 })
 
 /** vxe-grid 列配置：dragSort=true 的列作为拖拽触发区域（整行可拖） */
-const taskGridColumns = computed(() => [
+const taskGridColumns = computed((): any[] => [
   { type: 'seq', width: 60, title: '序号' },
   {
     field: 'taskName',
@@ -637,7 +639,7 @@ async function handleSaveDraft() {
       await updateTemplate(form)
     }
     // 持久化阶段/任务/交付件等详细配置到草稿快照
-    await saveDraftSnapshot(form.id, buildSnapshot())
+    await saveDraftSnapshot(form.id!, buildSnapshot())
     ElMessage.success('草稿已保存')
   } catch (e: any) {
     // 原实现仅 try/finally 无 catch，保存失败时错误被静默吞掉，用户只看到按钮恢复但无任何提示。
@@ -730,7 +732,7 @@ async function handleSave() {
       await updateTemplate(form)
     }
     // 持久化阶段/任务/交付件等详细配置到草稿快照
-    await saveDraftSnapshot(form.id, buildSnapshot())
+    await saveDraftSnapshot(form.id!, buildSnapshot())
     ElMessage.success('保存成功')
     router.back()
   } catch (e: any) {

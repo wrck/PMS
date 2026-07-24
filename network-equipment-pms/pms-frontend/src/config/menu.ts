@@ -147,6 +147,9 @@ export const menuGroups: MenuItem[] = [
       { title: '缓存管理', path: '/system/cache', icon: 'Coin' },
       { title: '定时任务', path: '/system/schedule', icon: 'Timer' },
       { title: '审计日志', path: '/system/audit', icon: 'DocumentChecked' },
+      { title: '登录日志', path: '/system/login-log', icon: 'Document' },
+      { title: '操作日志', path: '/system/operate-log', icon: 'DocumentChecked' },
+      { title: '令牌管理', path: '/system/oauth2-token', icon: 'Key' },
       { title: '版本日志', path: '/changelog', icon: 'Notebook' }
     ]
   },
@@ -158,10 +161,82 @@ export const menuGroups: MenuItem[] = [
       { title: '用户管理', path: '/system/user', icon: 'User' },
       { title: '角色管理', path: '/system/role', icon: 'UserFilled' },
       { title: '菜单管理', path: '/system/menu', icon: 'Menu' },
-      { title: '字典管理', path: '/system/dict', icon: 'Document' }
+      { title: '部门管理', path: '/system/dept', icon: 'OfficeBuilding' },
+      { title: '岗位管理', path: '/system/post', icon: 'Postcard' },
+      { title: '字典管理', path: '/system/dict', icon: 'Document' },
+      { title: '字典数据', path: '/system/dict/data', icon: 'Document' },
+      { title: '通知公告', path: '/system/notice', icon: 'BellFilled' },
+      { title: '租户管理', path: '/system/tenant', icon: 'OfficeBuilding' },
+      { title: '租户套餐', path: '/system/tenant-package', icon: 'Box' },
+      { title: 'OAuth2 客户端', path: '/system/oauth2-client', icon: 'Key' },
+      { title: '短信渠道', path: '/system/sms-channel', icon: 'ChatDotRound' },
+      { title: '短信模板', path: '/system/sms-template', icon: 'Message' },
+      { title: '短信日志', path: '/system/sms-log', icon: 'Document' },
+      { title: '邮箱账号', path: '/system/mail-account', icon: 'Message' },
+      { title: '邮件模板', path: '/system/mail-template', icon: 'Message' },
+      { title: '邮件日志', path: '/system/mail-log', icon: 'Document' },
+      { title: '站内信模板', path: '/system/notify-template', icon: 'BellFilled' },
+      { title: '站内信消息', path: '/system/notify-message', icon: 'Bell' },
+      { title: '我的站内信', path: '/system/notify-my', icon: 'Bell' },
+      { title: '社交客户端', path: '/system/social-client', icon: 'Share' },
+      { title: '社交用户', path: '/system/social-user', icon: 'User' },
+      { title: '地区管理', path: '/system/area', icon: 'Location' }
+    ]
+  },
+  {
+    title: '基础设施',
+    icon: 'Tools',
+    group: 'system',
+    children: [
+      { title: '参数配置', path: '/infra/config', icon: 'Setting' },
+      { title: '定时任务', path: '/infra/job', icon: 'Timer' },
+      { title: '任务日志', path: '/infra/job-log', icon: 'Document' },
+      { title: 'Redis 监控', path: '/infra/redis', icon: 'DataLine' },
+      { title: 'API 访问日志', path: '/infra/api-access-log', icon: 'Document' },
+      { title: 'API 错误日志', path: '/infra/api-error-log', icon: 'WarningFilled' },
+      { title: '数据源配置', path: '/infra/data-source-config', icon: 'Coin' },
+      { title: '文件管理', path: '/infra/file', icon: 'Document' },
+      { title: '文件配置', path: '/infra/file-config', icon: 'Files' },
+      { title: '代码生成', path: '/infra/codegen', icon: 'EditPen' },
+      { title: '构建信息', path: '/infra/build', icon: 'InfoFilled' },
+      { title: '服务器监控', path: '/infra/server', icon: 'Monitor' },
+      { title: 'Druid 监控', path: '/infra/druid', icon: 'DataLine' },
+      { title: 'API 文档', path: '/infra/swagger', icon: 'Document' },
+      { title: 'SkyWalking', path: '/infra/skywalking', icon: 'DataLine' },
+      { title: 'WebSocket 测试', path: '/infra/web-socket', icon: 'Connection' }
+    ]
+  },
+  {
+    title: '工作流 BPM',
+    icon: 'Connection',
+    group: 'system',
+    children: [
+      { title: '流程模型', path: '/bpm/model', icon: 'Connection' },
+      { title: '流程分类', path: '/bpm/category', icon: 'Files' },
+      { title: '动态表单', path: '/bpm/form', icon: 'Document' },
+      { title: '用户组', path: '/bpm/group', icon: 'User' },
+      { title: '流程表达式', path: '/bpm/process-expression', icon: 'EditPen' },
+      { title: '流程监听器', path: '/bpm/process-listener', icon: 'BellFilled' },
+      { title: '我的流程', path: '/bpm/process-instance', icon: 'Tickets' },
+      { title: '流程实例管理', path: '/bpm/process-instance/manager', icon: 'Tickets' },
+      { title: '待办任务', path: '/bpm/task/todo', icon: 'Bell' },
+      { title: '已办任务', path: '/bpm/task/done', icon: 'CircleCheck' },
+      { title: '任务管理', path: '/bpm/task/manager', icon: 'Tickets' },
+      { title: '抄送任务', path: '/bpm/task/copy', icon: 'Document' },
+      { title: 'OA 请假', path: '/bpm/oa/leave', icon: 'Calendar' },
+      { title: '简单模型设计', path: '/bpm/simple', icon: 'EditPen' }
     ]
   },
   { title: '报表统计', path: '/report', icon: 'TrendCharts', group: 'report' },
+  {
+    title: '报表平台',
+    icon: 'TrendCharts',
+    group: 'report',
+    children: [
+      { title: 'GoView 数据大屏', path: '/report/goview', icon: 'DataLine' },
+      { title: '积木报表', path: '/report/jmreport', icon: 'TrendCharts' }
+    ]
+  },
   {
     title: '低代码',
     icon: 'MagicStick',

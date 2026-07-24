@@ -111,7 +111,7 @@ export interface ProjectTreeNode {
   depth?: number
   progress?: number
   currentPhaseId?: number
-  children: ProjectTreeNode[]
+  children?: ProjectTreeNode[]
 }
 
 /** 项目进度汇总 */

@@ -28,11 +28,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * 文件附件管理控制器。
+ * 文件附件管理控制器（已弃用）。
+ *
+ * <p><b>@Deprecated</b>：文件存储基础能力已由 yudao 底座的
+ * {@code /admin-api/infra/file/*}（{@code FileController}）与
+ * {@code /admin-api/infra/file-config/*}（{@code FileConfigController}）提供。
+ * 本控制器的业务附件（bizType/bizId/geo-fence）能力后续将迁移至 yudao 文件体系之上，
+ * 待完全迁移后删除。beanName 已重命名为 {@code pmsFileController} 以避免与
+ * yudao {@code FileController} 同名冲突。</p>
  */
+@Deprecated
 @Slf4j
-@Tag(name = "文件附件", description = "File attachment management APIs")
-@RestController
+@Tag(name = "文件附件（已弃用，请使用 /admin-api/infra/file/*）", description = "File attachment management APIs")
+@RestController("pmsFileController")
 @RequestMapping("/api/file")
 @RequiredArgsConstructor
 public class FileController {

@@ -13,7 +13,7 @@
 // =============================================================================
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, type TableInstance } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   approveTask,
   completeTask,
@@ -61,7 +61,7 @@ const total = ref(0)
 const page = reactive({ current: 1, size: 20 })
 
 // ============ 表格 ref ============
-const tableRef = ref<TableInstance | null>(null)
+const tableRef = ref<any | null>(null)
 
 // ============ 筛选 ============
 const query = reactive({
@@ -355,7 +355,7 @@ function toggleAll(expand: boolean) {
   const walk = (nodes: ImplTaskNode[]) => {
     nodes.forEach((n) => {
       if (n.children && n.children.length > 0) {
-        table!.toggleTreeExpansion(n, expand)
+        table!.toggleTreeExpansion(n as any, expand)
         walk(n.children)
       }
     })

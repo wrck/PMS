@@ -24,9 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Role management controller.
+ * <p><b>@Deprecated</b>：角色管理基础能力已由 yudao 底座提供，替代接口为 {@code /admin-api/system/role/*}（yudao RoleController）。</p>
+ *
+ * <p>Role management controller.</p>
  */
-@Tag(name = "角色管理", description = "Role management APIs")
+@Deprecated
+@Tag(name = "角色管理（已弃用）", description = "Role management APIs")
 @RestController
 @RequestMapping("/api/system/role")
 @RequiredArgsConstructor

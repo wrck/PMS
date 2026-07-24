@@ -912,20 +912,22 @@ function handleAddDependency() {
 
 async function handleAddDepSubmit() {
   if (!addDepFormRef.value || !addDepForm.relatedTaskId || !task.value?.projectId) return
+  const relatedTaskId = addDepForm.relatedTaskId
+  const projectId = task.value.projectId
   await addDepFormRef.value.validate(async (valid) => {
     if (!valid) return
     addDepSubmitting.value = true
     try {
       const payload: TaskDependency = {
-        projectId: task.value!.projectId,
+        projectId,
         predecessorTaskId:
           addDepForm.direction === 'predecessor'
-            ? addDepForm.relatedTaskId
+            ? relatedTaskId
             : taskId.value,
         successorTaskId:
           addDepForm.direction === 'predecessor'
             ? taskId.value
-            : addDepForm.relatedTaskId,
+            : relatedTaskId,
         dependencyType: addDepForm.dependencyType,
         lagDays: addDepForm.lagDays
       }

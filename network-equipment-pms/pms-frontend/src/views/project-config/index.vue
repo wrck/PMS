@@ -23,6 +23,7 @@ import {
   createMilestone,
   updateMilestone,
   deleteMilestone,
+  updateMilestoneProgress,
   type Milestone
 } from '@/api/project'
 import { getProjectConfigs, updateProjectConfigs } from '@/api/project-config'
@@ -281,6 +282,56 @@ async function saveAllMilestones() {
     await loadMilestones()
   } finally {
     savingGroup.value.milestone = false
+  }
+}
+
+// ============== 里程碑进度更新 ==============
+
+const progressDialogVisible = ref(false)
+const progressSubmitting = ref(false)
+const progressForm = reactive<{
+  milestoneId: number | null
+  milestoneName: string
+  actualDate: string
+  description: string
+}>({
+  milestoneId: null,
+  milestoneName: '',
+  actualDate: '',
+  description: ''
+})
+
+function openProgressDialog(m: Milestone) {
+  if (!m.id) {
+    ElMessage.warning('请先保存里程碑再更新进度')
+    return
+  }
+  progressForm.milestoneId = m.id
+  progressForm.milestoneName = m.name
+  progressForm.actualDate = m.actualDate ?? ''
+  progressForm.description = ''
+  progressDialogVisible.value = true
+}
+
+async function submitMilestoneProgress() {
+  if (!progressForm.milestoneId) return
+  if (!progressForm.actualDate) {
+    ElMessage.warning('请选择实际完成日期')
+    return
+  }
+  progressSubmitting.value = true
+  try {
+    await updateMilestoneProgress(progressForm.milestoneId, {
+      actualDate: progressForm.actualDate,
+      description: progressForm.description
+    })
+    ElMessage.success('里程碑进度已更新')
+    progressDialogVisible.value = false
+    await loadMilestones()
+  } catch {
+    /* handled by interceptor */
+  } finally {
+    progressSubmitting.value = false
   }
 }
 
@@ -560,10 +611,19 @@ onMounted(async () => {
               <el-input v-model="row.description" size="small" />
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="160" fixed="right">
+          <el-table-column label="操作" width="220" fixed="right">
             <template #default="{ row, $index }">
               <el-button link type="primary" size="small" @click="saveMilestone(row)">
                 保存
+              </el-button>
+              <el-button
+                v-if="row.id"
+                link
+                type="success"
+                size="small"
+                @click="openProgressDialog(row)"
+              >
+                更新进度
               </el-button>
               <el-button link type="danger" size="small" :icon="Delete" @click="removeMilestoneRow($index)" />
             </template>
@@ -753,6 +813,47 @@ onMounted(async () => {
         description="可能 projectId 无效或未选择项目"
       />
     </div>
+
+    <!-- 里程碑进度更新对话框 -->
+    <el-dialog
+      v-model="progressDialogVisible"
+      title="更新里程碑进度"
+      width="480px"
+      destroy-on-close
+    >
+      <el-form label-width="100px">
+        <el-form-item label="里程碑">
+          <span style="font-weight: 600">{{ progressForm.milestoneName }}</span>
+        </el-form-item>
+        <el-form-item label="实际完成日期" required>
+          <el-date-picker
+            v-model="progressForm.actualDate"
+            type="date"
+            value-format="YYYY-MM-DD"
+            placeholder="请选择实际完成日期"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="说明">
+          <el-input
+            v-model="progressForm.description"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入进度说明（可选）"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="progressDialogVisible = false">取消</el-button>
+        <el-button
+          type="primary"
+          :loading="progressSubmitting"
+          @click="submitMilestoneProgress"
+        >
+          确认更新
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 

@@ -47,6 +47,8 @@ export interface ImplTask {
   phaseId?: number | null
   taskWeight?: number
   version?: number
+  /** 检查项列表（任务详情页使用） */
+  checklistItems?: TaskChecklistItem[]
 }
 
 export interface TaskPageQuery extends PageQuery {

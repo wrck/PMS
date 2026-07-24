@@ -15,10 +15,16 @@ export default defineConfig({
     include: ['monaco-editor/esm/vs/editor/editor.worker']
   },
   server: {
-    port: 3000,
+    port: 5000,
     proxy: {
+      // yudao 底座原生接口（/admin-api/system/*、/admin-api/infra/*）
+      '/admin-api': {
+        target: 'http://localhost:9080',
+        changeOrigin: true
+      },
+      // PMS 业务接口
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:9080',
         changeOrigin: true
       }
     }

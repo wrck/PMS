@@ -41,11 +41,11 @@ watch(searchKeyword, (val) => {
 })
 
 /** el-tree filter-node-method：匹配项目名 / 项目编码 */
-const filterNode = (value: string, data: ProjectTreeNode) => {
+const filterNode = (value: string, data: any): boolean => {
   if (!value) return true
-  return (
+  return Boolean(
     data.projectName?.toLowerCase().includes(value.toLowerCase()) ||
-    data.projectCode?.toLowerCase().includes(value.toLowerCase())
+      data.projectCode?.toLowerCase().includes(value.toLowerCase())
   )
 }
 

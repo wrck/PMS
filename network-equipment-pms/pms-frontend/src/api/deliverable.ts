@@ -1,6 +1,10 @@
 import { del, get, post, put } from '@/utils/request'
 import request from '@/utils/request'
+import type { AxiosRequestConfig } from 'axios'
 import { getDictItems, type SysDictItem } from '@/api/system'
+
+/** 重新导出 SysDictItem 类型，供下游组件直接从 deliverable 模块导入 */
+export type { SysDictItem }
 
 /** 交付件性质类型字典编码 */
 export const DELIVERABLE_TYPE_DICT = 'pms_deliverable_type'
@@ -374,7 +378,7 @@ export async function uploadDeliverableInitialVersion(
   return request.post(`/api/deliverable/${id}/upload`, form, {
     headers: { 'Content-Type': 'multipart/form-data' },
     skipValidate: true
-  }) as Promise<DeliverableVersion>
+  } as AxiosRequestConfig & { skipValidate?: boolean }) as Promise<DeliverableVersion>
 }
 
 /** 更新交付件基础信息 */

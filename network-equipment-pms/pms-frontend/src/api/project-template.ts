@@ -54,8 +54,14 @@ export interface TaskDef {
   parentTaskName?: string
   phaseCode?: string
   plannedHours?: number
+  /** 指派角色（对应 TaskNode.assigneeRole） */
+  assigneeRole?: string
+  /** 任务权重（对应 TaskNode.weight） */
+  weight?: number
   priority?: string
   sortOrder?: number
+  /** 任务描述 */
+  description?: string
 }
 
 /** 交付件定义（对齐后端 TemplateSnapshot.DeliverableDef） */
@@ -109,6 +115,8 @@ export interface ProjectTemplateVersion {
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
   publishedAt?: string
   publishedBy?: number
+  /** 创建时间（后端返回） */
+  createTime?: string
 }
 
 export interface PublishVersionRequest {
@@ -204,8 +212,8 @@ export function getDraftVersion(id: number) {
   return get<ProjectTemplateVersion | null>(`/api/project/template/${id}/draft-version`)
 }
 
-export function createProjectFromTemplate(data: ProjectCreateFromTemplateDTO) {
-  return post('/api/project/template/create-project', data)
+export function createProjectFromTemplate(data: ProjectCreateFromTemplateDTO): Promise<{ id: number }> {
+  return post<{ id: number }>('/api/project/template/create-project', data)
 }
 
 /**

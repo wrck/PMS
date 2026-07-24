@@ -18,9 +18,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 审计日志控制器：登录日志、异常日志、定时任务日志查询。
+ * <p><b>@Deprecated</b>：审计日志已由 yudao 操作日志和登录日志提供，替代接口为 {@code /admin-api/system/operate-log/*} + {@code /admin-api/system/login-log/*}。</p>
+ *
+ * <p>审计日志控制器：登录日志、异常日志、定时任务日志查询。</p>
  */
-@Tag(name = "审计日志", description = "Audit log APIs")
+@Deprecated
+@Tag(name = "审计日志（已弃用）", description = "Audit log APIs")
 @RestController
 @RequestMapping("/api/system/audit")
 @RequiredArgsConstructor

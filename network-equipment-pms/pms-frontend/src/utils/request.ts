@@ -63,15 +63,16 @@ const WRITE_METHODS = ['post', 'put', 'patch']
 export const VALIDATOR_ENABLED = true
 
 /**
- * Backend unified response envelope: { code, message, data }.
+ * Backend unified response envelope.
  *
- * <p>与 {@link '@/types'.Result} 的差异：后端历史接口未稳定输出 `success`
- * 与 `timestamp` 字段，因此内部拦截器仅依赖 `code / message / data`。
- * `success` 与 `timestamp` 设为可选以便与公共 Result 类型兼容。</p>
+ * <p>yudao 底座使用 {@code { code, msg, data }}（字段名为 `msg`），
+ * 旧 PMS 使用 {@code { code, message, data }}（字段名为 `message`）。
+ * 本拦截器同时兼容两者：优先读 `msg`，回退到 `message`。</p>
  */
 export interface ApiResult<T = unknown> {
   code: number
-  message: string
+  msg?: string
+  message?: string
   data: T
   success?: boolean
   timestamp?: number
@@ -165,9 +166,8 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response: AxiosResponse) => {
     const res = response.data as ApiResult
-    // Success: return the data payload directly (cast because axios types
-    // expect an AxiosResponse, but the helpers below unwrap it to <T>)
-    if (res.code === 200) {
+    // Success: yudao 底座使用 code=0 表示成功（旧 PMS 使用 code=200，兼容两者）
+    if (res.code === 0 || res.code === 200) {
       // ============ 数据集成校验对象（响应侧） ============
       // 若该 URL 注册了 response validator，对 Result.data 做白名单过滤，
       // 防止后端返回前端未预期的字段污染 store/视图状态。
@@ -196,13 +196,13 @@ service.interceptors.response.use(
       ElMessage.error('登录状态已过期，请重新登录')
       localStorage.removeItem(TOKEN_KEY)
       router.push('/login')
-      return Promise.reject(new Error(res.message || '未授权'))
+      return Promise.reject(new Error(res.msg || res.message || '未授权'))
     }
     // Other business errors（silent 请求不弹错误提示）
     if (!(response.config as AxiosRequestConfig & { silent?: boolean }).silent) {
-      ElMessage.error(res.message || '请求失败')
+      ElMessage.error(res.msg || res.message || '请求失败')
     }
-    return Promise.reject(new Error(res.message || '请求失败'))
+    return Promise.reject(new Error(res.msg || res.message || '请求失败'))
   },
   (error) => {
     // HTTP 401: 未登录或 token 过期，清除 token 并跳转登录页

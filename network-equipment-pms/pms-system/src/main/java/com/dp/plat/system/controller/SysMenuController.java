@@ -23,9 +23,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Menu management controller.
+ * <p><b>@Deprecated</b>：菜单管理基础能力已由 yudao 底座提供，替代接口为 {@code /admin-api/system/menu/*}（yudao MenuController）。</p>
+ *
+ * <p>Menu management controller.</p>
  */
-@Tag(name = "菜单管理", description = "Menu management APIs")
+@Deprecated
+@Tag(name = "菜单管理（已弃用）", description = "Menu management APIs")
 @RestController
 @RequestMapping("/api/system/menu")
 @RequiredArgsConstructor

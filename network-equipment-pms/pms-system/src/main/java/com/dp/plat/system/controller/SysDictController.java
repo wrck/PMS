@@ -25,9 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Dictionary management controller.
+ * <p><b>@Deprecated</b>：字典类型管理已由 yudao 底座提供，替代接口为 {@code /admin-api/system/dict-type/*}（yudao DictTypeController）。</p>
+ *
+ * <p>Dictionary management controller.</p>
  */
-@Tag(name = "字典管理", description = "Dictionary management APIs")
+@Deprecated
+@Tag(name = "字典管理（已弃用）", description = "Dictionary management APIs")
 @RestController
 @RequestMapping("/api/system/dict")
 @RequiredArgsConstructor

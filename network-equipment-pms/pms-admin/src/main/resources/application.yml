@@ -38,7 +38,7 @@ spring:
       strict: false            # 严格模式：未匹配数据源时报错；false 时回退到 master
       datasource:
         master:
-          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/network_equipment_pms?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/network_equipment_pms?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&zeroDateTimeBehavior=convertToNull}
           username: ${MYSQL_USER:root}
           password: ${MYSQL_PASSWORD:pmspassword}
           driver-class-name: com.mysql.cj.jdbc.Driver
@@ -106,6 +106,10 @@ yudao:
     mock-enable: true
     permit-all-urls: # 免登录 URL 列表
       - /admin-api/mp/open/** # 微信公众号回调
+      - /api/auth/login # PMS 登录接口
+      - /api/auth/logout # PMS 登出接口
+  captcha:
+    enable: false # 开发环境禁用验证码
   swagger:
     title: 网络设备 PMS 管理后台
     description: 网络设备 PMS 管理后台接口文档

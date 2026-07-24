@@ -166,7 +166,7 @@ export function range(minVal: number, maxVal: number): Pick<FieldSpec, 'min' | '
 
 /** 枚举值 */
 export function enumOf<T extends string | number>(values: readonly T[]): Pick<FieldSpec, 'enum'> {
-  return { enum: values as Array<string | number> }
+  return { enum: [...values] }
 }
 
 /** 正则校验 */

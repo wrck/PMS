@@ -159,6 +159,7 @@ public class DdlExecutionServiceImpl implements DdlExecutionService {
             for (String existingCol : existingColumnNames) {
                 if (!"id".equals(existingCol) && !designColumnNames.contains(existingCol)
                         && !"create_time".equals(existingCol) && !"update_time".equals(existingCol)
+                        && !"creator".equals(existingCol) && !"updater".equals(existingCol)
                         && !"create_by".equals(existingCol) && !"update_by".equals(existingCol)
                         && !"deleted".equals(existingCol)) {
                     // 备份列数据
@@ -171,6 +172,7 @@ public class DdlExecutionServiceImpl implements DdlExecutionService {
             }
         } else if (existingColumnNames.stream().anyMatch(c ->
                 !"id".equals(c) && !"create_time".equals(c) && !"update_time".equals(c)
+                && !"creator".equals(c) && !"updater".equals(c)
                 && !"create_by".equals(c) && !"update_by".equals(c) && !"deleted".equals(c)
                 && !designColumnNames.contains(c))) {
             throw new DdlSecurityException("检测到需删除的列，请确认 confirmDrop=true 后重试");

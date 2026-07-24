@@ -34,7 +34,7 @@ watch(isOnline, (online, prev) => {
 <template>
   <router-view v-slot="{ Component, route }">
     <transition
-      :name="route.meta.transitionName || 'fade-slide-up'"
+      :name="(route.meta.transitionName as string) || 'fade-slide-up'"
       mode="out-in"
     >
       <component :is="Component" :key="route.path" />

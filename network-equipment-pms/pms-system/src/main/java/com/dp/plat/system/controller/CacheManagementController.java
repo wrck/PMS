@@ -20,13 +20,16 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 缓存管理面板：查看缓存名称、按名称清空缓存、一键清空全部缓存。
+ * <p><b>@Deprecated</b>：Redis 缓存监控已由 yudao 底座提供，替代接口为 {@code /admin-api/infra/redis/*}（yudao RedisController）。</p>
+ *
+ * <p>缓存管理面板：查看缓存名称、按名称清空缓存、一键清空全部缓存。</p>
  *
  * <p>当前缓存命名空间由 {@link com.dp.plat.system.config.RedisConfig} 预置：
  * {@code sysDict}、{@code sysMenu}、{@code sysConfig}、{@code sysRole}。</p>
  */
+@Deprecated
 @Slf4j
-@Tag(name = "缓存管理", description = "Cache management APIs")
+@Tag(name = "缓存管理（已弃用）", description = "Cache management APIs")
 @RestController
 @RequestMapping("/api/system/cache")
 @RequiredArgsConstructor

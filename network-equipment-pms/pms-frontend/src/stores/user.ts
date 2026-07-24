@@ -1,20 +1,28 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import {
-  getUserInfo as getUserInfoApi,
+  getPermissionInfo as getPermissionInfoApi,
   login as loginApi,
   logout as logoutApi,
   type LoginParams,
-  type UserInfo
+  type UserInfo,
+  type PermissionInfo
 } from '@/api/auth'
 import { TOKEN_KEY } from '@/utils/request'
 import router from '@/router'
 
+/**
+ * 用户 Store（已适配 yudao 底座认证体系）。
+ *
+ * <p>yudao 登录返回 {@code accessToken}（不含用户信息），需额外调用
+ * {@code getPermissionInfo} 获取用户信息 + 角色 + 权限 + 菜单。</p>
+ */
 export const useUserStore = defineStore('user', () => {
   // Token is hydrated from localStorage so a refresh keeps the session
   const token = ref<string>(localStorage.getItem(TOKEN_KEY) || '')
   const userInfo = ref<UserInfo | null>(null)
   const permissions = ref<string[]>([])
+  const roles = ref<string[]>([])
 
   /**
    * Check if current user has the given permission code.
@@ -33,20 +41,43 @@ export const useUserStore = defineStore('user', () => {
     return permissions.value.includes('*') || codes.some((c) => permissions.value.includes(c))
   }
 
+  /**
+   * yudao 登录流程：
+   * 1. 调用 /admin-api/system/auth/login 获取 accessToken
+   * 2. 调用 /admin-api/system/auth/get-permission-info 获取用户信息 + 权限
+   */
   async function login(params: LoginParams) {
     const res = await loginApi(params)
-    token.value = res.token
-    localStorage.setItem(TOKEN_KEY, res.token)
-    userInfo.value = res.userInfo
-    permissions.value = res.userInfo.permissions ?? []
+    token.value = res.accessToken
+    localStorage.setItem(TOKEN_KEY, res.accessToken)
+
+    // 登录成功后立即拉取用户权限信息
+    await fetchPermissionInfo()
     return res
   }
 
-  async function fetchUserInfo() {
-    const info = await getUserInfoApi()
-    userInfo.value = info
+  /**
+   * 拉取用户权限信息（yudao get-permission-info）。
+   * 返回用户信息、角色标识、操作权限、菜单树。
+   */
+  async function fetchPermissionInfo(): Promise<PermissionInfo> {
+    const info = await getPermissionInfoApi()
+    userInfo.value = info.user
     permissions.value = info.permissions ?? []
+    roles.value = info.roles ?? []
     return info
+  }
+
+  /**
+   * @deprecated 使用 {@link fetchPermissionInfo} 替代。
+   * 旧 PMS 接口兼容方法，过渡期保留。
+   */
+  async function fetchUserInfo() {
+    const info = await getPermissionInfoApi()
+    userInfo.value = info.user
+    permissions.value = info.permissions ?? []
+    roles.value = info.roles ?? []
+    return info.user
   }
 
   async function logout() {
@@ -64,8 +95,21 @@ export const useUserStore = defineStore('user', () => {
     token.value = ''
     userInfo.value = null
     permissions.value = []
+    roles.value = []
     localStorage.removeItem(TOKEN_KEY)
   }
 
-  return { token, userInfo, permissions, hasPermission, hasAnyPermission, login, fetchUserInfo, logout, reset }
+  return {
+    token,
+    userInfo,
+    permissions,
+    roles,
+    hasPermission,
+    hasAnyPermission,
+    login,
+    fetchPermissionInfo,
+    fetchUserInfo,
+    logout,
+    reset
+  }
 })
